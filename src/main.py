@@ -16,7 +16,7 @@
 #################################################################################################
 from gui.MainWindow import MainWindow
 from com.SerialComPort import SerialComunication
-from multiprocessing import Queue
+import multiprocessing
 
 
 #################################################################################################
@@ -38,9 +38,12 @@ MAIN_SCRIPT_VER     = "V0.1.0"
 # ===============================================================================
 def main():
     
+    # Fix issue with reopening of window over and over
+    multiprocessing.freeze_support()
+
     # Create and run communication process
-    q_gui_to_serial = Queue()
-    q_serial_to_gui = Queue()
+    q_gui_to_serial = multiprocessing.Queue()
+    q_serial_to_gui = multiprocessing.Queue()
 
     # Run communication engine
     serial_com = SerialComunication(q_gui_to_serial, q_serial_to_gui)
