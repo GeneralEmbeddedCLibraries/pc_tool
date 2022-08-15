@@ -1,2 +1,2 @@
 # pc_tool
-PC application for embedded device parameterisation and diagnostication in real-time.
+PC application for embedded device configuration and diagnostics in real-time.
