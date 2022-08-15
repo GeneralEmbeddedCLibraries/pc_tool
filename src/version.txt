@@ -1,0 +1,27 @@
+============================================================
+ 	Version 0.1.0 (15.08.2022)
+============================================================
+
+This is first release of PC tool for embedded device 
+configuration/diagnostics purposes. It is build based
+on Tkinter GUI engine.
+
+ Features/Changes:
+ - Connection via serial VCP
+ - Command line interface (CLI)
+ - Parameter table reading/writing
+ - Creating/Deleting CLI shortcuts
+ - CLI configurations:
+   + Message timestamp 
+   + Message source indicator
+   + Pause (Freeze) CLI text
+ 
+ Solved Issues:
+ 
+ 
+ Known Issues:
+
+ 
+ TODO List: 
+ - Real-time ploting
+ 
