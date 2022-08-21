@@ -254,28 +254,29 @@ class CliFrame(tk.Frame):
     # ===============================================================================  
     def __print_to_console(self, text, tag):
 
+        # Freeze console
         if not self.cfg.get_state(CliCfgOpt.Freeze):
 
-            # Unlock text box
-            self.console_text.configure(state=tk.NORMAL)
-
-            # Append timestamp
-            if self.cfg.get_state(CliCfgOpt.Timestamp):
-                _datetime = datetime.datetime.now()
-                datetime_text = "(%02d.%02d.%04d  %02d:%02d:%02d.%03d)" % (_datetime.day, _datetime.month, _datetime.year, _datetime.hour, _datetime.minute, _datetime.second, round(_datetime.microsecond/1000)) + "    "
-
-                # Insert send char and command
-                self.console_text.insert(tk.END, datetime_text, tag)
-
-            # Add message source
-            if self.cfg.get_state(CliCfgOpt.MsgSrc):
-                if tag == "pc":
-                    self.console_text.insert(tk.END, "(TX <---)    ", tag)
-                else:
-                    self.console_text.insert(tk.END, "(RX --->)    ", tag)
-
-                
+            # Raw message check
             if not self.__get_raw_msg(text) or self.cfg.get_state(CliCfgOpt.RawTraffic):
+
+                # Unlock text box
+                self.console_text.configure(state=tk.NORMAL)
+
+                # Append timestamp
+                if self.cfg.get_state(CliCfgOpt.Timestamp):
+                    _datetime = datetime.datetime.now()
+                    datetime_text = "(%02d.%02d.%04d  %02d:%02d:%02d.%03d)" % (_datetime.day, _datetime.month, _datetime.year, _datetime.hour, _datetime.minute, _datetime.second, round(_datetime.microsecond/1000)) + "    "
+
+                    # Insert send char and command
+                    self.console_text.insert(tk.END, datetime_text, tag)
+
+                # Add message source
+                if self.cfg.get_state(CliCfgOpt.MsgSrc):
+                    if tag == "pc":
+                        self.console_text.insert(tk.END, "(TX <---)    ", tag)
+                    else:
+                        self.console_text.insert(tk.END, "(RX --->)    ", tag)  
 
                 # Insert send char and command
                 self.console_text.insert(tk.END, text + "\n", tag)
