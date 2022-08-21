@@ -60,6 +60,7 @@ class SerialComunication():
 
         # Create and start process
         self.process = Thread(name="Serial Communication", target=self.run)  
+        self.__alive = True
         self.process.start()
 
 
@@ -69,8 +70,8 @@ class SerialComunication():
     # @return:      void
     # ===============================================================================
     def __del__(self):
-        if self.process.is_alive():
-            self.process.terminate()
+        self.__alive = False
+        self.port.disconnect()
 
     # ===============================================================================
     # @brief:   Send message via IPC
@@ -164,6 +165,15 @@ class SerialComunication():
         self.port.send(str(payload))
 
     # ===============================================================================
+    # @brief:   Master GUI is requesting end of the thread
+    #
+    # @param[in]:   payload - Message payload
+    # @return:      void
+    # ===============================================================================
+    def __ipc_kill_cmd(self, payload):
+        self.__del__()
+
+    # ===============================================================================
     # @brief:   Handle command from Master GUI via IPC
     #
     # @return:      void
@@ -210,12 +220,13 @@ class SerialComunication():
                                 IpcMsgType.IpcMsgType_ComDisconnect :   self.__ipc_disconnect_cmd,  
                                 #IpcMsgType.IpcMsgType_ComRxFrame :      self.__ipc_rx_frame_cmd,  
                                 IpcMsgType.IpcMsgType_ComTxFrame :      self.__ipc_tx_frame_cmd,  
+                                IpcMsgType.IpcMsgType_ComFinished :      self.__ipc_kill_cmd,  
         }
         
         # =============================================================================================      
 
         # Run process until end
-        while True:
+        while self.__alive:
         
             # Handle IPC commands from MasterGUI
             self.__ipc_rx_hndl()

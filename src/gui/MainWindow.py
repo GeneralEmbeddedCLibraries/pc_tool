@@ -557,8 +557,9 @@ class MainWindow():
     def run(self):
         self.master_win.mainloop()
 
-        # TODO: Kill com process       
-
+        # Send command to end serial thread
+        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComFinished)
+        self.__ipc_send_msg(msg)
 
 
 #################################################################################################
