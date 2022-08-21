@@ -21,7 +21,6 @@ from tkinter import scrolledtext
 
 from gui.GuiCommon import GuiFont, GuiColor, NormalButton, SwitchButton, AddRemoveButton
 
-
 #################################################################################################
 ##  DEFINITIONS
 #################################################################################################
@@ -104,7 +103,7 @@ class CliFrame(tk.Frame):
         self.cfg.add_switch(id=CliCfgOpt.Timestamp,     text="Show message timestamp",      initial_state=False)
         self.cfg.add_switch(id=CliCfgOpt.MsgSrc,        text="Show message source",         initial_state=False)
         self.cfg.add_switch(id=CliCfgOpt.Freeze,        text="Freeze console print",        initial_state=False)
-        #self.cfg.add_switch(id=CliCfgOpt.RawTraffic,    text="Show raw message traffic",    initial_state=False)
+        self.cfg.add_switch(id=CliCfgOpt.RawTraffic,    text="Show raw message traffic",    initial_state=False)
         #self.cfg.add_switch(id=CliCfgOpt.LogToFile,     text="Log to file",                 initial_state=False)
 
         # Cli shortcuts
@@ -114,6 +113,11 @@ class CliFrame(tk.Frame):
         self.shortcut.add("Help", "help")
         self.shortcut.add("Reset", "reset")
         self.shortcut.add("Show parameters", "par_print")
+
+        # TODO: Remove only tesing
+        self.shortcut.add("Streaming ON", "status_start")
+        self.shortcut.add("Streaming OFF", "status_stop")
+        # TODO END: 
 
         # Self frame layout
         self.frame_label.grid(  column=0, row=0,                sticky=tk.W,                   padx=20, pady=10     )
@@ -270,14 +274,17 @@ class CliFrame(tk.Frame):
                 else:
                     self.console_text.insert(tk.END, "(RX --->)    ", tag)
 
-            # Insert send char and command
-            self.console_text.insert(tk.END, text + "\n", tag)
-            
-            # Lock text box back
-            self.console_text.configure(state=tk.DISABLED)
-            
-            # Scrool with latest text
-            self.console_text.see(tk.END)
+                
+            if not self.__get_raw_msg(text) or self.cfg.get_state(CliCfgOpt.RawTraffic):
+
+                # Insert send char and command
+                self.console_text.insert(tk.END, text + "\n", tag)
+                
+                # Lock text box back
+                self.console_text.configure(state=tk.DISABLED)
+                
+                # Scrool with latest text
+                self.console_text.see(tk.END)
 
     # ===============================================================================
     # @brief:   Print PC command
@@ -315,7 +322,24 @@ class CliFrame(tk.Frame):
     def print_war(self, text):
         self.__print_to_console(str(text), "war")
 
+    # ===============================================================================
+    # @brief:   Check if device message is raw traffic
+    #
+    # @note     Raw is being determinate based on latter. If any latter is inside
+    #           expection string than this string is not raw traffic.
+    #
+    # @param[in]:   dev_msg     - Message from embedded device
+    # @return:      raw         - Raw message flag
+    # ===============================================================================
+    def __get_raw_msg(self, dev_msg):
+        raw = True
 
+        for ch in dev_msg:
+            if ch.isalpha():
+                raw = False
+                break
+
+        return raw
 
 
 # ===============================================================================
