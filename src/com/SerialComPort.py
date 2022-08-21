@@ -14,9 +14,10 @@
 ##  IMPORTS
 #################################################################################################
 from dataclasses import dataclass
+from threading import Thread
 import serial
 import serial.tools.list_ports
-from multiprocessing import Process
+from threading import Thread
 from com.IpcProtocol import IpcMsg, IpcMsgType
 
 #################################################################################################
@@ -39,7 +40,7 @@ from com.IpcProtocol import IpcMsg, IpcMsgType
 #  @brief:   Serial Communication as process
 #
 # ===============================================================================  
-class SerialComunication(Process):
+class SerialComunication():
 
     # ===============================================================================
     # @brief:   Constructor
@@ -58,8 +59,9 @@ class SerialComunication(Process):
         self.port = SerialComPort()
 
         # Create and start process
-        self.process = Process(name="Serial Communication", target=self.run)  
+        self.process = Thread(name="Serial Communication", target=self.run)  
         self.process.start()
+
 
     # ===============================================================================
     # @brief:   Desctructor
