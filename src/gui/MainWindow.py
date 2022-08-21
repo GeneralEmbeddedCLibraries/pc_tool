@@ -472,7 +472,13 @@ class MainWindow():
                 self.com_rx_buf = self.com_rx_buf[str_term+1:]
 
                 # Parameter parser
-                self.par_frame.dev_msg_parser(dev_resp)
+                # Note: Ignore raw traffic for parameter parser
+                if not self.get_raw_msg(dev_resp):
+                    self.par_frame.dev_msg_parser(dev_resp)
+                
+                # Raw trafic for plotting purposes
+                else:
+                    pass # TODO: Provide that data to plotter...
 
         # Update msg rx counter
         self.status_frame.set_rx_count(len(payload))
@@ -521,6 +527,26 @@ class MainWindow():
         self.par_frame.write_btn.config(state=tk.DISABLED)
         self.par_frame.store_all_btn.config(state=tk.DISABLED)
         self.par_frame.value_entry.config(state=tk.DISABLED)
+
+
+    # ===============================================================================
+    # @brief:   Check if device message is raw traffic
+    #
+    # @note     Raw is being determinate based on latter. If any latter is inside
+    #           expection string than this string is not raw traffic.
+    #
+    # @param[in]:   dev_msg     - Message from embedded device
+    # @return:      raw         - Raw message flag
+    # ===============================================================================
+    def get_raw_msg(self, dev_msg):
+        raw = True
+
+        for ch in dev_msg:
+            if ch.isalpha():
+                raw = False
+                break
+
+        return raw
 
     # ===============================================================================
     # @brief:   Start GUI engine
