@@ -44,7 +44,7 @@ MAIN_WIN_FAST_TIM_PERIOD    = 50
 MAIN_WIN_SLOW_TIM_PERIOD    = 1000
 
 # Serial command end symbol
-MAIN_WIN_COM_STRING_TERMINATION = "\r"
+MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
 
 #################################################################################################
@@ -469,7 +469,7 @@ class MainWindow():
 
                 # Copy the rest of string for later process
                 # Note: Copy without termiantor
-                self.com_rx_buf = self.com_rx_buf[str_term+1:]
+                self.com_rx_buf = self.com_rx_buf[str_term+len(MAIN_WIN_COM_STRING_TERMINATION):]
 
                 # Parameter parser
                 # Note: Ignore raw traffic for parameter parser
