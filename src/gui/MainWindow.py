@@ -406,6 +406,9 @@ class MainWindow():
             self.status_frame.set_com_status(True)
             self.status_frame.clear_rx_count()
             self.status_frame.clear_tx_count()
+            self.status_frame.clear_num_of_pars()
+            self.status_frame.clear_err_count()
+            self.status_frame.clear_war_count()
 
             # Activate connection related widgets
             self.__activate_widgets()

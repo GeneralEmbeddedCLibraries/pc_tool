@@ -139,6 +139,15 @@ class StatusFrame(tk.Frame):
         self.err_cnt_label["text"] = "Err " + str(self.err_count)
 
     # ===============================================================================
+    # @brief:   Clear number of error messages
+    #
+    # @return:      void
+    # ===============================================================================
+    def clear_err_count(self):
+        self.err_count = 0
+        self.err_cnt_label["text"] = "Err " + str(self.err_count)
+
+    # ===============================================================================
     # @brief:   Set number of received warning messages
     #
     # @param[in]:   cnt     - Number of war msg
@@ -146,6 +155,15 @@ class StatusFrame(tk.Frame):
     # ===============================================================================
     def set_war_count(self, cnt):
         self.war_count += cnt
+        self.war_cnt_label["text"] = "War " + str(self.war_count)
+
+    # ===============================================================================
+    # @brief:   Clear number of warning messages
+    #
+    # @return:      void
+    # ===============================================================================
+    def clear_war_count(self):
+        self.war_count = 0
         self.war_cnt_label["text"] = "War " + str(self.war_count)
 
     # ===============================================================================
