@@ -106,29 +106,30 @@ class ParameterFrame(tk.Frame):
         self.par_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
 
         # Define columns
-        self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
+        #self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
+        self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Comment" )
         self.par_table.column("#0",                                 width=0,                        stretch=tk.NO       )
         self.par_table.column("ID",             anchor=tk.W,        width=80,       minwidth=80,    stretch=tk.NO       )
         self.par_table.column("Name",           anchor=tk.W,        width=400,      minwidth=400,   stretch=tk.NO     )
-        self.par_table.column("Type",           anchor=tk.CENTER,   width=75,       minwidth=75,    stretch=tk.NO       )
+        #self.par_table.column("Type",           anchor=tk.CENTER,   width=75,       minwidth=75,    stretch=tk.NO       )
         self.par_table.column("Val",            anchor=tk.W,        width=100,      minwidth=100,    stretch=tk.NO       )
         self.par_table.column("Max",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
         self.par_table.column("Min",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
-        self.par_table.column("Unit",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
-        self.par_table.column("Access",         anchor=tk.CENTER,   width=110,      minwidth=110,   stretch=tk.NO       )
-        self.par_table.column("NVM",            anchor=tk.CENTER,   width=100,      minwidth=100,   stretch=tk.NO       )
+        #self.par_table.column("Unit",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
+        #self.par_table.column("Access",         anchor=tk.CENTER,   width=110,      minwidth=110,   stretch=tk.NO       )
+        #self.par_table.column("NVM",            anchor=tk.CENTER,   width=100,      minwidth=100,   stretch=tk.NO       )
         self.par_table.column("Comment",        anchor=tk.W,        width=200,      minwidth=200,   stretch=tk.YES       )
 
         self.par_table.heading("#0",            text="",            anchor=tk.CENTER    )
         self.par_table.heading("ID",            text="ID",          anchor=tk.W         )
         self.par_table.heading("Name",          text="Name",        anchor=tk.W         )
-        self.par_table.heading("Type",          text="Type",        anchor=tk.CENTER    )
+        #self.par_table.heading("Type",          text="Type",        anchor=tk.CENTER    )
         self.par_table.heading("Val",           text="Val",         anchor=tk.W         )
         self.par_table.heading("Max",           text="Max",         anchor=tk.W         )
         self.par_table.heading("Min",           text="Min",         anchor=tk.W         )
-        self.par_table.heading("Unit",          text="Unit",        anchor=tk.CENTER    )
-        self.par_table.heading("Access",        text="Access",      anchor=tk.CENTER    )
-        self.par_table.heading("NVM",           text="NVM",         anchor=tk.CENTER    )
+        #self.par_table.heading("Unit",          text="Unit",        anchor=tk.CENTER    )
+        #self.par_table.heading("Access",        text="Access",      anchor=tk.CENTER    )
+        #self.par_table.heading("NVM",           text="NVM",         anchor=tk.CENTER    )
         self.par_table.heading("Comment",       text="Comment",     anchor=tk.W         )
 
         # Left mouse click bindings
@@ -180,9 +181,9 @@ class ParameterFrame(tk.Frame):
     def __par_table_insert(self, idx, par):
 
         if ( idx % 2 == 0 ):
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.unit), str(par.type), str(par.access), str(par.nvm), str(par.comment)), tags=('even', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('even', 'simple'))
         else:
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.unit), str(par.type), str(par.access), str(par.nvm), str(par.comment)), tags=('odd', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('odd', 'simple'))
 
         self.par_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
         
