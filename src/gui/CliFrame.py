@@ -327,7 +327,8 @@ class CliFrame(tk.Frame):
     # @brief:   Check if device message is raw traffic
     #
     # @note     Raw msg is being determinate based on first char. If number that
-    #           msg is raw! 
+    #           msg is potencially raw. If futhermore no alphabetic is found inside
+    #           msg then it is actually raw! 
     #
     # @param[in]:   dev_msg     - Message from embedded device
     # @return:      raw         - Raw message flag
@@ -335,6 +336,9 @@ class CliFrame(tk.Frame):
     def __get_raw_msg(self, dev_msg):
 
         if dev_msg[0].isdigit():
+            for ch in dev_msg:
+                if ch.isalpha():
+                    return False
             return True
         else:
             return False
