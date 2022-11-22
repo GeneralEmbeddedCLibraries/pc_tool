@@ -156,7 +156,10 @@ class ComFrame(tk.Frame):
             self.com_port_table.insert(parent='',index='end',iid=idx,text='',values=(str(idx), str(name), str(desc)), tags=('odd', 'simple'))
 
         self.com_port_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
-        self.com_port_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
+        
+        # TODO: Check why discrepancie between computers
+        #self.com_port_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
+        self.com_port_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg)
 
     # ===============================================================================
     # @brief:   Set COM port table

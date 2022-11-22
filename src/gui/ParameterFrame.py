@@ -185,7 +185,10 @@ class ParameterFrame(tk.Frame):
             self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.unit), str(par.type), str(par.access), str(par.nvm), str(par.comment)), tags=('odd', 'simple'))
 
         self.par_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
-        self.par_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
+        
+        # TODO: Check why discrepancy between computers
+        #self.par_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
+        self.par_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg)
 
     # ===============================================================================
     # @brief:   Insert delimiter to parameter table
