@@ -129,6 +129,11 @@ class GuiFont():
     # Status
     status: list = ("Calibri", 11, "normal")
 
+    # Command line text
+    cli: list = ("Consolas", 14)
+    cli_bold: list = ("Consolas", 14, "bold")
+    cli_italic: list = ("Consolas", 14, "italic")
+
 
 # ===============================================================================
 #

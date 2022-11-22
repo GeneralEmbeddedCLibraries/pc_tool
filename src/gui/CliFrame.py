@@ -71,16 +71,16 @@ class CliFrame(tk.Frame):
         self.frame_label = tk.Label(self, text="Command Line Interface", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
         # Create the textbox
-        self.console_text = scrolledtext.ScrolledText(self, width=40, height=10, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, relief=tk.FLAT, state=tk.DISABLED)
+        self.console_text = scrolledtext.ScrolledText(self, width=40, height=10, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.cli, relief=tk.FLAT, state=tk.DISABLED)
 
         # Change text color based on source
-        self.console_text.tag_config("pc",      background=GuiColor.sub_1_bg,   foreground=GuiColor.console_pc_fg,   font=GuiFont.normal_bold   )
+        self.console_text.tag_config("pc",      background=GuiColor.sub_1_bg,   foreground=GuiColor.console_pc_fg,   font=GuiFont.cli_bold   )
         self.console_text.tag_raise("sel")
-        self.console_text.tag_config("device",  background=GuiColor.sub_1_bg,   foreground=GuiColor.console_dev_fg,  font=GuiFont.normal        )
+        self.console_text.tag_config("device",  background=GuiColor.sub_1_bg,   foreground=GuiColor.console_dev_fg,  font=GuiFont.cli        )
         self.console_text.tag_raise("sel")
-        self.console_text.tag_config("err",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_err_fg,  font=GuiFont.normal        )
+        self.console_text.tag_config("err",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_err_fg,  font=GuiFont.cli        )
         self.console_text.tag_raise("sel")
-        self.console_text.tag_config("war",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_war_fg,  font=GuiFont.normal        )
+        self.console_text.tag_config("war",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_war_fg,  font=GuiFont.cli        )
         self.console_text.tag_raise("sel")
 
         # Command entry
@@ -326,21 +326,19 @@ class CliFrame(tk.Frame):
     # ===============================================================================
     # @brief:   Check if device message is raw traffic
     #
-    # @note     Raw is being determinate based on latter. If any latter is inside
-    #           expection string than this string is not raw traffic.
+    # @note     Raw msg is being determinate based on first char. If number that
+    #           msg is raw! 
     #
     # @param[in]:   dev_msg     - Message from embedded device
     # @return:      raw         - Raw message flag
     # ===============================================================================
     def __get_raw_msg(self, dev_msg):
-        raw = True
 
-        for ch in dev_msg:
-            if ch.isalpha():
-                raw = False
-                break
+        if dev_msg[0].isdigit():
+            return True
+        else:
+            return False
 
-        return raw
 
 
 # ===============================================================================
