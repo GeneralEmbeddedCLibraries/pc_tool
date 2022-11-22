@@ -47,6 +47,10 @@ class StatusFrame(tk.Frame):
         self.rx_count = 0
         self.tx_count = 0
 
+        # Error/Warning statistics
+        self.err_count = 0
+        self.war_count = 0
+
 
     # ===============================================================================
     # @brief:   Initialize widgets
@@ -131,7 +135,8 @@ class StatusFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def set_err_count(self, cnt):
-        self.err_cnt_label["text"] = "Err " + str(cnt)
+        self.err_count += cnt
+        self.err_cnt_label["text"] = "Err " + str(self.err_count)
 
     # ===============================================================================
     # @brief:   Set number of received warning messages
@@ -140,7 +145,8 @@ class StatusFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def set_war_count(self, cnt):
-        self.war_cnt_label["text"] = "War " + str(cnt)
+        self.war_count += cnt
+        self.war_cnt_label["text"] = "War " + str(self.war_count)
 
     # ===============================================================================
     # @brief:   Set communication status

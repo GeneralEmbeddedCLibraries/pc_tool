@@ -465,7 +465,14 @@ class MainWindow():
                 dev_resp = self.com_rx_buf[:str_term]
 
                 # Print till terminator
-                self.cli_frame.print_normal(dev_resp)
+                if "ERR" in dev_resp:
+                    self.cli_frame.print_err(dev_resp)
+                    self.status_frame.set_err_count(1)
+                elif "WAR" in dev_resp:
+                    self.cli_frame.print_war(dev_resp)
+                    self.status_frame.set_war_count(1)
+                else:
+                    self.cli_frame.print_normal(dev_resp)
 
                 # Copy the rest of string for later process
                 # Note: Copy without termiantor
