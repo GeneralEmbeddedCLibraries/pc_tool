@@ -41,7 +41,7 @@ MAIN_WIN_FAST_TIM_PERIOD    = 50
 # Slow timer period
 #
 # Unit: ms
-MAIN_WIN_SLOW_TIM_PERIOD    = 1000
+MAIN_WIN_SLOW_TIM_PERIOD    = 500
 
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
@@ -94,6 +94,7 @@ class MainWindow():
 
         # Connection status
         self.__connection_status = False
+        self.__connection_port = None
 
         # =============================================================================================
         # IPC Command Function Table
@@ -246,6 +247,9 @@ class MainWindow():
             # Update status line
             self.status_frame.set_port_baudrate(com, baud)
 
+            # Save connection port
+            self.__connection_port = com
+
         # Connection is established
         else:
             msg.type = IpcMsgType.IpcMsgType_ComDisconnect
@@ -378,13 +382,38 @@ class MainWindow():
 
         com = []
         desc = []
+        com_live = False
 
+        # Go thru IPC message
         for dev in payload:
-            com.append(dev["device"])
-            desc.append(dev["description"])
+            
+            # Get com port and description
+            com_port = dev["device"]
+            com_desc = dev["description"]
 
+            # Check if open port is still present
+            if self.__connection_port == com_port:
+                com_live = True
+
+            # Add to table list
+            com.append(com_port)
+            desc.append(com_desc)
+
+        # Update table
         self.com_frame.com_port_table_clear()
         self.com_frame.com_port_table_set(com, desc)
+
+        # Disconnect if connected port is no longer available
+        if False == com_live and True == self.__connection_status:
+
+            # Send IPC to serial to disconnect
+            msg = IpcMsg()
+            msg.type = IpcMsgType.IpcMsgType_ComDisconnect
+            self.__ipc_send_msg(msg)
+
+            print("Automatic disconnection...")
+
+        print( self.__connection_port )
 
     # ===============================================================================
     # @brief:   Response from connecto command to (Serial Process) via IPC
