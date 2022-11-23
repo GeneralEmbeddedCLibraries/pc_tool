@@ -41,7 +41,7 @@ MAIN_WIN_FAST_TIM_PERIOD    = 50
 # Slow timer period
 #
 # Unit: ms
-MAIN_WIN_SLOW_TIM_PERIOD    = 500
+MAIN_WIN_SLOW_TIM_PERIOD    = 1000
 
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
