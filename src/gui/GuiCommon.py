@@ -417,14 +417,23 @@ class SwitchButton():
     def pack(self, *args, **kwargs):
         self.btn.pack(*args, **kwargs)
 
+    # ===============================================================================
+    # @brief:   Override switch to OFF state
+    #
+    # @return:      void
+    # ===============================================================================  
     def turn_off(self):
         self.state = False
         self.__update_appear(self.state)
 
+    # ===============================================================================
+    # @brief:   Override switch to ON state
+    #
+    # @return:      void
+    # ===============================================================================  
     def turn_on(self):
         self.state = True
         self.__update_appear(self.state)
-
 
     # ===============================================================================
     # @brief:   Refresh appearance
