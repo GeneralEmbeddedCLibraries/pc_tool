@@ -41,7 +41,7 @@ MAIN_WIN_FAST_TIM_PERIOD    = 50
 # Slow timer period
 #
 # Unit: ms
-MAIN_WIN_SLOW_TIM_PERIOD    = 1000
+MAIN_WIN_SLOW_TIM_PERIOD    = 500
 
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
@@ -94,6 +94,8 @@ class MainWindow():
 
         # Connection status
         self.__connection_status = False
+        self.__connection_port = None
+        self.__connection_baud = None
 
         # =============================================================================================
         # IPC Command Function Table
@@ -243,12 +245,18 @@ class MainWindow():
             msg.type = IpcMsgType.IpcMsgType_ComConnect
             msg.payload = "%s;%s" % (com, baud)
 
-            # Update status line
-            self.status_frame.set_port_baudrate(com, baud)
+            # Save connection info (later use for automatic re-connection)
+            self.__connection_port = com
+            self.__connection_baud = baud
 
         # Connection is established
         else:
+
+            # Send disconnection reqeust to serial thread
             msg.type = IpcMsgType.IpcMsgType_ComDisconnect
+
+            # Turn off automatic connection
+            self.com_frame.auto_con_btn.turn_off()
 
         # Send command
         self.__ipc_send_msg(msg)
@@ -280,7 +288,6 @@ class MainWindow():
             # Update msg tx counter
             self.status_frame.set_tx_count(len(dev_cmd))
 
-
     # ===============================================================================
     # @brief:   CLI enter button press callback
     #
@@ -301,7 +308,6 @@ class MainWindow():
 
             # Update msg tx counter
             self.status_frame.set_tx_count(len(dev_cmd))
-
 
     # ===============================================================================
     # @brief:   Send message via IPC
@@ -378,13 +384,46 @@ class MainWindow():
 
         com = []
         desc = []
+        com_detected = False
 
+        # Go thru IPC message
         for dev in payload:
-            com.append(dev["device"])
-            desc.append(dev["description"])
+            
+            # Get com port and description
+            com_port = dev["device"]
+            com_desc = dev["description"]
 
+            # Check if open port is still present
+            if self.__connection_port == com_port:
+                com_detected = True
+
+            # Add to table list
+            com.append(com_port)
+            desc.append(com_desc)
+
+        # Update table
         self.com_frame.com_port_table_clear()
         self.com_frame.com_port_table_set(com, desc)
+
+        # Disconnect if connected port is no longer available
+        if False == com_detected and True == self.__connection_status:
+
+            # Send IPC to serial to disconnect
+            msg = IpcMsg()
+            msg.type = IpcMsgType.IpcMsgType_ComDisconnect
+            self.__ipc_send_msg(msg)
+
+        # Automatic re-connection if:
+        #       1. Automatic Connection is turned ON
+        #   AND 2. No active connection is present
+        #   AND 3. Previously connected port is back 
+        elif True == com_detected and False == self.__connection_status and True == self.com_frame.auto_con_btn.state:
+            
+            # Send IPC to serial to connect
+            msg = IpcMsg()
+            msg.type = IpcMsgType.IpcMsgType_ComConnect
+            msg.payload = "%s;%s" % (self.__connection_port, self.__connection_baud)
+            self.__ipc_send_msg(msg)
 
     # ===============================================================================
     # @brief:   Response from connecto command to (Serial Process) via IPC
@@ -409,6 +448,7 @@ class MainWindow():
             self.status_frame.clear_num_of_pars()
             self.status_frame.clear_err_count()
             self.status_frame.clear_war_count()
+            self.status_frame.set_port_baudrate(self.__connection_port, self.__connection_baud)
 
             # Activate connection related widgets
             self.__activate_widgets()

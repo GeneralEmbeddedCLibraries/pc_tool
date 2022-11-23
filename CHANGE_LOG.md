@@ -11,6 +11,7 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
  - Raw traffic enable/disable option
  - Timestamp append to msg enable/disable option
  - Errors & Warnings color coded
+ - Added automatic re-connection
 
 ### Fixed
  - End string termination parsing
