@@ -219,7 +219,7 @@ class ParameterFrame(tk.Frame):
     # @return:      void
     # ===============================================================================   
     def __par_table_change_par_data(self, row, par):
-        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.unit), str(par.type), str(par.access), str(par.nvm), str(par.comment)))
+        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)))
 
     # ===============================================================================
     # @brief:   Get table row from parameter ID
@@ -485,7 +485,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_ok(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_ok_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_ok_bg)], foreground=[("selected", GuiColor.table_bg)])
 
         # Start clear-up event
         self.after(PAR_FRAME_DEV_RESP_SIGNAL_DUR, self.__par_table_signal_clear) 
@@ -497,7 +497,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_error(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_fail_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_fail_bg)], foreground=[("selected", GuiColor.table_bg)])
 
         # Start clear-up event
         self.after(PAR_FRAME_DEV_RESP_SIGNAL_DUR, self.__par_table_signal_clear) 
@@ -509,7 +509,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_warning(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_warn_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_warn_bg)], foreground=[("selected", GuiColor.table_bg)])
 
         # Start clear-up event
         self.after(PAR_FRAME_DEV_RESP_SIGNAL_DUR, self.__par_table_signal_clear) 
@@ -521,7 +521,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_clear(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_sel_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_sel_bg)], foreground=[("selected", GuiColor.table_fg)])
 
     # ===============================================================================
     # @brief:   Device parameter parser
