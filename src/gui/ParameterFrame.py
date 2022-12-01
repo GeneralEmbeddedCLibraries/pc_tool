@@ -429,10 +429,9 @@ class ParameterFrame(tk.Frame):
             val = self.__param_get_value(self.__par_table_get_id_by_row(iid))
         
             # Update value entry
-            if val:
-                self.value_entry.focus()
-                self.value_entry.delete(0, tk.END)
-                self.value_entry.insert(0, val)
+            self.value_entry.focus()
+            self.value_entry.delete(0, tk.END)
+            self.value_entry.insert(0, val)
     
     # ===============================================================================
     # @brief:   Double right click on table action
