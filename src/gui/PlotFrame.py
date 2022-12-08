@@ -14,12 +14,10 @@
 ##  IMPORTS
 #################################################################################################
 from dataclasses import dataclass
-import multiprocessing
 import tkinter as tk
 from tkinter import ttk
-from gui.GuiCommon import GuiFont, GuiColor
-
-
+from gui.GuiCommon import *
+import csv
 
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -38,6 +36,12 @@ import matplotlib.animation as animation
 ##  DEFINITIONS
 #################################################################################################
 
+# Streaming period in secodns
+LOG_FILE_FIXED_TIMESTAMP        = 0.1
+
+# File delimiter
+LOG_FILE_DELIMITER              = ";"
+
 
 #################################################################################################
 ##  FUNCTIONS
@@ -48,60 +52,6 @@ import matplotlib.animation as animation
 #################################################################################################
 ##  CLASSES
 #################################################################################################   
-
-
-"""
-class Scope(multiprocessing.Process):
-    def __init__(self, fig, ax, maxt=2, dt=0.02):
-        self.ax = ax
-        self.dt = dt
-        self.maxt = maxt
-        self.tdata = [0]
-        self.ydata = [0]
-        self.line = Line2D(self.tdata, self.ydata)
-        self.ax.add_line(self.line)
-        self.ax.set_ylim(-.1, 1.1)
-        self.ax.set_xlim(0, self.maxt)
-
-        # Create and start process
-        self.process = multiprocessing.Process(name="Serial Communication", target=self.run)  
-        self.process.start()
-
-        #ani = animation.FuncAnimation(fig, self.plt_update, self.plt_emiter, interval=50, blit=True)
-        ani = animation.FuncAnimation(fig, self.update, self.plt_emiter, interval=50, blit=True)
-        #plt.show()
-
-
-    def run(self):
-        #plt.show()
-        pass
-        
-
-    def update(self, y):
-        lastt = self.tdata[-1]
-        if lastt > self.tdata[0] + self.maxt:  # reset the arrays
-            self.tdata = [self.tdata[-1]]
-            self.ydata = [self.ydata[-1]]
-            self.ax.set_xlim(self.tdata[0], self.tdata[0] + self.maxt)
-            self.ax.figure.canvas.draw()
-
-        t = self.tdata[-1] + self.dt
-        self.tdata.append(t)
-        self.ydata.append(y)
-        self.line.set_data(self.tdata, self.ydata)
-        return self.line,
-
-    def plt_emiter(self):
-        while True:
-            v = np.random.rand(1)
-            if v > 0.1:
-                yield 0.
-            else:
-                yield np.random.rand(1)
-
-
-"""
-
 
 
 
@@ -127,26 +77,21 @@ class PlotFrame(tk.Frame):
     # ===============================================================================
     def __init_widgets(self):
 
+        # File to visualize
+        self.meas_file = None
+
+        # Measured data
+        self.timestamp = []
+        self.meas_file_header = []
+
         # Create info label
-        self.frame_label = tk.Label(self, text="Real-Time Ploting", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.frame_label = tk.Label(self, text="Plot Measured Data", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
         # Plot frame
         self.plot_frame = tk.Frame(self, bg=GuiColor.main_bg)
 
-
-
-        
         # Matplotlib figure
         self.fig = Figure(figsize=(5, 4), dpi=100)
-        #fig, ax = plt.subplots(figsize=(5, 4), dpi=100)
-        
-    
-        #t = np.arange(0, 100, .01)
-        #self.ax = self.fig.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
-        self.ax = self.fig.add_subplot(111)
-        self.ax.set_xlim(0,100)
-
-        self.line, = self.ax.plot(0,0)
 
         canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)  # A tk.DrawingArea.
         canvas.draw()
@@ -155,14 +100,9 @@ class PlotFrame(tk.Frame):
         toolbar = NavigationToolbar2Tk(canvas, self.plot_frame)
         toolbar.update()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        
-
-        #scope = Scope(fig, ax)
-        
-
+                
         # Buttons
-        self.run_stop_btn = tk.Button(self, text="Run", font=GuiFont.btn, bg=GuiColor.btn_bg, fg=GuiColor.btn_fg, activebackground=GuiColor.btn_bg, activeforeground=GuiColor.btn_fg, relief=tk.FLAT, borderwidth=0, width=20, command=self.__run_btn_click) 
-        self.clear_btn = tk.Button(self, text="Clear", font=GuiFont.btn, bg=GuiColor.btn_bg, fg=GuiColor.btn_fg, activebackground=GuiColor.btn_bg, activeforeground=GuiColor.btn_fg, relief=tk.FLAT, borderwidth=0, width=20, command=None) 
+        self.import_btn = NormalButton(self, text="Import", command=self.__import_btn_click) 
 
         # Create table
         self.par_plot_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
@@ -170,7 +110,7 @@ class PlotFrame(tk.Frame):
         # Define columns
         self.par_plot_table["columns"] = ("Par", "Plot")
         self.par_plot_table.column("#0",                    width=0,                    stretch=tk.NO      )
-        self.par_plot_table.column("Par",   anchor=tk.W,    width=50,   minwidth=50,    stretch=tk.YES     )
+        self.par_plot_table.column("Par",   anchor=tk.W,    width=100,   minwidth=50,   stretch=tk.YES     )
         self.par_plot_table.column("Plot",  anchor=tk.W,    width=50,   minwidth=50,    stretch=tk.NO      )
 
         self.par_plot_table.heading("#0",   text="",        anchor=tk.CENTER    )
@@ -179,58 +119,89 @@ class PlotFrame(tk.Frame):
 
 
         # Self frame layout
-        self.frame_label.grid(              column=0, row=0,            sticky=tk.W,                   padx=20, pady=10    )
-        self.plot_frame.grid(               column=0, row=1, rowspan=4, sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10    )
+        self.frame_label.grid(      column=0, row=0,            sticky=tk.W,                   padx=20, pady=10 )
+        self.plot_frame.grid(       column=0, row=1, rowspan=4, sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10 )
+        self.par_plot_table.grid(   column=1, row=1,            sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+        self.import_btn.grid(       column=1, row=2,            sticky=tk.W+tk.S+tk.E,         padx=10, pady=10 )
+
+
+
+    def __import_btn_click(self):
+
+        # Select file to visualize
+        self.meas_file =  tk.filedialog.askopenfilename(initialdir = self.meas_file,title = "Select file",filetypes = (("text file","*.txt"),("all files","*.*")))
         
-        self.par_plot_table.grid(           column=1, row=1,            sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10   )
-        self.run_stop_btn.grid(             column=1, row=2,            sticky=tk.W+tk.S+tk.E,         padx=10, pady=0    )
-        self.clear_btn.grid(                column=1, row=3,            sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10    )
+        # File selected
+        if self.meas_file:
 
-        self.cnt = 0
-        #self.__update()
+            # Parse data
+            self.__parse_meas_file()
 
-
-    """
-    def plt_emiter(self):
-        while True:
-            v = np.random.rand(1)
-            if v > 0.1:
-                yield 0.
-            else:
-                yield np.random.rand(1)
-    """
+            # Update table of parameters
+            self.__table_update()
 
 
-    def __run_btn_click(self):
 
-        print("RUN BTN PRESSED!")
+    def __parse_meas_file(self):
+
+        # Open file for reading
+        with open(self.meas_file, "r") as csvfile: 
+
+            # Read row
+            spamreader = csv.reader(csvfile, delimiter=LOG_FILE_DELIMITER)
+
+            # Init timestamp
+            self.timestamp = []
+
+            # Go thru file
+            for idx, row in enumerate(spamreader):
+
+                # Read header
+                if 0 == idx:
+                    for h in row:
+                        self.meas_file_header.append( h )
+
+                # Read data
+                else:
+                
+                    if idx == 1:
+                        self.timestamp.append( 0 );
+                    else:
+                        self.timestamp.append( self.timestamp[-1] + LOG_FILE_FIXED_TIMESTAMP )
+                
+                    """
+                    # Accumulate data
+                    Tint.append( float( row[ LOG_FILE_INT_TEMP_COL ] ))
+                    Tint_filt.append( float( row[ LOG_FILE_INT_TEMP_FILT_COL ] ))
+                    Taux.append( float( row[ LOG_FILE_AUX_TEMP_COL ] ))
+                    Taux_filt.append( float( row[ LOG_FILE_AUX_TEMP_FILT_COL ] ))
+                    Tcomp.append( float( row[ LOG_FILE_COMP_TEMP_COL ] ))
+                    Tcomp_filt.append( float( row[ LOG_FILE_COMP_TEMP_FILT_COL ] ))
+                    Trelay.append( float( row[ LOG_FILE_RELAY_TEMP_COL ] ))
+                    Trelay_filt.append( float( row[ LOG_FILE_RELAY_TEMP_FILT_COL ] ))
+
+                    """
+
+    def __table_update(self):
+
+        # Clean table
+        self.__table_clear()
+
+        # List all signals defined in header
+        for idx, signal in enumerate( self.meas_file_header ):
+
+            signal = signal.replace(" ", "_")
+            self.par_plot_table.insert(parent='',index='end',iid=idx,text="", values=( signal ) )
 
 
-    def __update(self):
-
-        #print("PLOT TIMER EXPIRE...")
-
-
-        # Reload timer
-        self.plot_frame.after(1000, self.__update) 
-
-        self.cnt += 1
-
-        if self.cnt > 60:
-            self.cnt = 0
-
-        #self.ax.plot(self.cnt, self.cnt, "ro")
-        t = np.arange(0, self.cnt, .01)
-        data = 2 * np.cos(2 * np.pi * t) * np.sin(2 * np.pi * t)
-
-        #self.ax.plot(t, 2 * np.cos(2 * np.pi * t))
-
-        self.line.set_xdata(t)
-        self.line.set_ydata(data)
-        self.ax.set_xlim(0, self.cnt)
-        self.fig.canvas.draw()
-        #self.fig.canvas.flush_events()
-
+    # ===============================================================================
+    # @brief:   Clear parameter table
+    #
+    # @return:      void
+    # ===============================================================================   
+    def __table_clear(self):
+        for i in self.par_plot_table.get_children():
+            self.par_plot_table.delete(i)
 
 
 

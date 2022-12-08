@@ -135,9 +135,7 @@ class MainWindow():
         self.cli_frame      = CliFrame(self.master_win, btn_callbacks=[self.__cli_btn_enter])
         self.com_frame      = ComFrame(self.master_win, btn_callbacks=[self.__com_btn_connect])
         self.par_frame      = ParameterFrame(self.master_win, btn_callbacks=[self.__par_com_request])
-        
-        # TODO: Needs to be implemented
-        #self.plot_frame     = PlotFrame(self.master_win)
+        self.plot_frame     = PlotFrame(self.master_win)
 
         # Layout
         self.nav_frame.grid(        column=0, row=1, sticky=tk.E+tk.W+tk.N+tk.S, rowspan=2,     padx=0, pady=0    )
@@ -172,7 +170,7 @@ class MainWindow():
     def __nav_btn_com_action(self):
         self.cli_frame.grid_forget()
         self.par_frame.grid_forget()
-        #self.plot_frame.grid_forget()
+        self.plot_frame.grid_forget()
         self.com_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)
   
     # ===============================================================================
@@ -183,7 +181,7 @@ class MainWindow():
     def __nav_btn_cli_action(self):
         self.com_frame.grid_forget()
         self.par_frame.grid_forget()
-        #self.plot_frame.grid_forget()
+        self.plot_frame.grid_forget()
         self.cli_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)
         
         # Focus on command entry
@@ -197,7 +195,7 @@ class MainWindow():
     def __nav_btn_par_action(self):
         self.com_frame.grid_forget()
         self.cli_frame.grid_forget()
-        #self.plot_frame.grid_forget()
+        self.plot_frame.grid_forget()
         self.par_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
 
     # ===============================================================================
@@ -209,7 +207,7 @@ class MainWindow():
         self.com_frame.grid_forget()
         self.cli_frame.grid_forget()
         self.par_frame.grid_forget()
-        #self.plot_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
+        self.plot_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
 
     # ===============================================================================
     # @brief:   Change default table style
