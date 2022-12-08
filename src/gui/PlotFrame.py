@@ -87,11 +87,30 @@ class PlotFrame(tk.Frame):
         # Create info label
         self.frame_label = tk.Label(self, text="Plot Measured Data", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
+
+        # =============================================================================================
+        ## PLOT CONFIGURATIONS
+        # =============================================================================================
+        plt.style.use(['dark_background'])
+        self.PLOT_MAIN_TITLE_SIZE    = 18
+        self.PLOT_TITLE_SIZE         = 16
+        self.PLOT_AXIS_LABEL_SIZE    = 12
+
+        PLOT_ADJUST_LEFT        = 0.038
+        PLOT_ADJUST_BOTTOM      = 0.083
+        PLOT_ADJUST_RIGHT       = 0.99
+        PLOT_ADJUST_TOP         = 0.94
+        PLOT_ADJUST_WSPACE		= 0.2
+        PLOT_ADJUST_HSPACE		= 0.2
+            
         # Plot frame
         self.plot_frame = tk.Frame(self, bg=GuiColor.main_bg)
 
         # Matplotlib figure
-        self.fig = Figure(figsize=(5, 4), dpi=100)
+        self.fig, self.ax = plt.subplots(figsize=(5, 4), dpi=100)
+        
+        # Customize layout
+        plt.subplots_adjust(left=PLOT_ADJUST_LEFT, right=PLOT_ADJUST_RIGHT, top=PLOT_ADJUST_TOP, bottom=PLOT_ADJUST_BOTTOM, wspace=PLOT_ADJUST_WSPACE, hspace=PLOT_ADJUST_HSPACE)	
 
         canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)  # A tk.DrawingArea.
         canvas.draw()
@@ -102,7 +121,7 @@ class PlotFrame(tk.Frame):
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
                 
         # Buttons
-        self.import_btn = NormalButton(self, text="Import", command=self.__import_btn_click) 
+        self.import_btn = NormalButton(self, text="Import", command=self.__import_btn_click, width=30) 
 
         # Create table
         self.par_plot_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
@@ -110,7 +129,7 @@ class PlotFrame(tk.Frame):
         # Define columns
         self.par_plot_table["columns"] = ("Par", "Plot")
         self.par_plot_table.column("#0",                    width=0,                    stretch=tk.NO      )
-        self.par_plot_table.column("Par",   anchor=tk.W,    width=100,   minwidth=50,   stretch=tk.YES     )
+        self.par_plot_table.column("Par",   anchor=tk.W,    width=150,  minwidth=150,   stretch=tk.YES     )
         self.par_plot_table.column("Plot",  anchor=tk.W,    width=50,   minwidth=50,    stretch=tk.NO      )
 
         self.par_plot_table.heading("#0",   text="",        anchor=tk.CENTER    )
@@ -139,6 +158,9 @@ class PlotFrame(tk.Frame):
 
             # Update table of parameters
             self.__table_update()
+
+            # Update plot
+            self.__plot_update()
 
 
 
@@ -202,6 +224,25 @@ class PlotFrame(tk.Frame):
     def __table_clear(self):
         for i in self.par_plot_table.get_children():
             self.par_plot_table.delete(i)
+
+
+    def __plot_update(self):
+        
+        # Setup file
+        self.fig.suptitle( "File: \"%s\"" % self.meas_file.split("/")[-1]  , fontsize=self.PLOT_MAIN_TITLE_SIZE )
+        
+
+        
+        # Configure plot
+        self.ax.set_xlabel("Time [sec]")
+        self.ax.grid(True, alpha=0.25)
+        self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
+
+        # Refresh matplotlib library
+        plt.draw()
+
+
+
 
 
 
