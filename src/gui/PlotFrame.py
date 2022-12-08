@@ -174,6 +174,8 @@ class PlotFrame(tk.Frame):
 
             # Init timestamp
             self.timestamp = []
+            self.data = []
+            self.meas_file_header = []
 
             # Go thru file
             for idx, row in enumerate(spamreader):
@@ -187,22 +189,18 @@ class PlotFrame(tk.Frame):
                 else:
                 
                     if idx == 1:
-                        self.timestamp.append( 0 );
+                        self.timestamp.append( 0 )
+
+                        for pos, signal in enumerate( self.meas_file_header ):
+                            self.data.append( [ ( float( row[pos] )) ])
+
                     else:
                         self.timestamp.append( self.timestamp[-1] + LOG_FILE_FIXED_TIMESTAMP )
                 
-                    """
-                    # Accumulate data
-                    Tint.append( float( row[ LOG_FILE_INT_TEMP_COL ] ))
-                    Tint_filt.append( float( row[ LOG_FILE_INT_TEMP_FILT_COL ] ))
-                    Taux.append( float( row[ LOG_FILE_AUX_TEMP_COL ] ))
-                    Taux_filt.append( float( row[ LOG_FILE_AUX_TEMP_FILT_COL ] ))
-                    Tcomp.append( float( row[ LOG_FILE_COMP_TEMP_COL ] ))
-                    Tcomp_filt.append( float( row[ LOG_FILE_COMP_TEMP_FILT_COL ] ))
-                    Trelay.append( float( row[ LOG_FILE_RELAY_TEMP_COL ] ))
-                    Trelay_filt.append( float( row[ LOG_FILE_RELAY_TEMP_FILT_COL ] ))
+                        # Accumulate data
+                        for pos, signal in enumerate( self.meas_file_header ):
+                            self.data[pos].append( float( row[pos] ))
 
-                    """
 
     def __table_update(self):
 
@@ -230,9 +228,14 @@ class PlotFrame(tk.Frame):
         
         # Setup file
         self.fig.suptitle( "File: \"%s\"" % self.meas_file.split("/")[-1]  , fontsize=self.PLOT_MAIN_TITLE_SIZE )
-        
 
-        
+        # Clean plot
+        plt.cla()
+
+        # Plot data
+        for idx, signal in enumerate(self.data):
+            self.ax.plot( self.timestamp, self.data[idx], label=self.meas_file_header[idx])
+
         # Configure plot
         self.ax.set_xlabel("Time [sec]")
         self.ax.grid(True, alpha=0.25)
