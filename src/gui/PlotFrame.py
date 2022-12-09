@@ -5,7 +5,7 @@
 ##
 ## @file:       PlotFrame.py
 ## @brief:      Real-time plotting of device parameters
-## @date:		30.06.2022
+## @date:		08.12.2022
 ## @author:		Ziga Miklosic
 ##
 #################################################################################################
@@ -51,7 +51,11 @@ LOG_FILE_DELIMITER              = ";"
 #################################################################################################   
 
 
-
+# ===============================================================================
+#
+# @brief:   Plot frame
+#
+# ===============================================================================
 class PlotFrame(tk.Frame):
 
     def __init__(self, parent, *args, **kwargs):
@@ -66,7 +70,6 @@ class PlotFrame(tk.Frame):
 
         # Init widgets
         self.__init_widgets()
-
 
     # ===============================================================================
     # @brief:   Initialize widgets
@@ -126,7 +129,6 @@ class PlotFrame(tk.Frame):
         # Create table
         self.par_plot_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
         self.par_plot_table.bind("<Button-3>", self.__left_m_click_table)
-        self.par_plot_table.bind("<Button-1>", self.__right_m_click_table)
 
         self.par_table_menu = tk.Menu(self.frame_label, tearoff=False, font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         self.par_table_menu.add_command(label="Add to plot 1",      command=self.__add_to_plot_1, state="normal")
@@ -167,7 +169,11 @@ class PlotFrame(tk.Frame):
         # Refresh plot configs
         self.__refresh_plot_configs()
 
-
+    # ===============================================================================
+    # @brief:   Import button click callback
+    #
+    # @return:      void
+    # ===============================================================================
     def __import_btn_click(self):
 
         # Select file to visualize
@@ -192,8 +198,11 @@ class PlotFrame(tk.Frame):
             # Enable multiplot selection
             self.plot_num_combo.configure(state="readonly")
 
-
-
+    # ===============================================================================
+    # @brief:   Parse imported file
+    #
+    # @return:      void
+    # ===============================================================================
     def __parse_meas_file(self):
 
         # Open file for reading
@@ -342,7 +351,11 @@ class PlotFrame(tk.Frame):
             self.par_table_menu.entryconfig("Add to plot 3", state="normal")
             self.par_table_menu.entryconfig("Add to plot 4", state="normal")
 
-
+    # ===============================================================================
+    # @brief:   Refresh plot configurations
+    #
+    # @return:      void
+    # ===============================================================================
     def __refresh_plot_configs(self):
 
         if 1 == self.num_of_plot:
@@ -354,9 +367,12 @@ class PlotFrame(tk.Frame):
             
             self.ax[self.num_of_plot-1].set_xlabel("Time [sec]")
 
-
-
-
+    # ===============================================================================
+    # @brief:   Left mouse click on table callback
+    #
+    # @param[in]:   e - Event
+    # @return:      void
+    # ===============================================================================
     def __left_m_click_table(self, e):
 
         iid = self.par_plot_table.identify_row(e.y)
@@ -376,10 +392,11 @@ class PlotFrame(tk.Frame):
             # no action required
             pass
 
-    def __right_m_click_table(self, e):
-        pass
-
-
+    # ===============================================================================
+    # @brief:   Add to plot 1 option pressed callback
+    #
+    # @return:      void
+    # ===============================================================================
     def __add_to_plot_1(self):
 
         # Remove if already ploted
@@ -413,7 +430,11 @@ class PlotFrame(tk.Frame):
             plt.draw()
 
 
-
+    # ===============================================================================
+    # @brief:   Add to plot 2 option pressed callback
+    #
+    # @return:      void
+    # ===============================================================================
     def __add_to_plot_2(self):
 
         # Remove if already ploted
@@ -443,7 +464,11 @@ class PlotFrame(tk.Frame):
                 # Refresh matplotlib library
                 plt.draw()
 
-
+    # ===============================================================================
+    # @brief:   Add to plot 3 option pressed callback
+    #
+    # @return:      void
+    # ===============================================================================
     def __add_to_plot_3(self):
 
         # Remove if already ploted
@@ -473,8 +498,11 @@ class PlotFrame(tk.Frame):
                 # Refresh matplotlib library
                 plt.draw()
 
-
-
+    # ===============================================================================
+    # @brief:   Add to plot 4 option pressed callback
+    #
+    # @return:      void
+    # ===============================================================================
     def __add_to_plot_4(self):
 
         # Remove if already ploted
@@ -504,7 +532,11 @@ class PlotFrame(tk.Frame):
                 # Refresh matplotlib library
                 plt.draw()
         
-
+    # ===============================================================================
+    # @brief:   Remove plot line that is selected from plot
+    #
+    # @return:      void
+    # ===============================================================================
     def __remove_selected_line_from_plot(self):
 
         # Is even signal plot
@@ -540,9 +572,19 @@ class PlotFrame(tk.Frame):
             self.meas_signals[self.par_selected]["plot"] = None
             self.meas_signals[self.par_selected]["line"] = None
 
+    # ===============================================================================
+    # @brief:   Refresh button pressed callback
+    #
+    # @return:      void
+    # ===============================================================================
     def __refresh_btn_callback(self):
         self.__plot_num_change(None)
 
+    # ===============================================================================
+    # @brief:   Clean all button pressed callback
+    #
+    # @return:      void
+    # ===============================================================================
     def __clean_all_btn_callback(self):
         for idx, _ in enumerate( self.meas_signals ):
             self.par_selected = idx

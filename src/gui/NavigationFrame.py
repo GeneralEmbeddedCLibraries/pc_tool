@@ -33,6 +33,11 @@ from gui.GuiCommon import GuiFont, GuiColor, NavigationButton
 ##  CLASSES
 #################################################################################################   
 
+# ===============================================================================
+#
+# @brief:   Navigation Frame
+#
+# ===============================================================================
 class NavigationFrame(tk.Frame):
 
     def __init__(self, parent, btn_callbacks, *args, **kwargs):

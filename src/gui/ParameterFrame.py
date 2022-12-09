@@ -68,7 +68,11 @@ class ParCmd():
     Read:   str = "par_get"
     Store:  str = "par_save"
 
-
+# ===============================================================================
+#
+# @brief:   Parameter frame
+#
+# ===============================================================================
 class ParameterFrame(tk.Frame):
 
     def __init__(self, parent, btn_callbacks, *args, **kwargs):
