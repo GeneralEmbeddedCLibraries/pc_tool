@@ -33,6 +33,11 @@ from gui.GuiCommon import GuiFont, GuiColor, NavigationButton
 ##  CLASSES
 #################################################################################################   
 
+# ===============================================================================
+#
+# @brief:   Navigation Frame
+#
+# ===============================================================================
 class NavigationFrame(tk.Frame):
 
     def __init__(self, parent, btn_callbacks, *args, **kwargs):
@@ -58,13 +63,13 @@ class NavigationFrame(tk.Frame):
         self.btn_com    = NavigationButton(self, text="COM", command=self.btn_callbacks[0])
         self.btn_cli    = NavigationButton(self, text="CLI", command=self.btn_callbacks[1])
         self.btn_par    = NavigationButton(self, text="PAR", command=self.btn_callbacks[2])
-        #self.btn_plot   = NavigationButton(self, text="PLOT", command=self.btn_callbacks[3])
+        self.btn_plot   = NavigationButton(self, text="PLOT", command=self.btn_callbacks[3])
         
         # Setup layout
-        self.btn_com.pack(padx=10, pady=10, fill="x")
-        self.btn_cli.pack(padx=10, pady=10, fill="x")
-        self.btn_par.pack(padx=10, pady=10, fill="x")
-        #self.btn_plot.pack(padx=10, pady=10, fill="x")
+        self.btn_com.pack(padx=0, pady=10, fill="x")
+        self.btn_cli.pack(padx=0, pady=10, fill="x")
+        self.btn_par.pack(padx=0, pady=10, fill="x")
+        self.btn_plot.pack(padx=0, pady=10, fill="x")
 
 
 #################################################################################################
