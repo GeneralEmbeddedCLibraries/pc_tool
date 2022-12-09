@@ -126,6 +126,15 @@ class PlotFrame(tk.Frame):
 
         # Create table
         self.par_plot_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
+        self.par_plot_table.bind("<Button-3>", self.__left_m_click_table)
+        self.par_plot_table.bind("<Button-1>", self.__right_m_click_table)
+
+        self.par_table_menu = tk.Menu(self.frame_label, tearoff=False, font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_table_menu.add_command(label="Add to plot 1",      command=self.__add_to_plot_1)
+        self.par_table_menu.add_command(label="Add to plot 2",      command=self.__add_to_plot_2)
+        self.par_table_menu.add_command(label="Add to plot 3",      command=self.__add_to_plot_3)
+        self.par_table_menu.add_command(label="Add to plot 4",      command=self.__add_to_plot_4)
+        self.par_table_menu.add_command(label="Remove from plot",   command=self.__remove_from_plot)
 
         # Number of plots
         self.plot_num_label = tk.Label(self, text="Number of plots", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
@@ -144,7 +153,7 @@ class PlotFrame(tk.Frame):
 
         self.par_plot_table.heading("#0",   text="",        anchor=tk.CENTER    )
         self.par_plot_table.heading("Par",  text="Par",     anchor=tk.W         )
-        self.par_plot_table.heading("Plot", text="Plot",    anchor=tk.W         )
+        self.par_plot_table.heading("Plot", text="Plot",    anchor=tk.CENTER    )
 
 
         # Self frame layout
@@ -188,8 +197,10 @@ class PlotFrame(tk.Frame):
 
             # Init timestamp
             self.timestamp = []
-            self.data = []
-            self.meas_file_header = []
+            self.data = []              # TODO: Omit this
+            self.meas_file_header = []  # TODO: Omit this
+
+            self.meas_signals = []
 
             # Go thru file
             for idx, row in enumerate(spamreader):
@@ -198,6 +209,9 @@ class PlotFrame(tk.Frame):
                 if 0 == idx:
                     for h in row:
                         self.meas_file_header.append( h )
+
+                        # Prepare dictionary of measured data
+                        self.meas_signals.append( { "name": h, "data": [], "plot": None, "line": None } )
 
                 # Read data
                 else:
@@ -213,7 +227,9 @@ class PlotFrame(tk.Frame):
                 
                         # Accumulate data
                         for pos, signal in enumerate( self.meas_file_header ):
-                            self.data[pos].append( float( row[pos] ))
+                            self.data[pos].append( float( row[pos] ))   # TODO: Omit self.data...
+
+                            self.meas_signals[pos]["data"].append( float( row[pos] ))
 
 
     def __table_update(self):
@@ -223,9 +239,7 @@ class PlotFrame(tk.Frame):
 
         # List all signals defined in header
         for idx, signal in enumerate( self.meas_file_header ):
-
-            signal = signal.replace(" ", "_")
-            self.par_plot_table.insert(parent='',index='end',iid=idx,text="", values=signal )
+            self.par_plot_table.insert(parent='',index='end',iid=idx,text="", values=(signal,"x") )
 
 
     # ===============================================================================
@@ -247,11 +261,15 @@ class PlotFrame(tk.Frame):
         plt.cla()
 
         # Plot data
-        for idx, signal in enumerate(self.data):
-            self.ax.plot( self.timestamp, self.data[idx], label=self.meas_file_header[idx])
+        #for idx, signal in enumerate(self.data):
+        #    self.ax.plot( self.timestamp, self.data[idx], label=self.meas_file_header[idx])
+
+        # Refresh plot configs
+        self.__refresh_plot_configs()
 
         # Refresh matplotlib library
-        plt.draw()
+        #plt.draw()
+
 
     # ===============================================================================
     # @brief:   Number of plots change callback
@@ -271,13 +289,14 @@ class PlotFrame(tk.Frame):
         self.num_of_plot = int( self.plot_num_combo.get() )
 
         # Create subplots
-        self.ax = self.fig.subplots( nrows=self.num_of_plot, ncols=1)
+        self.ax = self.fig.subplots( nrows=self.num_of_plot, ncols=1, sharex=True, sharey=False)
 
         # Refresh plot configs
         self.__refresh_plot_configs()
 
         # Refresh matplotlib library
         plt.draw()
+
 
 
     def __refresh_plot_configs(self):
@@ -295,6 +314,127 @@ class PlotFrame(tk.Frame):
 
 
 
+
+    def __left_m_click_table(self, e):
+
+        iid = self.par_plot_table.identify_row(e.y)
+
+        if iid:
+            self.par_plot_table.selection_set(iid)    
+
+            # Store selected parameter
+            self.par_selected = int(self.par_plot_table.selection()[0])
+
+            # Popup menu
+            self.par_table_menu.tk_popup(e.x_root, e.y_root)  
+
+        else:
+            # mouse pointer not over item
+            # occurs when items do not fill frame
+            # no action required
+            pass
+
+    def __right_m_click_table(self, e):
+        pass
+
+
+    def __add_to_plot_1(self):
+        
+        # Signal not jet ploted on plot 0
+        if 0 != self.meas_signals[self.par_selected]["plot"]:
+
+            # Update table plot number
+            self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"1" ))
+
+            # Assign signal plot number
+            self.meas_signals[self.par_selected]["plot"] = 0
+
+            # Get signal data and name
+            data = self.meas_signals[self.par_selected]["data"]
+            name = self.meas_signals[self.par_selected]["name"]
+
+            # Plot data
+            if 1 == self.num_of_plot:
+                #plot_line = self.ax.plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
+                plot_line = self.ax.plot( self.timestamp, data, label=name )
+            else:
+                #plot_line = self.ax[0].plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
+                plot_line = self.ax[0].plot( self.timestamp, data, label=name )
+
+            # Assign plot line
+            self.meas_signals[self.par_selected]["line"] = plot_line
+
+            # Refresh matplotlib library
+            plt.draw()
+
+
+
+
+    def __add_to_plot_2(self):
+        
+        # Update table plot number
+        self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"2" ))
+
+        # Plot data
+        if self.num_of_plot > 1:
+            self.ax[1].plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
+
+            # Refresh matplotlib library
+            plt.draw()
+
+
+    def __add_to_plot_3(self):
+
+        # Update table plot number
+        self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"3" ))
+
+
+        # Plot data
+        if self.num_of_plot > 2:
+            self.ax[2].plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
+
+            # Refresh matplotlib library
+            plt.draw()
+        
+
+    def __add_to_plot_4(self):
+    
+        # Update table plot number
+        self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"4" ))
+
+
+        # Plot data
+        if self.num_of_plot > 3:
+            self.ax[3].plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
+
+            # Refresh matplotlib library
+            plt.draw()
+        
+
+    def __remove_from_plot(self):
+
+        # Get plot from which to remove
+        plot_num_to_remove = 0
+
+        # Update table plot number
+        self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"x" ))
+
+        # Check if signal is even plot
+        # TODO: 
+
+        # Plot data
+        if 1 == self.num_of_plot:
+            self.ax.lines.remove( self.ax.lines[self.par_selected] )
+        else:
+            self.ax[plot_num_to_remove].lines.remove( self.ax[plot_num_to_remove].lines[self.par_selected] )
+
+        
+
+        # Refresh matplotlib library
+        plt.draw()
+
+
+        
 
 
 
