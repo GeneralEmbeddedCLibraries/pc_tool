@@ -29,9 +29,6 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-
-
-
 #################################################################################################
 ##  DEFINITIONS
 #################################################################################################
@@ -83,7 +80,7 @@ class PlotFrame(tk.Frame):
 
         # Measured data
         self.timestamp = []
-        self.meas_file_header = []
+        self.meas_signals = []
 
         # Create info label
         self.frame_label = tk.Label(self, text="Plot Measured Data", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
@@ -207,9 +204,6 @@ class PlotFrame(tk.Frame):
 
             # Init timestamp
             self.timestamp = []
-            self.data = []              # TODO: Omit this
-            self.meas_file_header = []  # TODO: Omit this
-
             self.meas_signals = []
 
             # Go thru file
@@ -218,9 +212,6 @@ class PlotFrame(tk.Frame):
                 # Read header
                 if 0 == idx:
                     for h in row:
-                        self.meas_file_header.append( h )
-
-                        # Prepare dictionary of measured data
                         self.meas_signals.append( { "name": h, "data": [], "plot": None, "line": None } )
 
                 # Read data
@@ -228,28 +219,27 @@ class PlotFrame(tk.Frame):
                 
                     if idx == 1:
                         self.timestamp.append( 0 )
-
-                        for pos, signal in enumerate( self.meas_file_header ):
-                            self.data.append( [ ( float( row[pos] )) ])
-
                     else:
                         self.timestamp.append( self.timestamp[-1] + LOG_FILE_FIXED_TIMESTAMP )
                 
-                        # Accumulate data
-                        for pos, signal in enumerate( self.meas_file_header ):
-                            self.data[pos].append( float( row[pos] ))   # TODO: Omit self.data...
 
-                            self.meas_signals[pos]["data"].append( float( row[pos] ))
+                    # Get signal data
+                    for num, signal in enumerate( self.meas_signals ):
+                        signal["data"].append( float( row[num] ))
 
-
+    # ===============================================================================
+    # @brief:   Update parameter table
+    #
+    # @return:      void
+    # ===============================================================================   
     def __table_update(self):
 
         # Clean table
         self.__table_clear()
 
         # List all signals defined in header
-        for idx, signal in enumerate( self.meas_file_header ):
-            self.par_plot_table.insert(parent='',index='end',iid=idx,text="", values=(signal,"x") )
+        for idx, signal in enumerate( self.meas_signals ):
+            self.par_plot_table.insert(parent='',index='end',iid=idx,text="", values=(signal["name"],"x") )
 
 
     # ===============================================================================
@@ -261,12 +251,17 @@ class PlotFrame(tk.Frame):
         for i in self.par_plot_table.get_children():
             self.par_plot_table.delete(i)
 
-
+    # ===============================================================================
+    # @brief:   Update all subplots
+    #
+    # @return:      void
+    # ===============================================================================   
     def __update_all_plots(self):
 
         # Clean plot
         plt.cla()
 
+        # Go thru all measured signal
         for idx, signal in enumerate( self.meas_signals ):
             
             # Get signal name, assigned plot and data
@@ -277,21 +272,20 @@ class PlotFrame(tk.Frame):
             # Plot if signal is already ploted
             if None != plot:
 
-                # Plot data
+                # Single plot
                 if 1 == self.num_of_plot:
 
                     # Plot only signals that are assign to 0 plot
                     if 0 == plot:
-                        signal["line"]  = self.ax.plot( self.timestamp, self.data[idx], label=name )
+                        signal["line"]  = self.ax.plot( self.timestamp, data, label=name )
                         self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
-
+                # Multi plot
                 else:
-
+                    
+                    # Draw only if plot is available
                     if plot < self.num_of_plot:
-
-                        signal["line"] = self.ax[plot].plot( self.timestamp, self.data[idx], label=name )
-
+                        signal["line"] = self.ax[plot].plot( self.timestamp, data, label=name )
                         self.ax[plot].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
         # Refresh plot configs
@@ -299,7 +293,6 @@ class PlotFrame(tk.Frame):
 
         # Refresh matplotlib library
         plt.draw()
-
 
     # ===============================================================================
     # @brief:   Number of plots change callback
@@ -324,6 +317,7 @@ class PlotFrame(tk.Frame):
         # Refresh all plots
         self.__update_all_plots()
 
+        # Disable menu for adding/removing plots
         if 1 == self.num_of_plot:
             self.par_table_menu.entryconfig("Add to plot 1", state="normal")
             self.par_table_menu.entryconfig("Add to plot 2", state="disabled")
@@ -406,10 +400,10 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if 1 == self.num_of_plot:
-                lines = self.ax.plot( self.timestamp, self.data[self.par_selected], label=name )
+                lines = self.ax.plot( self.timestamp, data, label=name )
                 self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
             else:
-                lines = self.ax[0].plot( self.timestamp, self.data[self.par_selected], label=name )
+                lines = self.ax[0].plot( self.timestamp, data, label=name )
                 self.ax[0].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
             # Assign plot line
@@ -440,7 +434,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 1:
-                line = self.ax[1].plot( self.timestamp, self.data[self.par_selected], label=name)
+                line = self.ax[1].plot( self.timestamp, data, label=name)
                 self.ax[1].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -470,7 +464,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 2:
-                line = self.ax[2].plot( self.timestamp, self.data[self.par_selected], label=name)
+                line = self.ax[2].plot( self.timestamp, data, label=name)
                 self.ax[2].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -501,7 +495,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 3:
-                line = self.ax[3].plot( self.timestamp, self.data[self.par_selected], label=name)
+                line = self.ax[3].plot( self.timestamp, data, label=name)
                 self.ax[3].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
