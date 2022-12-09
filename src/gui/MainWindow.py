@@ -146,6 +146,10 @@ class MainWindow():
         #self.plot_frame.grid(       column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S,                padx=0, pady=0    )    # Hide that frame
         self.com_frame.grid(        column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S,                padx=0, pady=0    )
         
+        self.nav_frame.btn_com.set_active(1)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(0)
 
     # Leave for future improvements
     def __init_menu_bar(self):
@@ -172,6 +176,11 @@ class MainWindow():
         self.par_frame.grid_forget()
         self.plot_frame.grid_forget()
         self.com_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)
+
+        self.nav_frame.btn_com.set_active(1)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(0)
   
     # ===============================================================================
     # @brief:   Change main window to command line interface frame
@@ -186,6 +195,11 @@ class MainWindow():
         
         # Focus on command entry
         self.cli_frame.cmd_entry_focus(None)
+
+        self.nav_frame.btn_com.set_active(0)
+        self.nav_frame.btn_cli.set_active(1)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(0)
       
     # ===============================================================================
     # @brief:   Change main window to device parameter frame
@@ -196,7 +210,12 @@ class MainWindow():
         self.com_frame.grid_forget()
         self.cli_frame.grid_forget()
         self.plot_frame.grid_forget()
-        self.par_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
+        self.par_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)     
+
+        self.nav_frame.btn_com.set_active(0)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(1)
+        self.nav_frame.btn_plot.set_active(0) 
 
     # ===============================================================================
     # @brief:   Change main window to plot frame
@@ -208,6 +227,11 @@ class MainWindow():
         self.cli_frame.grid_forget()
         self.par_frame.grid_forget()
         self.plot_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
+
+        self.nav_frame.btn_com.set_active(0)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(1)
 
     # ===============================================================================
     # @brief:   Change default table style

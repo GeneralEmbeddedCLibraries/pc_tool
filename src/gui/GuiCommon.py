@@ -53,9 +53,12 @@ class GuiColor():
     btn_hoover_bg: str = "#1177bb"
 
     # Navigation button
-    nav_btn_bg: str = "#16825d"
-    nav_btn_fg: str = "#ffffff"
-    nav_btn_hoover_bg: str = "#1a996c"
+    nav_btn_bg: str = sub_1_bg
+    nav_btn_fg: str = "#999999"
+    nav_btn_unactive_fg: str = "#999999"
+    nav_btn_active_fg: str = "#ffffff"
+    nav_btn_hoover_fg: str = "#ffffff"
+    nav_btn_hoover_bg: str = sub_1_bg
 
     # Swich button
     sw_on_btn_bg:           str = "#00e600"
@@ -263,6 +266,8 @@ class NavigationButton():
         self.btn.bind("<Enter>", self.__btn_enter)
         self.btn.bind("<Leave>", self.__btn_leave)
 
+        self.active = False
+
     # ===============================================================================
     # @brief:   Get current button label
     #
@@ -322,7 +327,8 @@ class NavigationButton():
     # @return:      void
     # ===============================================================================  
     def __btn_enter(self, e):
-        self.btn["bg"] = GuiColor.nav_btn_hoover_bg
+        #self.btn["bg"] = GuiColor.nav_btn_hoover_bg
+        self.btn["fg"] = GuiColor.nav_btn_active_fg
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse exit
@@ -331,7 +337,19 @@ class NavigationButton():
     # @return: void
     # ===============================================================================  
     def __btn_leave(self, e):
-        self.btn["bg"] = GuiColor.nav_btn_bg
+        #self.btn["bg"] = GuiColor.nav_btn_bg
+        if not self.active:
+            self.btn["fg"] = GuiColor.nav_btn_unactive_fg
+
+
+
+    def set_active(self, active):
+        self.active = active
+
+        if active:
+            self.btn.config(fg=GuiColor.nav_btn_active_fg, font=GuiFont.heading_2_bold)
+        else:
+            self.btn.config(fg=GuiColor.nav_btn_unactive_fg, font=GuiFont.heading_2)
 
 
 # ===============================================================================
