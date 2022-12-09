@@ -109,7 +109,8 @@ class PlotFrame(tk.Frame):
 
         # Matplotlib figure
         self.fig, self.ax = plt.subplots(figsize=(5, 4), dpi=100)
-        
+        self.fig.tight_layout()
+
         # Customize layout
         plt.subplots_adjust(left=PLOT_ADJUST_LEFT, right=PLOT_ADJUST_RIGHT, top=PLOT_ADJUST_TOP, bottom=PLOT_ADJUST_BOTTOM, wspace=PLOT_ADJUST_WSPACE, hspace=PLOT_ADJUST_HSPACE)	
 
@@ -122,7 +123,9 @@ class PlotFrame(tk.Frame):
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
                 
         # Buttons
-        self.import_btn = NormalButton(self, text="Import", command=self.__import_btn_click, width=30) 
+        self.import_btn     = NormalButton(self, text="Import", command=self.__import_btn_click,    width=30) 
+        self.refresh_btn    = NormalButton(self, text="Refresh", command=self.__refresh_btn_callback,     width=14) 
+        self.clear_all_btn  = NormalButton(self, text="Clean All", command=self.__clean_all_btn_callback,    width=14) 
 
         # Create table
         self.par_plot_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
@@ -130,14 +133,14 @@ class PlotFrame(tk.Frame):
         self.par_plot_table.bind("<Button-1>", self.__right_m_click_table)
 
         self.par_table_menu = tk.Menu(self.frame_label, tearoff=False, font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.par_table_menu.add_command(label="Add to plot 1",      command=self.__add_to_plot_1)
-        self.par_table_menu.add_command(label="Add to plot 2",      command=self.__add_to_plot_2)
-        self.par_table_menu.add_command(label="Add to plot 3",      command=self.__add_to_plot_3)
-        self.par_table_menu.add_command(label="Add to plot 4",      command=self.__add_to_plot_4)
-        self.par_table_menu.add_command(label="Remove from plot",   command=self.__remove_selected_line_from_plot)
+        self.par_table_menu.add_command(label="Add to plot 1",      command=self.__add_to_plot_1, state="normal")
+        self.par_table_menu.add_command(label="Add to plot 2",      command=self.__add_to_plot_2, state="disabled")
+        self.par_table_menu.add_command(label="Add to plot 3",      command=self.__add_to_plot_3, state="disabled")
+        self.par_table_menu.add_command(label="Add to plot 4",      command=self.__add_to_plot_4, state="disabled")
+        self.par_table_menu.add_command(label="Remove from plot",   command=self.__remove_selected_line_from_plot, state="normal")
 
         # Number of plots
-        self.plot_num_label = tk.Label(self, text="Number of plots", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.plot_num_label = tk.Label(self, text="Number of plots:", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         self.plot_num_combo = GuiCombobox(self, options=["1","2","3","4"], font=GuiFont.normal_bold, state="readonly", width=2, justify="left")
         self.plot_num_combo.set("1")
         self.num_of_plot = 1
@@ -159,10 +162,12 @@ class PlotFrame(tk.Frame):
         # Self frame layout
         self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
         self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10 )
-        self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=10, pady=10 )
+        self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
         self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
         self.par_plot_table.grid(   column=1, row=2, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.import_btn.grid(       column=1, row=3, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=10, pady=10 )
+        self.refresh_btn.grid(      column=1, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5, pady=5 )
+        self.clear_all_btn.grid(    column=2, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5, pady=5 )
+        self.import_btn.grid(       column=1, row=4, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5, pady=10 )
 
         # Refresh plot configs
         self.__refresh_plot_configs()
@@ -260,10 +265,6 @@ class PlotFrame(tk.Frame):
         # Clean plot
         plt.cla()
 
-        # Plot data
-        #for idx, signal in enumerate(self.data):
-        #    self.ax.plot( self.timestamp, self.data[idx], label=self.meas_file_header[idx])
-
         for idx, signal in enumerate( self.meas_signals ):
             
             # Get signal name, assigned plot and data
@@ -321,18 +322,39 @@ class PlotFrame(tk.Frame):
         # Refresh all plots
         self.__update_all_plots()
 
+        if 1 == self.num_of_plot:
+            self.par_table_menu.entryconfig("Add to plot 1", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 2", state="disabled")
+            self.par_table_menu.entryconfig("Add to plot 3", state="disabled")
+            self.par_table_menu.entryconfig("Add to plot 4", state="disabled")
+
+        elif 2 == self.num_of_plot:
+            self.par_table_menu.entryconfig("Add to plot 1", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 2", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 3", state="disabled")
+            self.par_table_menu.entryconfig("Add to plot 4", state="disabled")
+
+        elif 3 == self.num_of_plot:
+            self.par_table_menu.entryconfig("Add to plot 1", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 2", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 3", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 4", state="disabled")
+
+        elif 4 == self.num_of_plot:
+            self.par_table_menu.entryconfig("Add to plot 1", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 2", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 3", state="normal")
+            self.par_table_menu.entryconfig("Add to plot 4", state="normal")
 
 
     def __refresh_plot_configs(self):
 
         if 1 == self.num_of_plot:
             self.ax.grid(True, alpha=0.25)
-            #self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12) #TODO: Remove
             self.ax.set_xlabel("Time [sec]")
         else:
             for n in range( self.num_of_plot ):
                 self.ax[n].grid(True, alpha=0.25)
-                #self.ax[n].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12) # TODO: Remove
             
             self.ax[self.num_of_plot-1].set_xlabel("Time [sec]")
 
@@ -383,8 +405,10 @@ class PlotFrame(tk.Frame):
             # Plot data
             if 1 == self.num_of_plot:
                 lines = self.ax.plot( self.timestamp, self.data[self.par_selected], label=name )
+                self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
             else:
                 lines = self.ax[0].plot( self.timestamp, self.data[self.par_selected], label=name )
+                self.ax[0].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
             # Assign plot line
             self.meas_signals[self.par_selected]["line"] = lines
@@ -415,6 +439,7 @@ class PlotFrame(tk.Frame):
             # Plot data
             if self.num_of_plot > 1:
                 line = self.ax[1].plot( self.timestamp, self.data[self.par_selected], label=name)
+                self.ax[1].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
                 self.meas_signals[self.par_selected]["line"] = line
@@ -444,6 +469,7 @@ class PlotFrame(tk.Frame):
             # Plot data
             if self.num_of_plot > 2:
                 line = self.ax[2].plot( self.timestamp, self.data[self.par_selected], label=name)
+                self.ax[2].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
                 self.meas_signals[self.par_selected]["line"] = line
@@ -474,6 +500,7 @@ class PlotFrame(tk.Frame):
             # Plot data
             if self.num_of_plot > 3:
                 line = self.ax[3].plot( self.timestamp, self.data[self.par_selected], label=name)
+                self.ax[3].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
                 self.meas_signals[self.par_selected]["line"] = line
@@ -497,10 +524,12 @@ class PlotFrame(tk.Frame):
             # Signle plot
             if 1 == self.num_of_plot:
                 self.ax.lines.remove( line[0] )
+                self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
             
             # Multiplot
             else:
                 self.ax[plot].lines.remove( line[0] )
+                self.ax[plot].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
             # Refresh matplotlib library
             plt.draw()
@@ -508,6 +537,14 @@ class PlotFrame(tk.Frame):
             # Clear global signals data
             self.meas_signals[self.par_selected]["plot"] = None
             self.meas_signals[self.par_selected]["line"] = None
+
+    def __refresh_btn_callback(self):
+        self.__plot_num_change(None)
+
+    def __clean_all_btn_callback(self):
+        for idx, _ in enumerate( self.meas_signals ):
+            self.par_selected = idx
+            self.__remove_selected_line_from_plot()
 
 
 #################################################################################################
