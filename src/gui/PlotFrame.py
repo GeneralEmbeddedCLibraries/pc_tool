@@ -97,12 +97,12 @@ class PlotFrame(tk.Frame):
         self.PLOT_TITLE_SIZE         = 16
         self.PLOT_AXIS_LABEL_SIZE    = 12
 
-        PLOT_ADJUST_LEFT        = 0.038
-        PLOT_ADJUST_BOTTOM      = 0.083
+        PLOT_ADJUST_LEFT        = 0.05
+        PLOT_ADJUST_BOTTOM      = 0.048
         PLOT_ADJUST_RIGHT       = 0.99
-        PLOT_ADJUST_TOP         = 0.94
+        PLOT_ADJUST_TOP         = 0.99
         PLOT_ADJUST_WSPACE		= 0.2
-        PLOT_ADJUST_HSPACE		= 0.2
+        PLOT_ADJUST_HSPACE		= 0.08
             
         # Plot frame
         self.plot_frame = tk.Frame(self, bg=GuiColor.main_bg)
@@ -141,7 +141,7 @@ class PlotFrame(tk.Frame):
 
         # Number of plots
         self.plot_num_label = tk.Label(self, text="Number of plots:", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.plot_num_combo = GuiCombobox(self, options=["1","2","3","4"], font=GuiFont.normal_bold, state="readonly", width=2, justify="left")
+        self.plot_num_combo = GuiCombobox(self, options=["1","2","3","4"], font=GuiFont.normal_bold, state="disable", width=2, justify="left")
         self.plot_num_combo.set("1")
         self.num_of_plot = 1
 
@@ -160,7 +160,7 @@ class PlotFrame(tk.Frame):
 
 
         # Self frame layout
-        self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
+        #self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
         self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10 )
         self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
         self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
@@ -192,6 +192,9 @@ class PlotFrame(tk.Frame):
 
             # Update plot
             self.__update_all_plots()
+
+            # Enable multiplot selection
+            self.plot_num_combo.configure(state="readonly")
 
 
 
@@ -523,13 +526,19 @@ class PlotFrame(tk.Frame):
 
             # Signle plot
             if 1 == self.num_of_plot:
-                self.ax.lines.remove( line[0] )
-                self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
+
+                # Remove only from that first plot 
+                if 0 == plot:
+                    self.ax.lines.remove( line[0] )
+                    self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
             
             # Multiplot
             else:
-                self.ax[plot].lines.remove( line[0] )
-                self.ax[plot].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
+
+                # If plot exists
+                if plot < self.num_of_plot:
+                    self.ax[plot].lines.remove( line[0] )
+                    self.ax[plot].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
             # Refresh matplotlib library
             plt.draw()
