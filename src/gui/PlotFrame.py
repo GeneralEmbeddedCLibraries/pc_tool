@@ -161,7 +161,7 @@ class PlotFrame(tk.Frame):
 
         # Self frame layout
         #self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
-        self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10 )
+        self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0, pady=0 )
         self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
         self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
         self.par_plot_table.grid(   column=1, row=2, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
@@ -187,8 +187,9 @@ class PlotFrame(tk.Frame):
             # Update table of parameters
             self.__table_update()
 
+            # TODO: Move that to status bar
             # Setup file
-            self.fig.suptitle( "File: \"%s\"" % self.meas_file.split("/")[-1]  , fontsize=self.PLOT_MAIN_TITLE_SIZE )
+            #self.fig.suptitle( "File: \"%s\"" % self.meas_file.split("/")[-1]  , fontsize=self.PLOT_MAIN_TITLE_SIZE )
 
             # Update plot
             self.__update_all_plots()

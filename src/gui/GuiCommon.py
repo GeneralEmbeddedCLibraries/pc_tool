@@ -257,7 +257,7 @@ class NavigationButton():
     def __init__(self, root, text=None, command=None):
 
         # Create tkinter button
-        self.btn = tk.Button(root, text=text, font=GuiFont.nav_btn, bg=GuiColor.nav_btn_bg, fg=GuiColor.nav_btn_fg, activebackground=GuiColor.nav_btn_bg, activeforeground=GuiColor.nav_btn_fg, borderwidth=0, relief=tk.FLAT, width=10, command=command)
+        self.btn = tk.Button(root, text=text, font=GuiFont.nav_btn, bg=GuiColor.nav_btn_bg, fg=GuiColor.nav_btn_fg, activebackground=GuiColor.nav_btn_bg, activeforeground=GuiColor.nav_btn_fg, borderwidth=0, relief=tk.FLAT, width=5, command=command)
         
         # Bind button actions
         self.btn.bind("<Enter>", self.__btn_enter)

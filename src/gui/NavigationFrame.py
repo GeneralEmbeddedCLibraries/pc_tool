@@ -61,10 +61,10 @@ class NavigationFrame(tk.Frame):
         self.btn_plot   = NavigationButton(self, text="PLOT", command=self.btn_callbacks[3])
         
         # Setup layout
-        self.btn_com.pack(padx=10, pady=10, fill="x")
-        self.btn_cli.pack(padx=10, pady=10, fill="x")
-        self.btn_par.pack(padx=10, pady=10, fill="x")
-        self.btn_plot.pack(padx=10, pady=10, fill="x")
+        self.btn_com.pack(padx=0, pady=10, fill="x")
+        self.btn_cli.pack(padx=0, pady=10, fill="x")
+        self.btn_par.pack(padx=0, pady=10, fill="x")
+        self.btn_plot.pack(padx=0, pady=10, fill="x")
 
 
 #################################################################################################
