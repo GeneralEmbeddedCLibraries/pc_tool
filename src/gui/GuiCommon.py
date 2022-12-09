@@ -15,7 +15,7 @@
 #################################################################################################
 from dataclasses import dataclass
 import tkinter as tk
-
+from tkinter import ttk
 
 #################################################################################################
 ##  DEFINITIONS
@@ -578,6 +578,115 @@ class AddRemoveButton():
     # ===============================================================================  
     def destroy(self):
         self.btn.destroy()
+
+# ===============================================================================
+#
+#  @brief:   Custom implementation of Combobox button
+#
+# ===============================================================================  
+class GuiCombobox():
+
+    # ===============================================================================
+    # @brief:   Combobox constructor
+    #
+    # @param[in]:   root        - Root window
+    # @param[in]:   options     - Options to show on dropdown of widget
+    # @param[in]:   command     - Callback function registration on change event
+    # @return:      void
+    # ===============================================================================  
+    def __init__(self, root, options, command=None, *args, **kwargs):
+
+        """
+        # Setup custom style
+        style = ttk.Style()
+        #style.theme_use('clam')
+        style.map('custom.TCombobox', fieldbackground=[("readonly",GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', foreground=[("readonly",GuiColor.sub_1_fg)] )
+        style.map('custom.TCombobox', background =[("readonly",GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', selectbackground=[("readonly",GuiColor.sub_1_bg)])
+        style.map('custom.TCombobox', selectforeground=[("readonly",GuiColor.sub_1_fg)])
+        style.map('custom.TCombobox', bordercolor =[("readonly",GuiColor.sub_1_bg)])
+        style.map('custom.TCombobox', arrowcolor  =[("readonly",GuiColor.sub_1_fg)])
+        style.map('custom.TCombobox', arrowsize   =[("readonly",14)])
+        style.map('custom.TCombobox', insertwidth = [("readonly", 0)] )
+        style.map('custom.TCombobox', insertcolor  = [("readonly", GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', lightcolor   = [("readonly", GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', placeholderforeground    = [("readonly", GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', postoffset     = [("readonly", 0)] )
+        style.map('custom.TCombobox', darkcolor      = [("readonly", GuiColor.sub_1_bg)] )
+
+        # Create widget
+        self.combo = ttk.Combobox(root, values=options, style='custom.TCombobox', *args, **kwargs)
+
+        """
+
+        # Create widget
+        self.combo = ttk.Combobox(root, values=options, *args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Put combobox on grid
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def grid(self, *args, **kwargs):
+        self.combo.grid(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Remove cobobox from grid
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def grid_forget(self, *args, **kwargs):
+        self.combo.grid_forget(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Set combobox selected value
+    #
+    # @param[in]:   val - Value to select field
+    # @return:      void
+    # ===============================================================================  
+    def set(self, val):
+        self.combo.set(val)
+
+    # ===============================================================================
+    # @brief:   Set combobox option value
+    #
+    # @param[in]:   list_of_options - List of options
+    # @return:      void
+    # =============================================================================== 
+    def set_options(self, list_of_options):
+        self.combo["values"] = list_of_options
+
+    # ===============================================================================
+    # @brief:   Get combobox selected value
+    #
+    # @return:      currently selected value
+    # ===============================================================================  
+    def get(self):
+        return self.combo.get()
+
+    # ===============================================================================
+    # @brief:   Bind combo comand
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def bind(self, *args, **kwargs):
+        self.combo.bind(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Post-init configurations
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def configure(self, *args, **kwargs):
+        self.combo.configure(*args, **kwargs)
+
+
+
 
 #################################################################################################
 ##  END OF FILE

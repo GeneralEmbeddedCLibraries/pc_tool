@@ -63,8 +63,9 @@ class PlotFrame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.configure(bg=GuiColor.main_bg)
 
-        self.rowconfigure(1, weight=1)
-        self.columnconfigure(0, weight=1)
+        self.rowconfigure(2, weight=1)
+        self.columnconfigure(0, weight=100)
+        self.columnconfigure(1, weight=1)
 
         # Init widgets
         self.__init_widgets()
@@ -126,6 +127,15 @@ class PlotFrame(tk.Frame):
         # Create table
         self.par_plot_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
 
+        # Number of plots
+        self.plot_num_label = tk.Label(self, text="Number of plots", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.plot_num_combo = GuiCombobox(self, options=["1","2","3","4"], font=GuiFont.normal_bold, state="readonly", width=2, justify="left")
+        self.plot_num_combo.set("1")
+        self.num_of_plot = 1
+
+        # Bind to change        
+        self.plot_num_combo.bind("<<ComboboxSelected>>", self.__plot_num_change)
+
         # Define columns
         self.par_plot_table["columns"] = ("Par", "Plot")
         self.par_plot_table.column("#0",                    width=0,                    stretch=tk.NO      )
@@ -138,11 +148,15 @@ class PlotFrame(tk.Frame):
 
 
         # Self frame layout
-        self.frame_label.grid(      column=0, row=0,            sticky=tk.W,                   padx=20, pady=10 )
-        self.plot_frame.grid(       column=0, row=1, rowspan=4, sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10 )
-        self.par_plot_table.grid(   column=1, row=1,            sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.import_btn.grid(       column=1, row=2,            sticky=tk.W+tk.S+tk.E,         padx=10, pady=10 )
+        self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
+        self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=10, pady=10 )
+        self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=10, pady=10 )
+        self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+        self.par_plot_table.grid(   column=1, row=2, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+        self.import_btn.grid(       column=1, row=3, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=10, pady=10 )
 
+        # Refresh plot configs
+        self.__refresh_plot_configs()
 
 
     def __import_btn_click(self):
@@ -211,7 +225,7 @@ class PlotFrame(tk.Frame):
         for idx, signal in enumerate( self.meas_file_header ):
 
             signal = signal.replace(" ", "_")
-            self.par_plot_table.insert(parent='',index='end',iid=idx,text="", values=( signal ) )
+            self.par_plot_table.insert(parent='',index='end',iid=idx,text="", values=signal )
 
 
     # ===============================================================================
@@ -236,14 +250,48 @@ class PlotFrame(tk.Frame):
         for idx, signal in enumerate(self.data):
             self.ax.plot( self.timestamp, self.data[idx], label=self.meas_file_header[idx])
 
-        # Configure plot
-        self.ax.set_xlabel("Time [sec]")
-        self.ax.grid(True, alpha=0.25)
-        self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
+        # Refresh matplotlib library
+        plt.draw()
+
+    # ===============================================================================
+    # @brief:   Number of plots change callback
+    #
+    # @param[in]:   event - Change combobox event
+    # @return:      void
+    # =============================================================================== 
+    def __plot_num_change(self, event):
+
+        if 1 == self.num_of_plot:
+            self.ax.remove()
+        else:
+            for n in range( self.num_of_plot ):
+                self.ax[n].remove()
+
+        # Refesh number of plots
+        self.num_of_plot = int( self.plot_num_combo.get() )
+
+        # Create subplots
+        self.ax = self.fig.subplots( nrows=self.num_of_plot, ncols=1)
+
+        # Refresh plot configs
+        self.__refresh_plot_configs()
 
         # Refresh matplotlib library
         plt.draw()
 
+
+    def __refresh_plot_configs(self):
+
+        if 1 == self.num_of_plot:
+            self.ax.grid(True, alpha=0.25)
+            self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
+            self.ax.set_xlabel("Time [sec]")
+        else:
+            for n in range( self.num_of_plot ):
+                self.ax[n].grid(True, alpha=0.25)
+                self.ax[n].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
+            
+            self.ax[self.num_of_plot-1].set_xlabel("Time [sec]")
 
 
 
