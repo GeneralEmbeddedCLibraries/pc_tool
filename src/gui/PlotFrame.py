@@ -194,8 +194,9 @@ class PlotFrame(tk.Frame):
             # Setup open file name to status line
             self.import_callback( "%s" % self.meas_file )
 
-            # Update plot
-            self.__update_all_plots()
+            # Remove all plots from graphs
+            self.__clean_all_btn_callback()
+            self.__refresh_btn_callback()
 
             # Enable multiplot selection
             self.plot_num_combo.configure(state="readonly")
