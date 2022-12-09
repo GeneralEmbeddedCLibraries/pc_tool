@@ -339,6 +339,9 @@ class PlotFrame(tk.Frame):
 
 
     def __add_to_plot_1(self):
+
+
+        print("Selected parameter: %s" % self.meas_signals[self.par_selected]["name"] )
         
         # Signal not jet ploted on plot 0
         if 0 != self.meas_signals[self.par_selected]["plot"]:
@@ -356,31 +359,48 @@ class PlotFrame(tk.Frame):
             # Plot data
             if 1 == self.num_of_plot:
                 #plot_line = self.ax.plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
-                plot_line = self.ax.plot( self.timestamp, data, label=name )
+                lines = self.ax.plot( self.timestamp, self.data[self.par_selected], label=name )
             else:
                 #plot_line = self.ax[0].plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
-                plot_line = self.ax[0].plot( self.timestamp, data, label=name )
+                lines = self.ax[0].plot( self.timestamp, self.data[self.par_selected], label=name )
 
             # Assign plot line
-            self.meas_signals[self.par_selected]["line"] = plot_line
+            self.meas_signals[self.par_selected]["line"] = lines
 
             # Refresh matplotlib library
             plt.draw()
+
+            print("Parameter added to plot: %s, plot:%s, line: %s" % ( self.meas_signals[self.par_selected]["name"], self.meas_signals[self.par_selected]["plot"], self.meas_signals[self.par_selected]["line"] ))
 
 
 
 
     def __add_to_plot_2(self):
         
-        # Update table plot number
-        self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"2" ))
+        # Signal not jet ploted on plot 1
+        if 1 != self.meas_signals[self.par_selected]["plot"]:
 
-        # Plot data
-        if self.num_of_plot > 1:
-            self.ax[1].plot( self.timestamp, self.data[self.par_selected], label=self.meas_file_header[self.par_selected])
+            # Update table plot number
+            self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"2" ))
+
+            # Assign signal plot number
+            self.meas_signals[self.par_selected]["plot"] = 1
+
+            # Get signal data and name
+            data = self.meas_signals[self.par_selected]["data"]
+            name = self.meas_signals[self.par_selected]["name"]
+
+            # Plot data
+            if self.num_of_plot > 1:
+                lines = self.ax[1].plot( self.timestamp, self.data[self.par_selected], label=name)
+
+            # Assign plot line
+            self.meas_signals[self.par_selected]["line"] = lines
 
             # Refresh matplotlib library
             plt.draw()
+
+
 
 
     def __add_to_plot_3(self):
@@ -413,27 +433,30 @@ class PlotFrame(tk.Frame):
 
     def __remove_from_plot(self):
 
-        # Get plot from which to remove
-        plot_num_to_remove = 0
+        # Is even signal plot
+        if None != self.meas_signals[self.par_selected]["plot"]:
 
-        # Update table plot number
-        self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"x" ))
+            # Update table plot number
+            self.par_plot_table.item(self.par_selected, values=(self.meas_signals[self.par_selected]["name"],"x" ))
 
-        # Check if signal is even plot
-        # TODO: 
+            # Get plot and line
+            plot = self.meas_signals[self.par_selected]["plot"]
+            line = self.meas_signals[self.par_selected]["line"]
 
-        # Plot data
-        if 1 == self.num_of_plot:
-            self.ax.lines.remove( self.ax.lines[self.par_selected] )
-        else:
-            self.ax[plot_num_to_remove].lines.remove( self.ax[plot_num_to_remove].lines[self.par_selected] )
+            # Signle plot
+            if 1 == self.num_of_plot:
+                self.ax.lines.remove( line[0] )
+            
+            # Multiplot
+            else:
+                self.ax[plot].lines.remove( line[0] )
 
-        
+            # Refresh matplotlib library
+            plt.draw()
 
-        # Refresh matplotlib library
-        plt.draw()
-
-
+            # Clear global signals data
+            self.meas_signals[self.par_selected]["plot"] = None
+            self.meas_signals[self.par_selected]["line"] = None
         
 
 
