@@ -139,7 +139,7 @@ class MainWindow():
         self.cli_frame      = CliFrame(self.master_win, btn_callbacks=[self.__cli_btn_enter])
         self.com_frame      = ComFrame(self.master_win, btn_callbacks=[self.__com_btn_connect])
         self.par_frame      = ParameterFrame(self.master_win, btn_callbacks=[self.__par_com_request])
-        self.plot_frame     = PlotFrame(self.master_win)
+        self.plot_frame     = PlotFrame(self.master_win, import_callback=self.__file_import_callback)
 
         # Layout
         self.nav_frame.grid(        column=0, row=1, sticky=tk.E+tk.W+tk.N+tk.S, rowspan=2,     padx=0, pady=0    )
@@ -604,6 +604,14 @@ class MainWindow():
         self.par_frame.store_all_btn.config(state=tk.DISABLED)
         self.par_frame.value_entry.config(state=tk.DISABLED)
 
+    # ===============================================================================
+    # @brief:   File imported callback
+    #
+    # @param[in]:   file_name   - Measurement data file name
+    # @return:      void
+    # ===============================================================================
+    def __file_import_callback(self, file_name):
+        self.status_frame.set_meas_file( file_name )
 
     # ===============================================================================
     # @brief:   Check if device message is raw traffic

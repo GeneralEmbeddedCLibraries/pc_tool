@@ -78,6 +78,9 @@ class StatusFrame(tk.Frame):
 
         # CPU load
         self.cpu_load_label = tk.Label(self, text="CPU 0%", font=GuiFont.status, bg=GuiColor.status_bg, fg=GuiColor.status_fg)
+        
+        # Measurement file 
+        self.meas_file_label = tk.Label(self, text="", font=GuiFont.status, bg=GuiColor.status_bg, fg=GuiColor.status_fg)
 
         # Self frame layout       
         self.rx_cnt_label.pack(         side="left",    padx=10, pady=0 )
@@ -86,6 +89,7 @@ class StatusFrame(tk.Frame):
         self.war_cnt_label.pack(        side="left",    padx=10, pady=0 )
         self.dev_par_num_label.pack(    side="left",    padx=10, pady=0 )
         self.cpu_load_label.pack(       side="left",    padx=10, pady=0 )
+        self.meas_file_label.pack(      side="left",    padx=10, pady=0 )
 
         self.com_status_label.pack(     side="right",   padx=10, pady=0 )
         self.port_baud_label.pack(      side="right",   padx=10, pady=0 )
@@ -212,6 +216,23 @@ class StatusFrame(tk.Frame):
     # ===============================================================================
     def clear_num_of_pars(self):
         self.set_num_of_pars(0)
+
+    # ===============================================================================
+    # @brief:   Set name of imported measurement file
+    #
+    # @param[in]:   file_name - Name of measurement file
+    # @return:      void
+    # ===============================================================================
+    def set_meas_file(self, file_name):
+        self.meas_file_label["text"] = str(file_name)
+
+    # ===============================================================================
+    # @brief:   Clear measurment file name
+    #
+    # @return:      void
+    # ===============================================================================
+    def clear_num_of_pars(self):
+        self.set_meas_file("")
 
     # ===============================================================================
     # @brief:   Set average CPU load 

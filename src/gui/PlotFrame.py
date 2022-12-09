@@ -58,8 +58,11 @@ LOG_FILE_DELIMITER              = ";"
 # ===============================================================================
 class PlotFrame(tk.Frame):
 
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, import_callback, *args, **kwargs):
         
+        # Import callback
+        self.import_callback = import_callback
+
         # Create frame
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.configure(bg=GuiColor.main_bg)
@@ -188,12 +191,12 @@ class PlotFrame(tk.Frame):
             # Update table of parameters
             self.__table_update()
 
-            # TODO: Move that to status bar
-            # Setup file
-            #self.fig.suptitle( "File: \"%s\"" % self.meas_file.split("/")[-1]  , fontsize=self.PLOT_MAIN_TITLE_SIZE )
+            # Setup open file name to status line
+            self.import_callback( "%s" % self.meas_file )
 
-            # Update plot
-            self.__update_all_plots()
+            # Remove all plots from graphs
+            self.__clean_all_btn_callback()
+            self.__refresh_btn_callback()
 
             # Enable multiplot selection
             self.plot_num_combo.configure(state="readonly")

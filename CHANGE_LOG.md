@@ -12,9 +12,12 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
  - Timestamp append to msg enable/disable option
  - Errors & Warnings color coded
  - Added automatic re-connection
+ - Added measured data ploting option (offline)
 
 ### Fixed
  - End string termination parsing
+ - Removed unused function
+ - Table coloring problems 
 
 ---
 ## V1.0.0 - 15.08.2022
