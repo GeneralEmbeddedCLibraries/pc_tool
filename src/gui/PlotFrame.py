@@ -134,7 +134,7 @@ class PlotFrame(tk.Frame):
         self.par_table_menu.add_command(label="Add to plot 2",      command=self.__add_to_plot_2)
         self.par_table_menu.add_command(label="Add to plot 3",      command=self.__add_to_plot_3)
         self.par_table_menu.add_command(label="Add to plot 4",      command=self.__add_to_plot_4)
-        self.par_table_menu.add_command(label="Remove from plot",   command=self.__remove_from_plot)
+        self.par_table_menu.add_command(label="Remove from plot",   command=self.__remove_selected_line_from_plot)
 
         # Number of plots
         self.plot_num_label = tk.Label(self, text="Number of plots", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
@@ -364,32 +364,9 @@ class PlotFrame(tk.Frame):
 
     def __add_to_plot_1(self):
 
-        # Signal already ploted 
-        if None != self.meas_signals[self.par_selected]["plot"]:
+        # Remove if already ploted
+        self.__remove_selected_line_from_plot()
 
-            # Update table plot number
-            self.par_plot_table.item(self.par_selected, values=(self.meas_signals[self.par_selected]["name"],"x" ))
-
-            # Get plot and line
-            plot = self.meas_signals[self.par_selected]["plot"]
-            line = self.meas_signals[self.par_selected]["line"]
-
-            # Signle plot
-            if 1 == self.num_of_plot:
-                self.ax.lines.remove( line[0] )
-            
-            # Multiplot
-            else:
-                self.ax[plot].lines.remove( line[0] )
-
-            # Refresh matplotlib library
-            plt.draw()
-
-            # Clear global signals data
-            self.meas_signals[self.par_selected]["plot"] = None
-            self.meas_signals[self.par_selected]["line"] = None
-
-        
         # Signal not jet ploted on plot 0
         if 0 != self.meas_signals[self.par_selected]["plot"]:
 
@@ -415,12 +392,12 @@ class PlotFrame(tk.Frame):
             # Refresh matplotlib library
             plt.draw()
 
-            print("Parameter added to plot: %s, plot:%s, line: %s" % ( self.meas_signals[self.par_selected]["name"], self.meas_signals[self.par_selected]["plot"], self.meas_signals[self.par_selected]["line"] ))
-
-
 
 
     def __add_to_plot_2(self):
+
+        # Remove if already ploted
+        self.__remove_selected_line_from_plot()
         
         # Signal not jet ploted on plot 1
         if 1 != self.meas_signals[self.par_selected]["plot"]:
@@ -446,9 +423,10 @@ class PlotFrame(tk.Frame):
                 plt.draw()
 
 
-
-
     def __add_to_plot_3(self):
+
+        # Remove if already ploted
+        self.__remove_selected_line_from_plot()
 
         # Signal not jet ploted on plot 1
         if 2 != self.meas_signals[self.par_selected]["plot"]:
@@ -472,9 +450,13 @@ class PlotFrame(tk.Frame):
 
                 # Refresh matplotlib library
                 plt.draw()
-        
+
+
 
     def __add_to_plot_4(self):
+
+        # Remove if already ploted
+        self.__remove_selected_line_from_plot()
     
         # Signal not jet ploted on plot 1
         if 3 != self.meas_signals[self.par_selected]["plot"]:
@@ -500,7 +482,7 @@ class PlotFrame(tk.Frame):
                 plt.draw()
         
 
-    def __remove_from_plot(self):
+    def __remove_selected_line_from_plot(self):
 
         # Is even signal plot
         if None != self.meas_signals[self.par_selected]["plot"]:
@@ -526,8 +508,6 @@ class PlotFrame(tk.Frame):
             # Clear global signals data
             self.meas_signals[self.par_selected]["plot"] = None
             self.meas_signals[self.par_selected]["line"] = None
-        
-
 
 
 #################################################################################################
