@@ -88,7 +88,6 @@ class PlotFrame(tk.Frame):
         # Create info label
         self.frame_label = tk.Label(self, text="Plot Measured Data", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
-
         # =============================================================================================
         ## PLOT CONFIGURATIONS
         # =============================================================================================
@@ -158,16 +157,15 @@ class PlotFrame(tk.Frame):
         self.par_plot_table.heading("Par",  text="Par",     anchor=tk.W         )
         self.par_plot_table.heading("Plot", text="Plot",    anchor=tk.CENTER    )
 
-
         # Self frame layout
-        #self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
-        self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0, pady=0 )
+        self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
+        self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0,  pady=0 )
         self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
         self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
         self.par_plot_table.grid(   column=1, row=2, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.refresh_btn.grid(      column=1, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5, pady=5 )
-        self.clear_all_btn.grid(    column=2, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5, pady=5 )
-        self.import_btn.grid(       column=1, row=4, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5, pady=10 )
+        self.refresh_btn.grid(      column=1, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.clear_all_btn.grid(    column=2, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.import_btn.grid(       column=1, row=4, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=10 )
 
         # Refresh plot configs
         self.__refresh_plot_configs()
@@ -396,15 +394,15 @@ class PlotFrame(tk.Frame):
         # Signal not jet ploted on plot 0
         if 0 != self.meas_signals[self.par_selected]["plot"]:
 
-            # Update table plot number
-            self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"1" ))
-
             # Assign signal plot number
             self.meas_signals[self.par_selected]["plot"] = 0
 
             # Get signal data and name
             data = self.meas_signals[self.par_selected]["data"]
             name = self.meas_signals[self.par_selected]["name"]
+
+            # Update table plot number
+            self.par_plot_table.item(self.par_selected, values=(name,"1" ))
 
             # Plot data
             if 1 == self.num_of_plot:
@@ -430,15 +428,15 @@ class PlotFrame(tk.Frame):
         # Signal not jet ploted on plot 1
         if 1 != self.meas_signals[self.par_selected]["plot"]:
 
-            # Update table plot number
-            self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"2" ))
-
             # Assign signal plot number
             self.meas_signals[self.par_selected]["plot"] = 1
 
             # Get signal data and name
             data = self.meas_signals[self.par_selected]["data"]
             name = self.meas_signals[self.par_selected]["name"]
+
+            # Update table plot number
+            self.par_plot_table.item(self.par_selected, values=(name,"2" ))
 
             # Plot data
             if self.num_of_plot > 1:
@@ -460,15 +458,15 @@ class PlotFrame(tk.Frame):
         # Signal not jet ploted on plot 1
         if 2 != self.meas_signals[self.par_selected]["plot"]:
 
-            # Update table plot number
-            self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"3" ))
-
             # Assign signal plot number
             self.meas_signals[self.par_selected]["plot"] = 2
 
             # Get signal data and name
             data = self.meas_signals[self.par_selected]["data"]
             name = self.meas_signals[self.par_selected]["name"]
+
+            # Update table plot number
+            self.par_plot_table.item(self.par_selected, values=(name,"3" ))
 
             # Plot data
             if self.num_of_plot > 2:
@@ -491,15 +489,15 @@ class PlotFrame(tk.Frame):
         # Signal not jet ploted on plot 1
         if 3 != self.meas_signals[self.par_selected]["plot"]:
 
-            # Update table plot number
-            self.par_plot_table.item(self.par_selected, values=(self.meas_file_header[self.par_selected],"4" ))
-
             # Assign signal plot number
             self.meas_signals[self.par_selected]["plot"] = 3
 
             # Get signal data and name
             data = self.meas_signals[self.par_selected]["data"]
             name = self.meas_signals[self.par_selected]["name"]
+
+            # Update table plot number
+            self.par_plot_table.item(self.par_selected, values=(name,"4" ))
 
             # Plot data
             if self.num_of_plot > 3:

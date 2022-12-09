@@ -266,6 +266,7 @@ class NavigationButton():
         self.btn.bind("<Enter>", self.__btn_enter)
         self.btn.bind("<Leave>", self.__btn_leave)
 
+        # Actie switch
         self.active = False
 
     # ===============================================================================
@@ -327,7 +328,6 @@ class NavigationButton():
     # @return:      void
     # ===============================================================================  
     def __btn_enter(self, e):
-        #self.btn["bg"] = GuiColor.nav_btn_hoover_bg
         self.btn["fg"] = GuiColor.nav_btn_active_fg
 
     # ===============================================================================
@@ -337,12 +337,15 @@ class NavigationButton():
     # @return: void
     # ===============================================================================  
     def __btn_leave(self, e):
-        #self.btn["bg"] = GuiColor.nav_btn_bg
         if not self.active:
             self.btn["fg"] = GuiColor.nav_btn_unactive_fg
 
-
-
+    # ===============================================================================
+    # @brief:   Set active flag
+    #
+    # @param[in]:   active  - Active flag
+    # @return:      void
+    # ===============================================================================  
     def set_active(self, active):
         self.active = active
 

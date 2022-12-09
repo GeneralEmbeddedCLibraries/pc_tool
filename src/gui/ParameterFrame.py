@@ -133,13 +133,8 @@ class ParameterFrame(tk.Frame):
         self.par_table.heading("Comment",       text="Comment",     anchor=tk.W         )
 
         # Left mouse click bindings
-        self.par_table.bind("<Button-3>", self.__left_m_click_table)
         self.par_table.bind("<Button-1>", self.__right_m_click_table)
         self.par_table.bind("<Double-Button-1>", self.__double_right_m_click_table)
-
-        self.par_table_menu = tk.Menu(self.frame_label, tearoff=False, font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.par_table_menu.add_command(label="Add to plot", command=None)
-        self.par_table_menu.add_command(label="Add to slider", command=None)
 
         # Buttons
         self.read_btn       = NormalButton(self, text="Read", command=self.__read_btn_click)    
@@ -187,8 +182,6 @@ class ParameterFrame(tk.Frame):
 
         self.par_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
         
-        # TODO: Check why discrepancy between computers
-        #self.par_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
         self.par_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg)
 
     # ===============================================================================
@@ -443,28 +436,6 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __double_right_m_click_table(self, e):
         self.__read_btn_click()
-
-
-    # TODO: 
-    def __left_m_click_table(self, e):
-        
-
-        iid = self.par_table.identify_row(e.y)
-        if iid:
-
-            
-            self.par_table.selection_set(iid)    
-
-            print(self.par_table.selection())      
-
-              
-
-            self.par_table_menu.tk_popup(e.x_root, e.y_root)   
-        else:
-            # mouse pointer not over item
-            # occurs when items do not fill frame
-            # no action required
-            pass
 
     # ===============================================================================
     # @brief:   Value enter to write to device event
