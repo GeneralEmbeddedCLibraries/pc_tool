@@ -339,14 +339,15 @@ class CliFrame(tk.Frame):
     # @return:      raw         - Raw message flag
     # ===============================================================================
     def __get_raw_msg(self, dev_msg):
-
-        if dev_msg[0].isdigit():
-            for ch in dev_msg:
-                if ch.isalpha():
-                    return False
-            return True
-        else:
-            return False
+        if dev_msg:
+            if dev_msg[0].isdigit():
+                for ch in dev_msg:
+                    if ch.isalpha():
+                        return False
+                return True
+            else:
+                return False
+        return True
 
 
 
