@@ -157,6 +157,7 @@ class NormalButton():
     # ===============================================================================  
     def __init__(self, root, text=None, command=None, width=20):
 
+        # Save root window
         self.root = root
 
         # Create tkinter button
@@ -227,26 +228,53 @@ class NormalButton():
     def config(self, *args, **kwargs):
         self.btn.config(*args, **kwargs)
 
+    # ===============================================================================
+    # @brief:   Signal/Show feedback as error
+    #
+    # @return:      void
+    # ===============================================================================  
     def show_error(self):
+
+        # Set error background
         self.config(bg=GuiColor.btn_error_bg)
 
+        # Unbind until timeout
         self.btn.unbind("<Enter>")
         self.btn.unbind("<Leave>")
 
         # Start timer
+        self.error_show_active = True
         self.root.after(500, self.__show_timeout)
 
+    # ===============================================================================
+    # @brief:   Signal/Show feedback as success
+    #
+    # @return:      void
+    # ===============================================================================  
     def show_success(self):
+
+        # Set success background
         self.config(bg=GuiColor.btn_success_bg)
 
+        # Unbind until timeout
         self.btn.unbind("<Enter>")
         self.btn.unbind("<Leave>")
 
         # Start timer
-        self.root.after(1000, self.__show_timeout)
+        self.error_show_active = True
+        self.root.after(500, self.__show_timeout)
 
+    # ===============================================================================
+    # @brief:   Signal/Show feedback timeout event
+    #
+    # @return:      void
+    # ===============================================================================  
     def __show_timeout(self):
+
+        # Change bg back to normal
         self.config(bg=GuiColor.btn_bg)
+
+        # Bind command back
         self.btn.bind("<Enter>", self.__btn_enter)
         self.btn.bind("<Leave>", self.__btn_leave)
 

@@ -531,11 +531,18 @@ class ParameterFrame(tk.Frame):
                 self.__cmd = ParCmd.Idle
                 self.__table_row = 0
 
+                # Show error
+                self.read_all_btn.show_error()
+
             else:
+
                 # After all characters are read set cmd to idle
                 if ";END" == dev_msg:
                     self.__cmd = ParCmd.Idle
                     self.__table_row = 0
+
+                    # Show success
+                    self.read_all_btn.show_success()
 
                 # Header
                 elif ";" == dev_msg[0]:
@@ -577,6 +584,7 @@ class ParameterFrame(tk.Frame):
             # Device response with error
             if "ERR" in dev_msg:
                 self.__par_table_signal_error()
+                self.write_btn.show_error()
 
             # Device response with success
             elif "OK" in dev_msg:
@@ -595,6 +603,7 @@ class ParameterFrame(tk.Frame):
 
                 # Signal OK
                 self.__par_table_signal_ok()
+                self.write_btn.show_success()
         
         # Reponse for read command
         elif ParCmd.Read == self.__cmd:
@@ -603,6 +612,7 @@ class ParameterFrame(tk.Frame):
             # Device response with error
             if "ERR" in dev_msg:
                 self.__par_table_signal_error()
+                self.read_btn.show_error()
             
             # Device response with success
             elif "OK" in dev_msg:
@@ -618,13 +628,12 @@ class ParameterFrame(tk.Frame):
 
                 # Signal OK
                 self.__par_table_signal_ok()
+                self.read_btn.show_success()
 
 
         # Reponse for saving command
         elif ParCmd.Store == self.__cmd:
             self.__cmd = ParCmd.Idle
-
-            print( "Response to Store: %s" % dev_msg )
 
            # Device response with error
             if "ERR" in dev_msg:
