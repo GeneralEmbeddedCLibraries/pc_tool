@@ -52,7 +52,7 @@ class Parameter():
     unit: str = ""
     access: str = ""
     nvm: str = ""
-    comment: str = ""
+    desc: str = ""
 
 @dataclass
 class ParameterTable():
@@ -111,30 +111,31 @@ class ParameterFrame(tk.Frame):
 
         # Define columns
         #self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
-        self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Comment" )
+        self.par_table["columns"] = ("ID", "Name", "Val", "Unit", "Description" )
         self.par_table.column("#0",                                 width=0,                        stretch=tk.NO       )
         self.par_table.column("ID",             anchor=tk.W,        width=80,       minwidth=80,    stretch=tk.NO       )
         self.par_table.column("Name",           anchor=tk.W,        width=400,      minwidth=400,   stretch=tk.NO     )
         #self.par_table.column("Type",           anchor=tk.CENTER,   width=75,       minwidth=75,    stretch=tk.NO       )
-        self.par_table.column("Val",            anchor=tk.W,        width=100,      minwidth=100,    stretch=tk.NO       )
-        self.par_table.column("Max",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
-        self.par_table.column("Min",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
-        #self.par_table.column("Unit",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
+        self.par_table.column("Val",            anchor=tk.E,        width=120,      minwidth=100,    stretch=tk.NO       )
+        #self.par_table.column("Max",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
+        #self.par_table.column("Min",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
+        self.par_table.column("Unit",            anchor=tk.W,   width=100,       minwidth=80,    stretch=tk.NO       )
+        #self.par_table.column("Type",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
         #self.par_table.column("Access",         anchor=tk.CENTER,   width=110,      minwidth=110,   stretch=tk.NO       )
         #self.par_table.column("NVM",            anchor=tk.CENTER,   width=100,      minwidth=100,   stretch=tk.NO       )
-        self.par_table.column("Comment",        anchor=tk.W,        width=200,      minwidth=200,   stretch=tk.YES       )
+        self.par_table.column("Description",        anchor=tk.W,        width=200,      minwidth=200,   stretch=tk.YES       )
 
         self.par_table.heading("#0",            text="",            anchor=tk.CENTER    )
         self.par_table.heading("ID",            text="ID",          anchor=tk.W         )
         self.par_table.heading("Name",          text="Name",        anchor=tk.W         )
-        #self.par_table.heading("Type",          text="Type",        anchor=tk.CENTER    )
-        self.par_table.heading("Val",           text="Val",         anchor=tk.W         )
-        self.par_table.heading("Max",           text="Max",         anchor=tk.W         )
-        self.par_table.heading("Min",           text="Min",         anchor=tk.W         )
-        #self.par_table.heading("Unit",          text="Unit",        anchor=tk.CENTER    )
-        #self.par_table.heading("Access",        text="Access",      anchor=tk.CENTER    )
-        #self.par_table.heading("NVM",           text="NVM",         anchor=tk.CENTER    )
-        self.par_table.heading("Comment",       text="Comment",     anchor=tk.W         )
+        #self.par_table.heading("Type",         text="Type",        anchor=tk.CENTER    )
+        self.par_table.heading("Val",           text="Val",         anchor=tk.E         )
+        #self.par_table.heading("Max",          text="Max",         anchor=tk.W         )
+        #self.par_table.heading("Min",          text="Min",         anchor=tk.W         )
+        self.par_table.heading("Unit",          text="Unit",        anchor=tk.W    )
+        #self.par_table.heading("Access",       text="Access",      anchor=tk.CENTER    )
+        #self.par_table.heading("NVM",          text="NVM",         anchor=tk.CENTER    )
+        self.par_table.heading("Description",   text="Description", anchor=tk.W         )
 
         # Left mouse click bindings
         self.par_table.bind("<Button-1>", self.__right_m_click_table)
@@ -180,9 +181,9 @@ class ParameterFrame(tk.Frame):
     def __par_table_insert(self, idx, par):
 
         if ( idx % 2 == 0 ):
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('even', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.unit), str(par.desc)), tags=('even', 'simple'))
         else:
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('odd', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.unit), str(par.desc)), tags=('odd', 'simple'))
 
         self.par_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
         
@@ -216,7 +217,7 @@ class ParameterFrame(tk.Frame):
     # @return:      void
     # ===============================================================================   
     def __par_table_change_par_data(self, row, par):
-        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)))
+        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.unit), str(par.desc)))
 
     # ===============================================================================
     # @brief:   Get table row from parameter ID
@@ -548,16 +549,11 @@ class ParameterFrame(tk.Frame):
                 else:
                     
                     # Parse parameter info
-                    p_id, p_name, p_val, p_def, p_min, p_max, p_comment, p_type, _ = dev_msg.split(",")
-
-                    # Remove space in values
-                    p_val = p_val.replace(" ", "")
-                    p_def = p_def.replace(" ", "")
-                    p_max = p_max.replace(" ", "")
-                    p_min = p_min.replace(" ", "")
+                    # >>>ID,Name,Value,Default,Min,Max,Unit,Type,Access,Persistance,Description
+                    p_id, p_name, p_val, p_def, p_min, p_max, p_unit, p_type, p_access, p_nvm, p_desc = dev_msg.split(",")
 
                     # Create parameter
-                    p = Parameter(id=p_id, name=p_name, type=p_type, val=p_val, max=p_max, min=p_min, unit="", comment=p_comment, nvm="")
+                    p = Parameter(id=p_id, name=p_name, type=p_type, val=p_val, max=p_max, min=p_min, unit=p_unit, desc=p_desc, nvm=p_nvm, access=p_access)
 
                     # Put paramter to table
                     self.__par_table_insert(self.__table_row, p)
