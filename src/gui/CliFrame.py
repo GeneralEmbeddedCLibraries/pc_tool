@@ -21,7 +21,6 @@ from tkinter import scrolledtext
 
 from gui.GuiCommon import GuiFont, GuiColor, NormalButton, SwitchButton, AddRemoveButton
 
-
 #################################################################################################
 ##  DEFINITIONS
 #################################################################################################
@@ -39,6 +38,11 @@ CLI_MAX_NUM_OF_SHORTCUTS = 10
 ##  CLASSES
 #################################################################################################   
 
+# ===============================================================================
+#
+# @brief:   Cli frame
+#
+# ===============================================================================
 class CliFrame(tk.Frame):
 
     def __init__(self, parent, btn_callbacks, *args, **kwargs):
@@ -72,16 +76,16 @@ class CliFrame(tk.Frame):
         self.frame_label = tk.Label(self, text="Command Line Interface", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
         # Create the textbox
-        self.console_text = scrolledtext.ScrolledText(self, width=40, height=10, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, relief=tk.FLAT, state=tk.DISABLED)
+        self.console_text = scrolledtext.ScrolledText(self, width=40, height=10, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.cli, relief=tk.FLAT, state=tk.DISABLED)
 
         # Change text color based on source
-        self.console_text.tag_config("pc",      background=GuiColor.sub_1_bg,   foreground=GuiColor.console_pc_fg,   font=GuiFont.normal_bold   )
+        self.console_text.tag_config("pc",      background=GuiColor.sub_1_bg,   foreground=GuiColor.console_pc_fg,   font=GuiFont.cli_bold   )
         self.console_text.tag_raise("sel")
-        self.console_text.tag_config("device",  background=GuiColor.sub_1_bg,   foreground=GuiColor.console_dev_fg,  font=GuiFont.normal        )
+        self.console_text.tag_config("device",  background=GuiColor.sub_1_bg,   foreground=GuiColor.console_dev_fg,  font=GuiFont.cli        )
         self.console_text.tag_raise("sel")
-        self.console_text.tag_config("err",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_err_fg,  font=GuiFont.normal        )
+        self.console_text.tag_config("err",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_err_fg,  font=GuiFont.cli        )
         self.console_text.tag_raise("sel")
-        self.console_text.tag_config("war",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_war_fg,  font=GuiFont.normal        )
+        self.console_text.tag_config("war",     background=GuiColor.sub_1_bg,   foreground=GuiColor.console_war_fg,  font=GuiFont.cli        )
         self.console_text.tag_raise("sel")
 
         # Command entry
@@ -104,7 +108,7 @@ class CliFrame(tk.Frame):
         self.cfg.add_switch(id=CliCfgOpt.Timestamp,     text="Show message timestamp",      initial_state=False)
         self.cfg.add_switch(id=CliCfgOpt.MsgSrc,        text="Show message source",         initial_state=False)
         self.cfg.add_switch(id=CliCfgOpt.Freeze,        text="Freeze console print",        initial_state=False)
-        #self.cfg.add_switch(id=CliCfgOpt.RawTraffic,    text="Show raw message traffic",    initial_state=False)
+        self.cfg.add_switch(id=CliCfgOpt.RawTraffic,    text="Show raw message traffic",    initial_state=False)
         #self.cfg.add_switch(id=CliCfgOpt.LogToFile,     text="Log to file",                 initial_state=False)
 
         # Cli shortcuts
@@ -114,6 +118,11 @@ class CliFrame(tk.Frame):
         self.shortcut.add("Help", "help")
         self.shortcut.add("Reset", "reset")
         self.shortcut.add("Show parameters", "par_print")
+
+        # TODO: Remove only tesing
+        self.shortcut.add("Streaming ON", "status_start")
+        self.shortcut.add("Streaming OFF", "status_stop")
+        # TODO END: 
 
         # Self frame layout
         self.frame_label.grid(  column=0, row=0,                sticky=tk.W,                   padx=20, pady=10     )
@@ -250,34 +259,38 @@ class CliFrame(tk.Frame):
     # ===============================================================================  
     def __print_to_console(self, text, tag):
 
+        # Freeze console
         if not self.cfg.get_state(CliCfgOpt.Freeze):
 
-            # Unlock text box
-            self.console_text.configure(state=tk.NORMAL)
+            # Raw message check
+            if not self.__get_raw_msg(text) or self.cfg.get_state(CliCfgOpt.RawTraffic):
 
-            # Append timestamp
-            if self.cfg.get_state(CliCfgOpt.Timestamp):
-                _datetime = datetime.datetime.now()
-                datetime_text = "(%02d.%02d.%04d  %02d:%02d:%02d.%03d)" % (_datetime.day, _datetime.month, _datetime.year, _datetime.hour, _datetime.minute, _datetime.second, round(_datetime.microsecond/1000)) + "    "
+                # Unlock text box
+                self.console_text.configure(state=tk.NORMAL)
+
+                # Append timestamp
+                if self.cfg.get_state(CliCfgOpt.Timestamp):
+                    _datetime = datetime.datetime.now()
+                    datetime_text = "(%02d.%02d.%04d  %02d:%02d:%02d.%03d)" % (_datetime.day, _datetime.month, _datetime.year, _datetime.hour, _datetime.minute, _datetime.second, round(_datetime.microsecond/1000)) + "    "
+
+                    # Insert send char and command
+                    self.console_text.insert(tk.END, datetime_text, tag)
+
+                # Add message source
+                if self.cfg.get_state(CliCfgOpt.MsgSrc):
+                    if tag == "pc":
+                        self.console_text.insert(tk.END, "(TX <---)    ", tag)
+                    else:
+                        self.console_text.insert(tk.END, "(RX --->)    ", tag)  
 
                 # Insert send char and command
-                self.console_text.insert(tk.END, datetime_text, tag)
-
-            # Add message source
-            if self.cfg.get_state(CliCfgOpt.MsgSrc):
-                if tag == "pc":
-                    self.console_text.insert(tk.END, "(TX <---)    ", tag)
-                else:
-                    self.console_text.insert(tk.END, "(RX --->)    ", tag)
-
-            # Insert send char and command
-            self.console_text.insert(tk.END, text + "\n", tag)
-            
-            # Lock text box back
-            self.console_text.configure(state=tk.DISABLED)
-            
-            # Scrool with latest text
-            self.console_text.see(tk.END)
+                self.console_text.insert(tk.END, text + "\n", tag)
+                
+                # Lock text box back
+                self.console_text.configure(state=tk.DISABLED)
+                
+                # Scrool with latest text
+                self.console_text.see(tk.END)
 
     # ===============================================================================
     # @brief:   Print PC command
@@ -315,6 +328,26 @@ class CliFrame(tk.Frame):
     def print_war(self, text):
         self.__print_to_console(str(text), "war")
 
+    # ===============================================================================
+    # @brief:   Check if device message is raw traffic
+    #
+    # @note     Raw msg is being determinate based on first char. If number that
+    #           msg is potencially raw. If futhermore no alphabetic is found inside
+    #           msg then it is actually raw! 
+    #
+    # @param[in]:   dev_msg     - Message from embedded device
+    # @return:      raw         - Raw message flag
+    # ===============================================================================
+    def __get_raw_msg(self, dev_msg):
+        if dev_msg:
+            if dev_msg[0].isdigit():
+                for ch in dev_msg:
+                    if ch.isalpha():
+                        return False
+                return True
+            else:
+                return False
+        return True
 
 
 

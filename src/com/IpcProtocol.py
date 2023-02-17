@@ -43,6 +43,10 @@ class IpcMsgType():
     IpcMsgType_ComTxFrame : int         = 14    # Transmit frame to embedded device
 
 
+
+    IpcMsgType_ComFinished : int         = 20    # Transmit frame to embedded device
+
+
 @dataclass
 class IpcMsg():
 

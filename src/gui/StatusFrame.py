@@ -31,7 +31,11 @@ from gui.GuiCommon import GuiFont, GuiColor
 ##  CLASSES
 #################################################################################################   
 
-
+# ===============================================================================
+#
+# @brief:   Status frame
+#
+# ===============================================================================
 class StatusFrame(tk.Frame):
 
     def __init__(self, parent, *args, **kwargs):
@@ -46,6 +50,10 @@ class StatusFrame(tk.Frame):
         # Transmition statistics
         self.rx_count = 0
         self.tx_count = 0
+
+        # Error/Warning statistics
+        self.err_count = 0
+        self.war_count = 0
 
 
     # ===============================================================================
@@ -70,6 +78,9 @@ class StatusFrame(tk.Frame):
 
         # CPU load
         self.cpu_load_label = tk.Label(self, text="CPU 0%", font=GuiFont.status, bg=GuiColor.status_bg, fg=GuiColor.status_fg)
+        
+        # Measurement file 
+        self.meas_file_label = tk.Label(self, text="", font=GuiFont.status, bg=GuiColor.status_bg, fg=GuiColor.status_fg)
 
         # Self frame layout       
         self.rx_cnt_label.pack(         side="left",    padx=10, pady=0 )
@@ -78,6 +89,7 @@ class StatusFrame(tk.Frame):
         self.war_cnt_label.pack(        side="left",    padx=10, pady=0 )
         self.dev_par_num_label.pack(    side="left",    padx=10, pady=0 )
         self.cpu_load_label.pack(       side="left",    padx=10, pady=0 )
+        self.meas_file_label.pack(      side="left",    padx=10, pady=0 )
 
         self.com_status_label.pack(     side="right",   padx=10, pady=0 )
         self.port_baud_label.pack(      side="right",   padx=10, pady=0 )
@@ -131,7 +143,17 @@ class StatusFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def set_err_count(self, cnt):
-        self.err_cnt_label["text"] = "Err " + str(cnt)
+        self.err_count += cnt
+        self.err_cnt_label["text"] = "Err " + str(self.err_count)
+
+    # ===============================================================================
+    # @brief:   Clear number of error messages
+    #
+    # @return:      void
+    # ===============================================================================
+    def clear_err_count(self):
+        self.err_count = 0
+        self.err_cnt_label["text"] = "Err " + str(self.err_count)
 
     # ===============================================================================
     # @brief:   Set number of received warning messages
@@ -140,7 +162,17 @@ class StatusFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def set_war_count(self, cnt):
-        self.war_cnt_label["text"] = "War " + str(cnt)
+        self.war_count += cnt
+        self.war_cnt_label["text"] = "War " + str(self.war_count)
+
+    # ===============================================================================
+    # @brief:   Clear number of warning messages
+    #
+    # @return:      void
+    # ===============================================================================
+    def clear_war_count(self):
+        self.war_count = 0
+        self.war_cnt_label["text"] = "War " + str(self.war_count)
 
     # ===============================================================================
     # @brief:   Set communication status
@@ -186,6 +218,23 @@ class StatusFrame(tk.Frame):
         self.set_num_of_pars(0)
 
     # ===============================================================================
+    # @brief:   Set name of imported measurement file
+    #
+    # @param[in]:   file_name - Name of measurement file
+    # @return:      void
+    # ===============================================================================
+    def set_meas_file(self, file_name):
+        self.meas_file_label["text"] = str(file_name)
+
+    # ===============================================================================
+    # @brief:   Clear measurment file name
+    #
+    # @return:      void
+    # ===============================================================================
+    def clear_num_of_pars(self):
+        self.set_meas_file("")
+
+    # ===============================================================================
     # @brief:   Set average CPU load 
     #
     # @param[in]:   load    - CPU load
@@ -210,6 +259,7 @@ class StatusFrame(tk.Frame):
         self.war_cnt_label["bg"] = color
         self.dev_par_num_label["bg"] = color
         self.cpu_load_label["bg"] = color
+        self.meas_file_label["bg"] = color
 
 
 

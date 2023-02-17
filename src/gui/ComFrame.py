@@ -18,7 +18,7 @@ from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
 
-from gui.GuiCommon import GuiFont, GuiColor, NormalButton
+from gui.GuiCommon import *
 from com.IpcProtocol import IpcMsg, IpcMsgType
 
 #################################################################################################
@@ -36,7 +36,11 @@ from com.IpcProtocol import IpcMsg, IpcMsgType
 #################################################################################################   
  
 
-
+# ===============================================================================
+#
+# @brief:   Com frame
+#
+# ===============================================================================
 class ComFrame(tk.Frame):
 
     def __init__(self, parent, btn_callbacks, *args, **kwargs):
@@ -79,6 +83,10 @@ class ComFrame(tk.Frame):
         self.com_port_sel = tk.Entry(self.settings_frame, font=GuiFont.normal, bg=GuiColor.sub_1_fg, fg=GuiColor.sub_1_bg, borderwidth=0, width=8)
         self.baudrate_sel = tk.Entry(self.settings_frame, font=GuiFont.normal, bg=GuiColor.sub_1_fg, fg=GuiColor.sub_1_bg, borderwidth=0, width=8)
         
+        # Setting button & label
+        self.auto_con_btn = SwitchButton(self.settings_frame, initial_state=False)
+        self.auto_con_label = tk.Label(self.settings_frame, text="Automatic Connection", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+
         # Default values
         self.baudrate_sel.insert(0, "115200")
 
@@ -120,11 +128,16 @@ class ComFrame(tk.Frame):
         self.com_port_table.grid(           column=0, row=6, columnspan=2,  sticky=tk.E+tk.W+tk.N+tk.S, padx=10, pady=10    )
         
         # Settings frame layout
-        self.com_port_sel_label.grid(       column=0, row=0, sticky=tk.E,   padx=5, pady=5  )
-        self.com_port_sel.grid(             column=1, row=0,                padx=5, pady=5  )
-        self.baudrate_sel_label.grid(       column=0, row=1, sticky=tk.E,   padx=5, pady=5  )
-        self.baudrate_sel.grid(             column=1, row=1,                padx=5, pady=5  )
-        self.connect_btn.grid(              column=2, row=1, sticky=tk.W,   padx=30, pady=5 )
+        self.com_port_sel_label.grid(       column=0, row=0, sticky=tk.E,                   padx=5, pady=5  )
+        self.com_port_sel.grid(             column=1, row=0,                                padx=5, pady=5  )
+        self.baudrate_sel_label.grid(       column=0, row=1, sticky=tk.E,                   padx=5, pady=5  )
+        self.baudrate_sel.grid(             column=1, row=1,                                padx=5, pady=5  )
+        self.connect_btn.grid(              column=2, row=1, sticky=tk.W,                   padx=30, pady=5 )
+        self.auto_con_label.grid(           column=5, row=1, sticky=tk.W,                   padx=5, pady=5 )
+        self.auto_con_btn.grid(             column=6, row=1, sticky=tk.W+tk.S+tk.N+tk.S,    padx=5, pady=5 )
+
+        # Layout configuration
+        self.settings_frame.columnconfigure(4, weight=1)
 
 
     # ===============================================================================
@@ -156,7 +169,10 @@ class ComFrame(tk.Frame):
             self.com_port_table.insert(parent='',index='end',iid=idx,text='',values=(str(idx), str(name), str(desc)), tags=('odd', 'simple'))
 
         self.com_port_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
-        self.com_port_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
+        
+        # TODO: Check why discrepancie between computers
+        #self.com_port_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
+        self.com_port_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg)
 
     # ===============================================================================
     # @brief:   Set COM port table

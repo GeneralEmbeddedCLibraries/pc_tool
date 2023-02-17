@@ -15,7 +15,7 @@
 #################################################################################################
 from dataclasses import dataclass
 import tkinter as tk
-
+from tkinter import ttk
 
 #################################################################################################
 ##  DEFINITIONS
@@ -53,9 +53,12 @@ class GuiColor():
     btn_hoover_bg: str = "#1177bb"
 
     # Navigation button
-    nav_btn_bg: str = "#16825d"
-    nav_btn_fg: str = "#ffffff"
-    nav_btn_hoover_bg: str = "#1a996c"
+    nav_btn_bg: str = sub_1_bg
+    nav_btn_fg: str = "#999999"
+    nav_btn_unactive_fg: str = "#999999"
+    nav_btn_active_fg: str = "#ffffff"
+    nav_btn_hoover_fg: str = "#ffffff"
+    nav_btn_hoover_bg: str = sub_1_bg
 
     # Swich button
     sw_on_btn_bg:           str = "#00e600"
@@ -128,6 +131,11 @@ class GuiFont():
 
     # Status
     status: list = ("Calibri", 11, "normal")
+
+    # Command line text
+    cli: list = ("Consolas", 14)
+    cli_bold: list = ("Consolas", 14, "bold")
+    cli_italic: list = ("Consolas", 14, "italic")
 
 
 # ===============================================================================
@@ -252,11 +260,14 @@ class NavigationButton():
     def __init__(self, root, text=None, command=None):
 
         # Create tkinter button
-        self.btn = tk.Button(root, text=text, font=GuiFont.nav_btn, bg=GuiColor.nav_btn_bg, fg=GuiColor.nav_btn_fg, activebackground=GuiColor.nav_btn_bg, activeforeground=GuiColor.nav_btn_fg, borderwidth=0, relief=tk.FLAT, width=10, command=command)
+        self.btn = tk.Button(root, text=text, font=GuiFont.nav_btn, bg=GuiColor.nav_btn_bg, fg=GuiColor.nav_btn_fg, activebackground=GuiColor.nav_btn_bg, activeforeground=GuiColor.nav_btn_fg, borderwidth=0, relief=tk.FLAT, width=5, command=command)
         
         # Bind button actions
         self.btn.bind("<Enter>", self.__btn_enter)
         self.btn.bind("<Leave>", self.__btn_leave)
+
+        # Actie switch
+        self.active = False
 
     # ===============================================================================
     # @brief:   Get current button label
@@ -317,7 +328,7 @@ class NavigationButton():
     # @return:      void
     # ===============================================================================  
     def __btn_enter(self, e):
-        self.btn["bg"] = GuiColor.nav_btn_hoover_bg
+        self.btn["fg"] = GuiColor.nav_btn_active_fg
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse exit
@@ -326,7 +337,22 @@ class NavigationButton():
     # @return: void
     # ===============================================================================  
     def __btn_leave(self, e):
-        self.btn["bg"] = GuiColor.nav_btn_bg
+        if not self.active:
+            self.btn["fg"] = GuiColor.nav_btn_unactive_fg
+
+    # ===============================================================================
+    # @brief:   Set active flag
+    #
+    # @param[in]:   active  - Active flag
+    # @return:      void
+    # ===============================================================================  
+    def set_active(self, active):
+        self.active = active
+
+        if active:
+            self.btn.config(fg=GuiColor.nav_btn_active_fg, font=GuiFont.heading_2_bold)
+        else:
+            self.btn.config(fg=GuiColor.nav_btn_unactive_fg, font=GuiFont.heading_2)
 
 
 # ===============================================================================
@@ -411,6 +437,24 @@ class SwitchButton():
     # ===============================================================================  
     def pack(self, *args, **kwargs):
         self.btn.pack(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Override switch to OFF state
+    #
+    # @return:      void
+    # ===============================================================================  
+    def turn_off(self):
+        self.state = False
+        self.__update_appear(self.state)
+
+    # ===============================================================================
+    # @brief:   Override switch to ON state
+    #
+    # @return:      void
+    # ===============================================================================  
+    def turn_on(self):
+        self.state = True
+        self.__update_appear(self.state)
 
     # ===============================================================================
     # @brief:   Refresh appearance
@@ -555,6 +599,115 @@ class AddRemoveButton():
     # ===============================================================================  
     def destroy(self):
         self.btn.destroy()
+
+# ===============================================================================
+#
+#  @brief:   Custom implementation of Combobox button
+#
+# ===============================================================================  
+class GuiCombobox():
+
+    # ===============================================================================
+    # @brief:   Combobox constructor
+    #
+    # @param[in]:   root        - Root window
+    # @param[in]:   options     - Options to show on dropdown of widget
+    # @param[in]:   command     - Callback function registration on change event
+    # @return:      void
+    # ===============================================================================  
+    def __init__(self, root, options, command=None, *args, **kwargs):
+
+        """
+        # Setup custom style
+        style = ttk.Style()
+        #style.theme_use('clam')
+        style.map('custom.TCombobox', fieldbackground=[("readonly",GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', foreground=[("readonly",GuiColor.sub_1_fg)] )
+        style.map('custom.TCombobox', background =[("readonly",GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', selectbackground=[("readonly",GuiColor.sub_1_bg)])
+        style.map('custom.TCombobox', selectforeground=[("readonly",GuiColor.sub_1_fg)])
+        style.map('custom.TCombobox', bordercolor =[("readonly",GuiColor.sub_1_bg)])
+        style.map('custom.TCombobox', arrowcolor  =[("readonly",GuiColor.sub_1_fg)])
+        style.map('custom.TCombobox', arrowsize   =[("readonly",14)])
+        style.map('custom.TCombobox', insertwidth = [("readonly", 0)] )
+        style.map('custom.TCombobox', insertcolor  = [("readonly", GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', lightcolor   = [("readonly", GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', placeholderforeground    = [("readonly", GuiColor.sub_1_bg)] )
+        style.map('custom.TCombobox', postoffset     = [("readonly", 0)] )
+        style.map('custom.TCombobox', darkcolor      = [("readonly", GuiColor.sub_1_bg)] )
+
+        # Create widget
+        self.combo = ttk.Combobox(root, values=options, style='custom.TCombobox', *args, **kwargs)
+
+        """
+
+        # Create widget
+        self.combo = ttk.Combobox(root, values=options, *args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Put combobox on grid
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def grid(self, *args, **kwargs):
+        self.combo.grid(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Remove cobobox from grid
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def grid_forget(self, *args, **kwargs):
+        self.combo.grid_forget(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Set combobox selected value
+    #
+    # @param[in]:   val - Value to select field
+    # @return:      void
+    # ===============================================================================  
+    def set(self, val):
+        self.combo.set(val)
+
+    # ===============================================================================
+    # @brief:   Set combobox option value
+    #
+    # @param[in]:   list_of_options - List of options
+    # @return:      void
+    # =============================================================================== 
+    def set_options(self, list_of_options):
+        self.combo["values"] = list_of_options
+
+    # ===============================================================================
+    # @brief:   Get combobox selected value
+    #
+    # @return:      currently selected value
+    # ===============================================================================  
+    def get(self):
+        return self.combo.get()
+
+    # ===============================================================================
+    # @brief:   Bind combo comand
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def bind(self, *args, **kwargs):
+        self.combo.bind(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Post-init configurations
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def configure(self, *args, **kwargs):
+        self.combo.configure(*args, **kwargs)
+
+
+
 
 #################################################################################################
 ##  END OF FILE

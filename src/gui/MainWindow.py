@@ -36,7 +36,7 @@ import time
 # Fast timer period
 #
 # Unit: ms
-MAIN_WIN_FAST_TIM_PERIOD    = 1
+MAIN_WIN_FAST_TIM_PERIOD    = 100
 
 # Slow timer period
 #
@@ -44,7 +44,7 @@ MAIN_WIN_FAST_TIM_PERIOD    = 1
 MAIN_WIN_SLOW_TIM_PERIOD    = 1000
 
 # Serial command end symbol
-MAIN_WIN_COM_STRING_TERMINATION = "\r"
+MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
 
 #################################################################################################
@@ -56,7 +56,11 @@ MAIN_WIN_COM_STRING_TERMINATION = "\r"
 ##  CLASSES
 #################################################################################################       
 
-
+# ===============================================================================
+#
+# @brief:   Main Window 
+#
+# ===============================================================================
 class MainWindow():
 
     def __init__(self, ver, rx_queue, tx_queue): 
@@ -94,6 +98,8 @@ class MainWindow():
 
         # Connection status
         self.__connection_status = False
+        self.__connection_port = None
+        self.__connection_baud = None
 
         # =============================================================================================
         # IPC Command Function Table
@@ -133,9 +139,7 @@ class MainWindow():
         self.cli_frame      = CliFrame(self.master_win, btn_callbacks=[self.__cli_btn_enter])
         self.com_frame      = ComFrame(self.master_win, btn_callbacks=[self.__com_btn_connect])
         self.par_frame      = ParameterFrame(self.master_win, btn_callbacks=[self.__par_com_request])
-        
-        # TODO: Needs to be implemented
-        #self.plot_frame     = PlotFrame(self.master_win)
+        self.plot_frame     = PlotFrame(self.master_win, import_callback=self.__file_import_callback)
 
         # Layout
         self.nav_frame.grid(        column=0, row=1, sticky=tk.E+tk.W+tk.N+tk.S, rowspan=2,     padx=0, pady=0    )
@@ -146,6 +150,10 @@ class MainWindow():
         #self.plot_frame.grid(       column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S,                padx=0, pady=0    )    # Hide that frame
         self.com_frame.grid(        column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S,                padx=0, pady=0    )
         
+        self.nav_frame.btn_com.set_active(1)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(0)
 
     # Leave for future improvements
     def __init_menu_bar(self):
@@ -170,8 +178,13 @@ class MainWindow():
     def __nav_btn_com_action(self):
         self.cli_frame.grid_forget()
         self.par_frame.grid_forget()
-        #self.plot_frame.grid_forget()
+        self.plot_frame.grid_forget()
         self.com_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)
+
+        self.nav_frame.btn_com.set_active(1)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(0)
   
     # ===============================================================================
     # @brief:   Change main window to command line interface frame
@@ -181,11 +194,16 @@ class MainWindow():
     def __nav_btn_cli_action(self):
         self.com_frame.grid_forget()
         self.par_frame.grid_forget()
-        #self.plot_frame.grid_forget()
+        self.plot_frame.grid_forget()
         self.cli_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)
         
         # Focus on command entry
         self.cli_frame.cmd_entry_focus(None)
+
+        self.nav_frame.btn_com.set_active(0)
+        self.nav_frame.btn_cli.set_active(1)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(0)
       
     # ===============================================================================
     # @brief:   Change main window to device parameter frame
@@ -195,8 +213,13 @@ class MainWindow():
     def __nav_btn_par_action(self):
         self.com_frame.grid_forget()
         self.cli_frame.grid_forget()
-        #self.plot_frame.grid_forget()
-        self.par_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
+        self.plot_frame.grid_forget()
+        self.par_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)     
+
+        self.nav_frame.btn_com.set_active(0)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(1)
+        self.nav_frame.btn_plot.set_active(0) 
 
     # ===============================================================================
     # @brief:   Change main window to plot frame
@@ -207,7 +230,12 @@ class MainWindow():
         self.com_frame.grid_forget()
         self.cli_frame.grid_forget()
         self.par_frame.grid_forget()
-        #self.plot_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
+        self.plot_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
+
+        self.nav_frame.btn_com.set_active(0)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(1)
 
     # ===============================================================================
     # @brief:   Change default table style
@@ -243,12 +271,18 @@ class MainWindow():
             msg.type = IpcMsgType.IpcMsgType_ComConnect
             msg.payload = "%s;%s" % (com, baud)
 
-            # Update status line
-            self.status_frame.set_port_baudrate(com, baud)
+            # Save connection info (later use for automatic re-connection)
+            self.__connection_port = com
+            self.__connection_baud = baud
 
         # Connection is established
         else:
+
+            # Send disconnection reqeust to serial thread
             msg.type = IpcMsgType.IpcMsgType_ComDisconnect
+
+            # Turn off automatic connection
+            self.com_frame.auto_con_btn.turn_off()
 
         # Send command
         self.__ipc_send_msg(msg)
@@ -280,7 +314,6 @@ class MainWindow():
             # Update msg tx counter
             self.status_frame.set_tx_count(len(dev_cmd))
 
-
     # ===============================================================================
     # @brief:   CLI enter button press callback
     #
@@ -301,7 +334,6 @@ class MainWindow():
 
             # Update msg tx counter
             self.status_frame.set_tx_count(len(dev_cmd))
-
 
     # ===============================================================================
     # @brief:   Send message via IPC
@@ -378,13 +410,46 @@ class MainWindow():
 
         com = []
         desc = []
+        com_detected = False
 
+        # Go thru IPC message
         for dev in payload:
-            com.append(dev["device"])
-            desc.append(dev["description"])
+            
+            # Get com port and description
+            com_port = dev["device"]
+            com_desc = dev["description"]
 
+            # Check if open port is still present
+            if self.__connection_port == com_port:
+                com_detected = True
+
+            # Add to table list
+            com.append(com_port)
+            desc.append(com_desc)
+
+        # Update table
         self.com_frame.com_port_table_clear()
         self.com_frame.com_port_table_set(com, desc)
+
+        # Disconnect if connected port is no longer available
+        if False == com_detected and True == self.__connection_status:
+
+            # Send IPC to serial to disconnect
+            msg = IpcMsg()
+            msg.type = IpcMsgType.IpcMsgType_ComDisconnect
+            self.__ipc_send_msg(msg)
+
+        # Automatic re-connection if:
+        #       1. Automatic Connection is turned ON
+        #   AND 2. No active connection is present
+        #   AND 3. Previously connected port is back 
+        elif True == com_detected and False == self.__connection_status and True == self.com_frame.auto_con_btn.state:
+            
+            # Send IPC to serial to connect
+            msg = IpcMsg()
+            msg.type = IpcMsgType.IpcMsgType_ComConnect
+            msg.payload = "%s;%s" % (self.__connection_port, self.__connection_baud)
+            self.__ipc_send_msg(msg)
 
     # ===============================================================================
     # @brief:   Response from connecto command to (Serial Process) via IPC
@@ -406,6 +471,10 @@ class MainWindow():
             self.status_frame.set_com_status(True)
             self.status_frame.clear_rx_count()
             self.status_frame.clear_tx_count()
+            self.status_frame.clear_num_of_pars()
+            self.status_frame.clear_err_count()
+            self.status_frame.clear_war_count()
+            self.status_frame.set_port_baudrate(self.__connection_port, self.__connection_baud)
 
             # Activate connection related widgets
             self.__activate_widgets()
@@ -465,14 +534,27 @@ class MainWindow():
                 dev_resp = self.com_rx_buf[:str_term]
 
                 # Print till terminator
-                self.cli_frame.print_normal(dev_resp)
+                if "ERR" in dev_resp:
+                    self.cli_frame.print_err(dev_resp)
+                    self.status_frame.set_err_count(1)
+                elif "WAR" in dev_resp:
+                    self.cli_frame.print_war(dev_resp)
+                    self.status_frame.set_war_count(1)
+                else:
+                    self.cli_frame.print_normal(dev_resp)
 
                 # Copy the rest of string for later process
                 # Note: Copy without termiantor
-                self.com_rx_buf = self.com_rx_buf[str_term+1:]
+                self.com_rx_buf = self.com_rx_buf[str_term+len(MAIN_WIN_COM_STRING_TERMINATION):]
 
                 # Parameter parser
-                self.par_frame.dev_msg_parser(dev_resp)
+                # Note: Ignore raw traffic for parameter parser
+                if not self.get_raw_msg(dev_resp):
+                    self.par_frame.dev_msg_parser(dev_resp)
+                
+                # Raw trafic for plotting purposes
+                else:
+                    pass # TODO: Provide that data to plotter...
 
         # Update msg rx counter
         self.status_frame.set_rx_count(len(payload))
@@ -523,6 +605,34 @@ class MainWindow():
         self.par_frame.value_entry.config(state=tk.DISABLED)
 
     # ===============================================================================
+    # @brief:   File imported callback
+    #
+    # @param[in]:   file_name   - Measurement data file name
+    # @return:      void
+    # ===============================================================================
+    def __file_import_callback(self, file_name):
+        self.status_frame.set_meas_file( file_name )
+
+    # ===============================================================================
+    # @brief:   Check if device message is raw traffic
+    #
+    # @note     Raw is being determinate based on latter. If any latter is inside
+    #           expection string than this string is not raw traffic.
+    #
+    # @param[in]:   dev_msg     - Message from embedded device
+    # @return:      raw         - Raw message flag
+    # ===============================================================================
+    def get_raw_msg(self, dev_msg):
+        raw = True
+
+        for ch in dev_msg:
+            if ch.isalpha():
+                raw = False
+                break
+
+        return raw
+
+    # ===============================================================================
     # @brief:   Start GUI engine
     # @note:    This function is blocking until app is closed!
     #
@@ -531,8 +641,9 @@ class MainWindow():
     def run(self):
         self.master_win.mainloop()
 
-        # TODO: Kill com process       
-
+        # Send command to end serial thread
+        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComFinished)
+        self.__ipc_send_msg(msg)
 
 
 #################################################################################################

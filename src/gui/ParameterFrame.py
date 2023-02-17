@@ -68,7 +68,11 @@ class ParCmd():
     Read:   str = "par_get"
     Store:  str = "par_save"
 
-
+# ===============================================================================
+#
+# @brief:   Parameter frame
+#
+# ===============================================================================
 class ParameterFrame(tk.Frame):
 
     def __init__(self, parent, btn_callbacks, *args, **kwargs):
@@ -106,39 +110,35 @@ class ParameterFrame(tk.Frame):
         self.par_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
 
         # Define columns
-        self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
+        #self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
+        self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Comment" )
         self.par_table.column("#0",                                 width=0,                        stretch=tk.NO       )
         self.par_table.column("ID",             anchor=tk.W,        width=80,       minwidth=80,    stretch=tk.NO       )
         self.par_table.column("Name",           anchor=tk.W,        width=400,      minwidth=400,   stretch=tk.NO     )
-        self.par_table.column("Type",           anchor=tk.CENTER,   width=75,       minwidth=75,    stretch=tk.NO       )
+        #self.par_table.column("Type",           anchor=tk.CENTER,   width=75,       minwidth=75,    stretch=tk.NO       )
         self.par_table.column("Val",            anchor=tk.W,        width=100,      minwidth=100,    stretch=tk.NO       )
         self.par_table.column("Max",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
         self.par_table.column("Min",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
-        self.par_table.column("Unit",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
-        self.par_table.column("Access",         anchor=tk.CENTER,   width=110,      minwidth=110,   stretch=tk.NO       )
-        self.par_table.column("NVM",            anchor=tk.CENTER,   width=100,      minwidth=100,   stretch=tk.NO       )
+        #self.par_table.column("Unit",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
+        #self.par_table.column("Access",         anchor=tk.CENTER,   width=110,      minwidth=110,   stretch=tk.NO       )
+        #self.par_table.column("NVM",            anchor=tk.CENTER,   width=100,      minwidth=100,   stretch=tk.NO       )
         self.par_table.column("Comment",        anchor=tk.W,        width=200,      minwidth=200,   stretch=tk.YES       )
 
         self.par_table.heading("#0",            text="",            anchor=tk.CENTER    )
         self.par_table.heading("ID",            text="ID",          anchor=tk.W         )
         self.par_table.heading("Name",          text="Name",        anchor=tk.W         )
-        self.par_table.heading("Type",          text="Type",        anchor=tk.CENTER    )
+        #self.par_table.heading("Type",          text="Type",        anchor=tk.CENTER    )
         self.par_table.heading("Val",           text="Val",         anchor=tk.W         )
         self.par_table.heading("Max",           text="Max",         anchor=tk.W         )
         self.par_table.heading("Min",           text="Min",         anchor=tk.W         )
-        self.par_table.heading("Unit",          text="Unit",        anchor=tk.CENTER    )
-        self.par_table.heading("Access",        text="Access",      anchor=tk.CENTER    )
-        self.par_table.heading("NVM",           text="NVM",         anchor=tk.CENTER    )
+        #self.par_table.heading("Unit",          text="Unit",        anchor=tk.CENTER    )
+        #self.par_table.heading("Access",        text="Access",      anchor=tk.CENTER    )
+        #self.par_table.heading("NVM",           text="NVM",         anchor=tk.CENTER    )
         self.par_table.heading("Comment",       text="Comment",     anchor=tk.W         )
 
         # Left mouse click bindings
-        self.par_table.bind("<Button-3>", self.__left_m_click_table)
         self.par_table.bind("<Button-1>", self.__right_m_click_table)
         self.par_table.bind("<Double-Button-1>", self.__double_right_m_click_table)
-
-        self.par_table_menu = tk.Menu(self.frame_label, tearoff=False, font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.par_table_menu.add_command(label="Add to plot", command=None)
-        self.par_table_menu.add_command(label="Add to slider", command=None)
 
         # Buttons
         self.read_btn       = NormalButton(self, text="Read", command=self.__read_btn_click)    
@@ -180,12 +180,13 @@ class ParameterFrame(tk.Frame):
     def __par_table_insert(self, idx, par):
 
         if ( idx % 2 == 0 ):
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.unit), str(par.type), str(par.access), str(par.nvm), str(par.comment)), tags=('even', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('even', 'simple'))
         else:
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.unit), str(par.type), str(par.access), str(par.nvm), str(par.comment)), tags=('odd', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('odd', 'simple'))
 
         self.par_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
-        self.par_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg_even)
+        
+        self.par_table.tag_configure('odd', background=GuiColor.table_fg_even, foreground=GuiColor.table_bg)
 
     # ===============================================================================
     # @brief:   Insert delimiter to parameter table
@@ -215,7 +216,7 @@ class ParameterFrame(tk.Frame):
     # @return:      void
     # ===============================================================================   
     def __par_table_change_par_data(self, row, par):
-        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.unit), str(par.type), str(par.access), str(par.nvm), str(par.comment)))
+        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)))
 
     # ===============================================================================
     # @brief:   Get table row from parameter ID
@@ -425,10 +426,9 @@ class ParameterFrame(tk.Frame):
             val = self.__param_get_value(self.__par_table_get_id_by_row(iid))
         
             # Update value entry
-            if val:
-                self.value_entry.focus()
-                self.value_entry.delete(0, tk.END)
-                self.value_entry.insert(0, val)
+            self.value_entry.focus()
+            self.value_entry.delete(0, tk.END)
+            self.value_entry.insert(0, val)
     
     # ===============================================================================
     # @brief:   Double right click on table action
@@ -440,28 +440,6 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __double_right_m_click_table(self, e):
         self.__read_btn_click()
-
-
-    # TODO: 
-    def __left_m_click_table(self, e):
-        
-
-        iid = self.par_table.identify_row(e.y)
-        if iid:
-
-            
-            self.par_table.selection_set(iid)    
-
-            print(self.par_table.selection())      
-
-              
-
-            self.par_table_menu.tk_popup(e.x_root, e.y_root)   
-        else:
-            # mouse pointer not over item
-            # occurs when items do not fill frame
-            # no action required
-            pass
 
     # ===============================================================================
     # @brief:   Value enter to write to device event
@@ -481,7 +459,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_ok(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_ok_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_ok_bg)], foreground=[("selected", GuiColor.table_bg)])
 
         # Start clear-up event
         self.after(PAR_FRAME_DEV_RESP_SIGNAL_DUR, self.__par_table_signal_clear) 
@@ -493,7 +471,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_error(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_fail_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_fail_bg)], foreground=[("selected", GuiColor.table_bg)])
 
         # Start clear-up event
         self.after(PAR_FRAME_DEV_RESP_SIGNAL_DUR, self.__par_table_signal_clear) 
@@ -505,7 +483,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_warning(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_warn_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_warn_bg)], foreground=[("selected", GuiColor.table_bg)])
 
         # Start clear-up event
         self.after(PAR_FRAME_DEV_RESP_SIGNAL_DUR, self.__par_table_signal_clear) 
@@ -517,7 +495,7 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __par_table_signal_clear(self):
         style = ttk.Style()
-        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_sel_bg)])
+        style.map("mystyle.Treeview", background=[("selected", GuiColor.table_sel_bg)], foreground=[("selected", GuiColor.table_fg)])
 
     # ===============================================================================
     # @brief:   Device parameter parser
