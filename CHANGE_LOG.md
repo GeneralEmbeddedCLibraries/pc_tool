@@ -7,6 +7,9 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 ---
 ## V0.3.0 - 17.02.2023
 
+### Notice
+ This version has new CLI interface format, compatible with CLI V1.3.0 on
+
 ### Added
  - Showing paramter details (access, type, persistance)
  - Feedback information on button press (Read All, Store All)
