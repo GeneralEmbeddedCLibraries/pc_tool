@@ -259,6 +259,7 @@ class StatusFrame(tk.Frame):
         self.war_cnt_label["bg"] = color
         self.dev_par_num_label["bg"] = color
         self.cpu_load_label["bg"] = color
+        self.meas_file_label["bg"] = color
 
 
 
