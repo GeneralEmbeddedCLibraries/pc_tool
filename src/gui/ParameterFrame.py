@@ -141,7 +141,8 @@ class ParameterFrame(tk.Frame):
         # Parameter value
         self.value_label        = tk.Label(self.par_ctrl_frame, text="", justify=tk.RIGHT, font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         self.unit_label         = tk.Label(self.par_ctrl_frame, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.par_limit_label    = tk.Label(self.par_ctrl_frame, text="", justify=tk.RIGHT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_limit_label    = tk.Label(self.par_ctrl_frame, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_type_label     = tk.Label(self.par_ctrl_frame, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         
         self.value_entry        = tk.Entry(self.par_ctrl_frame, state=tk.DISABLED, justify=tk.RIGHT, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, width=10, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
 
@@ -160,10 +161,14 @@ class ParameterFrame(tk.Frame):
         # Parameter control frame
         self.read_all_btn.grid(     column=0, row=1,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
         self.store_all_btn.grid(    column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
-        self.value_label.grid(      column=1, row=1,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
-        self.value_entry.grid(      column=2, row=1,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
-        self.unit_label.grid(       column=3, row=1,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
-        self.par_limit_label.grid(  column=1, row=2,  columnspan=2,     sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
+
+        self.par_limit_label.grid(  column=1, row=1, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
+        self.par_type_label.grid(   column=1, row=2, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
+
+        self.value_label.grid(      column=2, row=1,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
+        self.value_entry.grid(      column=3, row=1,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
+        self.unit_label.grid(       column=4, row=1,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
+        
         
     # ===============================================================================
     # @brief:   Insert parameter to table
@@ -440,7 +445,6 @@ class ParameterFrame(tk.Frame):
                 # Update unit & parameter name                                       
                 self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
                 self.unit_label["text"] = par.unit
-                self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
 
             # Read only parameter
             else:
@@ -450,7 +454,9 @@ class ParameterFrame(tk.Frame):
                 # Update unit & parameter name                                       
                 self.value_label["text"] = ""
                 self.unit_label["text"] = ""
-                self.par_limit_label["text"] = ""
+
+        self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
+        self.par_type_label["text"] = "Type: %s" % ( par.type )
 
     
     # ===============================================================================
@@ -482,7 +488,6 @@ class ParameterFrame(tk.Frame):
                 # Update unit & parameter name                                       
                 self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
                 self.unit_label["text"] = par.unit
-                self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
 
             # Read only parameter
             else:
@@ -492,7 +497,9 @@ class ParameterFrame(tk.Frame):
                 # Update unit & parameter name                                       
                 self.value_label["text"] = ""
                 self.unit_label["text"] = ""
-                self.par_limit_label["text"] = ""
+
+        self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
+        self.par_type_label["text"] = "Type: %s" % ( par.type )
 
     # ===============================================================================
     # @brief:   Value enter to write to device event
