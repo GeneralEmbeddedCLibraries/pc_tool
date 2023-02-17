@@ -1,4 +1,4 @@
-## Copyright (c) 2022 Ziga Miklosic
+## Copyright (c) 2023 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -51,6 +51,8 @@ class GuiColor():
     btn_bg: str = "#0e639c"
     btn_fg: str = "#ffffff"
     btn_hoover_bg: str = "#1177bb"
+    btn_error_bg: str = "#ff4d4d"
+    btn_success_bg: str = "#4dff4d"
 
     # Navigation button
     nav_btn_bg: str = sub_1_bg
@@ -112,6 +114,7 @@ class GuiFont():
     heading_1_bold: list = ("Calibri", 18, "bold")
     heading_2: list = ("Calibri", 16)
     heading_2_bold: list = ("Calibri", 16, "bold")
+    heading_2_italic: list = ("Calibri", 16, "italic")
 
     # Normal text
     normal: list = ("Calibri", 14)
@@ -154,6 +157,9 @@ class NormalButton():
     # @return:      void
     # ===============================================================================  
     def __init__(self, root, text=None, command=None, width=20):
+
+        # Save root window
+        self.root = root
 
         # Create tkinter button
         self.btn = tk.Button(root, text=text, font=GuiFont.btn, bg=GuiColor.btn_bg, fg=GuiColor.btn_fg, activebackground=GuiColor.btn_bg, activeforeground=GuiColor.btn_fg, relief=tk.FLAT, borderwidth=0, width=width, command=command)
@@ -222,6 +228,56 @@ class NormalButton():
     # ===============================================================================  
     def config(self, *args, **kwargs):
         self.btn.config(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Signal/Show feedback as error
+    #
+    # @return:      void
+    # ===============================================================================  
+    def show_error(self):
+
+        # Set error background
+        self.config(bg=GuiColor.btn_error_bg, fg="#000000")
+
+        # Unbind until timeout
+        self.btn.unbind("<Enter>")
+        self.btn.unbind("<Leave>")
+
+        # Start timer
+        self.error_show_active = True
+        self.root.after(500, self.__show_timeout)
+
+    # ===============================================================================
+    # @brief:   Signal/Show feedback as success
+    #
+    # @return:      void
+    # ===============================================================================  
+    def show_success(self):
+
+        # Set success background
+        self.config(bg=GuiColor.btn_success_bg, fg="#000000")
+
+        # Unbind until timeout
+        self.btn.unbind("<Enter>")
+        self.btn.unbind("<Leave>")
+
+        # Start timer
+        self.error_show_active = True
+        self.root.after(500, self.__show_timeout)
+
+    # ===============================================================================
+    # @brief:   Signal/Show feedback timeout event
+    #
+    # @return:      void
+    # ===============================================================================  
+    def __show_timeout(self):
+
+        # Change bg back to normal
+        self.config(bg=GuiColor.btn_bg, fg=GuiColor.btn_fg)
+
+        # Bind command back
+        self.btn.bind("<Enter>", self.__btn_enter)
+        self.btn.bind("<Leave>", self.__btn_leave)
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse entry

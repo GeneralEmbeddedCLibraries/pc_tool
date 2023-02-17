@@ -1,4 +1,4 @@
-## Copyright (c) 2022 Ziga Miklosic
+## Copyright (c) 2023 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -41,7 +41,7 @@ MAIN_WIN_FAST_TIM_PERIOD    = 100
 # Slow timer period
 #
 # Unit: ms
-MAIN_WIN_SLOW_TIM_PERIOD    = 1000
+MAIN_WIN_SLOW_TIM_PERIOD    = 2500
 
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
@@ -581,10 +581,7 @@ class MainWindow():
 
         # Parameter frame
         self.par_frame.read_all_btn.config(state=tk.NORMAL)
-        self.par_frame.read_btn.config(state=tk.NORMAL)
-        self.par_frame.write_btn.config(state=tk.NORMAL)
         self.par_frame.store_all_btn.config(state=tk.NORMAL)
-        self.par_frame.value_entry.config(state=tk.NORMAL)
 
     # ===============================================================================
     # @brief:   Deactivate connection related widgets
@@ -599,10 +596,7 @@ class MainWindow():
 
         # Parameter frame
         self.par_frame.read_all_btn.config(state=tk.DISABLED)
-        self.par_frame.read_btn.config(state=tk.DISABLED)
-        self.par_frame.write_btn.config(state=tk.DISABLED)
         self.par_frame.store_all_btn.config(state=tk.DISABLED)
-        self.par_frame.value_entry.config(state=tk.DISABLED)
 
     # ===============================================================================
     # @brief:   File imported callback
