@@ -31,6 +31,11 @@ from gui.GuiCommon import GuiFont, GuiColor, NormalButton
 # Unit: ms
 PAR_FRAME_DEV_RESP_SIGNAL_DUR   = 500
 
+## Parameter units
+PAR_TYPE_STRING = [ "uint8_t", "uint16_t", "uint32_t", "int8_t", "int16_t", "int32_t", "float32_t" ]
+
+## Parameter persistance string
+PAR_PERSISTANT_STRING = [ "NO", "YES"]
 
 #################################################################################################
 ##  FUNCTIONS
@@ -49,10 +54,11 @@ class Parameter():
     val: str = ""
     max: str = ""
     min: str = ""
+    default: str = ""
     unit: str = ""
     access: str = ""
     nvm: str = ""
-    comment: str = ""
+    desc: str = ""
 
 @dataclass
 class ParameterTable():
@@ -109,46 +115,45 @@ class ParameterFrame(tk.Frame):
         # Parameter table
         self.par_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
 
+        # Parameter control & info frame
+        self.par_ctrl_frame = tk.Frame( self, bg=GuiColor.main_bg );
+
         # Define columns
-        #self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
-        self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Comment" )
+        self.par_table["columns"] = ("ID", "Name", "Val", "Unit", "Access", "Description" )
         self.par_table.column("#0",                                 width=0,                        stretch=tk.NO       )
         self.par_table.column("ID",             anchor=tk.W,        width=80,       minwidth=80,    stretch=tk.NO       )
         self.par_table.column("Name",           anchor=tk.W,        width=400,      minwidth=400,   stretch=tk.NO     )
-        #self.par_table.column("Type",           anchor=tk.CENTER,   width=75,       minwidth=75,    stretch=tk.NO       )
-        self.par_table.column("Val",            anchor=tk.W,        width=100,      minwidth=100,    stretch=tk.NO       )
-        self.par_table.column("Max",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
-        self.par_table.column("Min",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
-        #self.par_table.column("Unit",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
-        #self.par_table.column("Access",         anchor=tk.CENTER,   width=110,      minwidth=110,   stretch=tk.NO       )
-        #self.par_table.column("NVM",            anchor=tk.CENTER,   width=100,      minwidth=100,   stretch=tk.NO       )
-        self.par_table.column("Comment",        anchor=tk.W,        width=200,      minwidth=200,   stretch=tk.YES       )
+        self.par_table.column("Val",            anchor=tk.E,        width=120,      minwidth=100,    stretch=tk.NO       )
+        self.par_table.column("Unit",           anchor=tk.W,        width=100,       minwidth=80,    stretch=tk.NO       )
+        self.par_table.column("Access",         anchor=tk.CENTER,        width=80,       minwidth=30,    stretch=tk.NO       )
+        self.par_table.column("Description",    anchor=tk.W,        width=200,      minwidth=200,   stretch=tk.YES       )
 
         self.par_table.heading("#0",            text="",            anchor=tk.CENTER    )
         self.par_table.heading("ID",            text="ID",          anchor=tk.W         )
         self.par_table.heading("Name",          text="Name",        anchor=tk.W         )
-        #self.par_table.heading("Type",          text="Type",        anchor=tk.CENTER    )
-        self.par_table.heading("Val",           text="Val",         anchor=tk.W         )
-        self.par_table.heading("Max",           text="Max",         anchor=tk.W         )
-        self.par_table.heading("Min",           text="Min",         anchor=tk.W         )
-        #self.par_table.heading("Unit",          text="Unit",        anchor=tk.CENTER    )
-        #self.par_table.heading("Access",        text="Access",      anchor=tk.CENTER    )
-        #self.par_table.heading("NVM",           text="NVM",         anchor=tk.CENTER    )
-        self.par_table.heading("Comment",       text="Comment",     anchor=tk.W         )
+        self.par_table.heading("Val",           text="Val",         anchor=tk.E         )
+        self.par_table.heading("Unit",          text="Unit",        anchor=tk.CENTER    )
+        self.par_table.heading("Access",        text="Access",      anchor=tk.CENTER    )
+        self.par_table.heading("Description",   text="Description", anchor=tk.W         )
 
         # Left mouse click bindings
         self.par_table.bind("<Button-1>", self.__right_m_click_table)
         self.par_table.bind("<Double-Button-1>", self.__double_right_m_click_table)
 
         # Buttons
-        self.read_btn       = NormalButton(self, text="Read", command=self.__read_btn_click)    
-        self.write_btn      = NormalButton(self, text="Write", command=self.__write_btn_click)
-        self.read_all_btn   = NormalButton(self, text="Read All", command=self.__read_all_btn_click)    
-        self.store_all_btn  = NormalButton(self, text="Store All", command=self.__store_all_btn_click)
+        self.read_all_btn   = NormalButton(self.par_ctrl_frame, text="Read All", command=self.__read_all_btn_click)    
+        self.store_all_btn  = NormalButton(self.par_ctrl_frame, text="Store All", command=self.__store_all_btn_click)
 
         # Parameter value
-        self.value_label = tk.Label(self, text="Parameter Value", font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.value_entry = tk.Entry(self, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
+        self.value_label        = tk.Label(self.par_ctrl_frame, text="", justify=tk.RIGHT, font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.unit_label         = tk.Label(self.par_ctrl_frame, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_limit_label    = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_type_label     = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        
+        self.par_def_label     = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_per_label     = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        
+        self.value_entry        = tk.Entry(self.par_ctrl_frame, state=tk.DISABLED, justify=tk.RIGHT, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, width=10, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
 
         # Entry validation
         vcmd = (self.register(self.__value_entry_validate), '%P')
@@ -158,17 +163,24 @@ class ParameterFrame(tk.Frame):
         self.value_entry.bind("<Return>", self.__value_entry_enter)
 
         # Self frame layout
-        self.frame_label.grid(      column=0, row=0,                    sticky=tk.W,                    padx=20, pady=10    )
-        self.par_table.grid(        column=0, row=1, columnspan=4,      sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10    )
+        self.frame_label.grid(      column=0, row=0, sticky=tk.W,                    padx=20, pady=10    )
+        self.par_table.grid(        column=0, row=1, sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10    )
+        self.par_ctrl_frame.grid(   column=0, row=2, sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=0   )
 
-        self.read_btn.grid(         column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=10, pady=10    )
-        self.read_all_btn.grid(     column=0, row=3,                    sticky=tk.W+tk.N+tk.S,          padx=10, pady=10    )
+        # Parameter control frame
+        self.read_all_btn.grid(     column=0, row=1,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
+        self.store_all_btn.grid(    column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
 
-        self.value_label.grid(      column=1, row=2,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
-        self.value_entry.grid(      column=2, row=2,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10    )
+        self.par_limit_label.grid(  column=1, row=1, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
+        self.par_type_label.grid(   column=1, row=2, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
 
-        self.write_btn.grid(        column=3, row=2,                    sticky=tk.W+tk.E+tk.S,          padx=10, pady=10    )
-        self.store_all_btn.grid(    column=3, row=3,                    sticky=tk.W+tk.E+tk.N,          padx=10, pady=10    )
+        self.par_def_label.grid(    column=2, row=1, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
+        self.par_per_label.grid(    column=2, row=2, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
+
+        self.value_label.grid(      column=3, row=1,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
+        self.value_entry.grid(      column=4, row=1,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
+        self.unit_label.grid(       column=5, row=1,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
+        
         
     # ===============================================================================
     # @brief:   Insert parameter to table
@@ -180,9 +192,9 @@ class ParameterFrame(tk.Frame):
     def __par_table_insert(self, idx, par):
 
         if ( idx % 2 == 0 ):
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('even', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.unit), str(par.access), str(par.desc)), tags=('even', 'simple'))
         else:
-            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)), tags=('odd', 'simple'))
+            self.par_table.insert(parent='',index='end',iid=idx,text='', values=(str(par.id), str(par.name), str(par.val), str(par.unit), str(par.access), str(par.desc)), tags=('odd', 'simple'))
 
         self.par_table.tag_configure('even', background=GuiColor.table_fg, foreground=GuiColor.table_bg)
         
@@ -216,7 +228,7 @@ class ParameterFrame(tk.Frame):
     # @return:      void
     # ===============================================================================   
     def __par_table_change_par_data(self, row, par):
-        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.max), str(par.min), str(par.comment)))
+        self.par_table.item(row, values=(str(par.id), str(par.name), str(par.val), str(par.unit), str(par.access), str(par.desc)))
 
     # ===============================================================================
     # @brief:   Get table row from parameter ID
@@ -391,7 +403,6 @@ class ParameterFrame(tk.Frame):
                     self.__cmd = ParCmd.Write
 
                     # Assemble command
-                    
                     dev_cmd = self.__cmd + " " + str(self.__cmd_par_id) + "," + val_str
 
                     # Raise callback for command send
@@ -407,8 +418,15 @@ class ParameterFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def __store_all_btn_click(self):
-        #TODO: 
-        pass
+
+        # Store paramterst into nwm
+        self.__cmd = ParCmd.Store
+
+        # Assemble command
+        dev_cmd = self.__cmd
+
+        # Raise callback for command send
+        self.btn_callbacks[0](dev_cmd)
 
     # ===============================================================================
     # @brief:   Single right click on table action
@@ -423,12 +441,37 @@ class ParameterFrame(tk.Frame):
         iid = self.par_table.identify_row(e.y)
         if iid:
             
-            val = self.__param_get_value(self.__par_table_get_id_by_row(iid))
-        
-            # Update value entry
-            self.value_entry.focus()
-            self.value_entry.delete(0, tk.END)
-            self.value_entry.insert(0, val)
+            # Get parameter info
+            par_id = self.__par_table_get_id_by_row(iid)
+            par = self.__par_table_get_par_by_id( par_id )
+
+            # Parameter is Read/Write
+            if "RW" == par.access:
+                
+                # Update value entry
+                self.value_entry.config(state=tk.NORMAL)
+                self.value_entry.focus()
+                self.value_entry.delete(0, tk.END)
+                self.value_entry.insert(0, par.val)
+
+                # Update unit & parameter name                                       
+                self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
+                self.unit_label["text"] = par.unit
+
+            # Read only parameter
+            else:
+                self.value_entry.delete(0, tk.END)
+                self.value_entry.config(state=tk.DISABLED)
+
+                # Update unit & parameter name                                       
+                self.value_label["text"] = ""
+                self.unit_label["text"] = ""
+
+        self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
+        self.par_type_label["text"] = "Type: %s" % ( PAR_TYPE_STRING[ int(par.type) ] )
+        self.par_def_label["text"] = "Default: %s" % par.default
+        self.par_per_label["text"] = "Persistant: %s" % ( PAR_PERSISTANT_STRING[ int(par.nvm) ])
+
     
     # ===============================================================================
     # @brief:   Double right click on table action
@@ -440,6 +483,39 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __double_right_m_click_table(self, e):
         self.__read_btn_click()
+
+        iid = self.par_table.identify_row(e.y)
+        if iid:
+            
+            # Get parameter info
+            par_id = self.__par_table_get_id_by_row(iid)
+            par = self.__par_table_get_par_by_id( par_id )
+
+            # Parameter is Read/Write
+            if "RW" == par.access:
+                
+                # Update value entry
+                self.value_entry.config(state=tk.NORMAL)
+                self.value_entry.focus()
+                self.value_entry.delete(0, tk.END)
+                                
+                # Update unit & parameter name                                       
+                self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
+                self.unit_label["text"] = par.unit
+
+            # Read only parameter
+            else:
+                self.value_entry.delete(0, tk.END)
+                self.value_entry.config(state=tk.DISABLED)
+                
+                # Update unit & parameter name                                       
+                self.value_label["text"] = ""
+                self.unit_label["text"] = ""
+
+        self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
+        self.par_type_label["text"] = "Type: %s" % ( PAR_TYPE_STRING[ int(par.type) ] )
+        self.par_def_label["text"] = "Default: %s" % par.default
+        self.par_per_label["text"] = "Persistant: %s" % ( PAR_PERSISTANT_STRING[ int(par.nvm) ])
 
     # ===============================================================================
     # @brief:   Value enter to write to device event
@@ -524,11 +600,18 @@ class ParameterFrame(tk.Frame):
                 self.__cmd = ParCmd.Idle
                 self.__table_row = 0
 
+                # Show error
+                self.read_all_btn.show_error()
+
             else:
+
                 # After all characters are read set cmd to idle
                 if ";END" == dev_msg:
                     self.__cmd = ParCmd.Idle
                     self.__table_row = 0
+
+                    # Show success
+                    self.read_all_btn.show_success()
 
                 # Header
                 elif ";" == dev_msg[0]:
@@ -548,16 +631,16 @@ class ParameterFrame(tk.Frame):
                 else:
                     
                     # Parse parameter info
-                    p_id, p_name, p_val, p_def, p_min, p_max, p_comment, p_type, _ = dev_msg.split(",")
+                    # >>>ID,Name,Value,Default,Min,Max,Unit,Type,Access,Persistance,Description
+                    p_id, p_name, p_val, p_def, p_min, p_max, p_unit, p_type, p_access, p_nvm, p_desc = dev_msg.split(",")
 
-                    # Remove space in values
-                    p_val = p_val.replace(" ", "")
-                    p_def = p_def.replace(" ", "")
-                    p_max = p_max.replace(" ", "")
-                    p_min = p_min.replace(" ", "")
+                    if "0" == p_access:
+                        p_access = "RO"
+                    else:
+                        p_access = "RW"
 
                     # Create parameter
-                    p = Parameter(id=p_id, name=p_name, type=p_type, val=p_val, max=p_max, min=p_min, unit="", comment=p_comment, nvm="")
+                    p = Parameter(id=p_id, name=p_name, type=p_type, val=p_val, max=p_max, min=p_min, default=p_def, unit=p_unit, desc=p_desc, nvm=p_nvm, access=p_access)
 
                     # Put paramter to table
                     self.__par_table_insert(self.__table_row, p)
@@ -617,12 +700,24 @@ class ParameterFrame(tk.Frame):
                 # Signal OK
                 self.__par_table_signal_ok()
 
-
         # Reponse for saving command
         elif ParCmd.Store == self.__cmd:
             self.__cmd = ParCmd.Idle
 
-            # TODO: Further actions here...
+           # Device response with error
+            if "ERR" in dev_msg:
+                self.store_all_btn.show_error()
+            
+            # Device response with success
+            elif "OK" in dev_msg:
+                self.store_all_btn.show_success()
+
+            else:
+                # No actions
+                pass
+                
+
+
 
 
 #################################################################################################
