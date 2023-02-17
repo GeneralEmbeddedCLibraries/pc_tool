@@ -31,6 +31,11 @@ from gui.GuiCommon import GuiFont, GuiColor, NormalButton
 # Unit: ms
 PAR_FRAME_DEV_RESP_SIGNAL_DUR   = 500
 
+## Parameter units
+PAR_TYPE_STRING = [ "uint8_t", "uint16_t", "uint32_t", "int8_t", "int16_t", "int32_t", "float32_t" ]
+
+## Parameter persistance string
+PAR_PERSISTANT_STRING = [ "NO", "YES"]
 
 #################################################################################################
 ##  FUNCTIONS
@@ -49,6 +54,7 @@ class Parameter():
     val: str = ""
     max: str = ""
     min: str = ""
+    default: str = ""
     unit: str = ""
     access: str = ""
     nvm: str = ""
@@ -141,8 +147,11 @@ class ParameterFrame(tk.Frame):
         # Parameter value
         self.value_label        = tk.Label(self.par_ctrl_frame, text="", justify=tk.RIGHT, font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         self.unit_label         = tk.Label(self.par_ctrl_frame, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.par_limit_label    = tk.Label(self.par_ctrl_frame, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.par_type_label     = tk.Label(self.par_ctrl_frame, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_limit_label    = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_type_label     = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        
+        self.par_def_label     = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_per_label     = tk.Label(self.par_ctrl_frame, width=30, text="", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         
         self.value_entry        = tk.Entry(self.par_ctrl_frame, state=tk.DISABLED, justify=tk.RIGHT, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, width=10, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
 
@@ -165,9 +174,12 @@ class ParameterFrame(tk.Frame):
         self.par_limit_label.grid(  column=1, row=1, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
         self.par_type_label.grid(   column=1, row=2, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
 
-        self.value_label.grid(      column=2, row=1,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
-        self.value_entry.grid(      column=3, row=1,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
-        self.unit_label.grid(       column=4, row=1,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
+        self.par_def_label.grid(    column=2, row=1, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
+        self.par_per_label.grid(    column=2, row=2, sticky=tk.W+tk.N+tk.S,          padx=0, pady=5    )
+
+        self.value_label.grid(      column=3, row=1,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
+        self.value_entry.grid(      column=4, row=1,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
+        self.unit_label.grid(       column=5, row=1,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
         
         
     # ===============================================================================
@@ -456,7 +468,9 @@ class ParameterFrame(tk.Frame):
                 self.unit_label["text"] = ""
 
         self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
-        self.par_type_label["text"] = "Type: %s" % ( par.type )
+        self.par_type_label["text"] = "Type: %s" % ( PAR_TYPE_STRING[ int(par.type) ] )
+        self.par_def_label["text"] = "Default: %s" % par.default
+        self.par_per_label["text"] = "Persistant: %s" % ( PAR_PERSISTANT_STRING[ int(par.nvm) ])
 
     
     # ===============================================================================
@@ -499,7 +513,9 @@ class ParameterFrame(tk.Frame):
                 self.unit_label["text"] = ""
 
         self.par_limit_label["text"] = "Limits: %s/%s" % ( par.min, par.max )
-        self.par_type_label["text"] = "Type: %s" % ( par.type )
+        self.par_type_label["text"] = "Type: %s" % ( PAR_TYPE_STRING[ int(par.type) ] )
+        self.par_def_label["text"] = "Default: %s" % par.default
+        self.par_per_label["text"] = "Persistant: %s" % ( PAR_PERSISTANT_STRING[ int(par.nvm) ])
 
     # ===============================================================================
     # @brief:   Value enter to write to device event
@@ -624,7 +640,7 @@ class ParameterFrame(tk.Frame):
                         p_access = "RW"
 
                     # Create parameter
-                    p = Parameter(id=p_id, name=p_name, type=p_type, val=p_val, max=p_max, min=p_min, unit=p_unit, desc=p_desc, nvm=p_nvm, access=p_access)
+                    p = Parameter(id=p_id, name=p_name, type=p_type, val=p_val, max=p_max, min=p_min, default=p_def, unit=p_unit, desc=p_desc, nvm=p_nvm, access=p_access)
 
                     # Put paramter to table
                     self.__par_table_insert(self.__table_row, p)
