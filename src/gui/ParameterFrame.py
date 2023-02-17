@@ -137,9 +137,11 @@ class ParameterFrame(tk.Frame):
         self.store_all_btn  = NormalButton(self.par_ctrl_frame, text="Store All", command=self.__store_all_btn_click)
 
         # Parameter value
-        self.value_label = tk.Label(self.par_ctrl_frame, text="Set \"parameter\" value:", justify=tk.RIGHT, font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.unit_label = tk.Label(self.par_ctrl_frame, text="Unit", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.value_entry = tk.Entry(self.par_ctrl_frame, justify=tk.RIGHT, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, width=10, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
+        self.value_label        = tk.Label(self.par_ctrl_frame, text="Set \"parameter\" value:", justify=tk.RIGHT, font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.unit_label         = tk.Label(self.par_ctrl_frame, text="Unit", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.par_limit_label    = tk.Label(self.par_ctrl_frame, text="Min/Max", justify=tk.RIGHT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        
+        self.value_entry        = tk.Entry(self.par_ctrl_frame, justify=tk.RIGHT, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, width=10, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
 
         # Entry validation
         vcmd = (self.register(self.__value_entry_validate), '%P')
@@ -154,11 +156,12 @@ class ParameterFrame(tk.Frame):
         self.par_ctrl_frame.grid(   column=0, row=2, sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10   )
 
         # Parameter control frame
-        self.read_all_btn.grid(     column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
-        self.store_all_btn.grid(    column=0, row=3,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
-        self.value_label.grid(      column=1, row=2,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
-        self.value_entry.grid(      column=2, row=2,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
-        self.unit_label.grid(       column=3, row=2,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
+        self.read_all_btn.grid(     column=0, row=1,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
+        self.store_all_btn.grid(    column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
+        self.value_label.grid(      column=1, row=1,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
+        self.value_entry.grid(      column=2, row=1,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
+        self.unit_label.grid(       column=3, row=1,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
+        self.par_limit_label.grid(  column=1, row=2,  columnspan=2,     sticky=tk.E+tk.N+tk.S,     padx=0, pady=10    )
         
     # ===============================================================================
     # @brief:   Insert parameter to table
@@ -431,6 +434,7 @@ class ParameterFrame(tk.Frame):
             # Update unit & parameter name                                       
             self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
             self.unit_label["text"] = par.unit
+            self.par_limit_label["text"] = "%s/%s" % ( par.min, par.max )
     
     # ===============================================================================
     # @brief:   Double right click on table action
@@ -457,6 +461,7 @@ class ParameterFrame(tk.Frame):
             # Update unit & parameter name                                       
             self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
             self.unit_label["text"] = par.unit
+            self.par_limit_label["text"] = "%s/%s" % ( par.min, par.max )
 
     # ===============================================================================
     # @brief:   Value enter to write to device event
