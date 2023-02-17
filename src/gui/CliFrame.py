@@ -117,12 +117,6 @@ class CliFrame(tk.Frame):
         # Add deafult shortcuts
         self.shortcut.add("Help", "help")
         self.shortcut.add("Reset", "reset")
-        self.shortcut.add("Show parameters", "par_print")
-
-        # TODO: Remove only tesing
-        self.shortcut.add("Streaming ON", "status_start")
-        self.shortcut.add("Streaming OFF", "status_stop")
-        # TODO END: 
 
         # Self frame layout
         self.frame_label.grid(  column=0, row=0,                sticky=tk.W,                   padx=20, pady=10     )
