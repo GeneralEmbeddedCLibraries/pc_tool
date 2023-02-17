@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V0.2.0 - 09.12.2022
+## V0.2.0 - 17.02.2023
 
 ### Added
  - Raw traffic enable/disable option
