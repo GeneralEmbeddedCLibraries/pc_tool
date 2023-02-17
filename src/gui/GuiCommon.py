@@ -157,6 +157,8 @@ class NormalButton():
     # ===============================================================================  
     def __init__(self, root, text=None, command=None, width=20):
 
+        self.root = root
+
         # Create tkinter button
         self.btn = tk.Button(root, text=text, font=GuiFont.btn, bg=GuiColor.btn_bg, fg=GuiColor.btn_fg, activebackground=GuiColor.btn_bg, activeforeground=GuiColor.btn_fg, relief=tk.FLAT, borderwidth=0, width=width, command=command)
 
@@ -228,8 +230,25 @@ class NormalButton():
     def show_error(self):
         self.config(bg=GuiColor.btn_error_bg)
 
+        self.btn.unbind("<Enter>")
+        self.btn.unbind("<Leave>")
+
+        # Start timer
+        self.root.after(500, self.__show_timeout)
+
     def show_success(self):
         self.config(bg=GuiColor.btn_success_bg)
+
+        self.btn.unbind("<Enter>")
+        self.btn.unbind("<Leave>")
+
+        # Start timer
+        self.root.after(1000, self.__show_timeout)
+
+    def __show_timeout(self):
+        self.config(bg=GuiColor.btn_bg)
+        self.btn.bind("<Enter>", self.__btn_enter)
+        self.btn.bind("<Leave>", self.__btn_leave)
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse entry
