@@ -113,43 +113,26 @@ class ParameterFrame(tk.Frame):
         self.par_ctrl_frame = tk.Frame( self, bg=GuiColor.main_bg );
 
         # Define columns
-        #self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
         self.par_table["columns"] = ("ID", "Name", "Val", "Unit", "Description" )
         self.par_table.column("#0",                                 width=0,                        stretch=tk.NO       )
         self.par_table.column("ID",             anchor=tk.W,        width=80,       minwidth=80,    stretch=tk.NO       )
         self.par_table.column("Name",           anchor=tk.W,        width=400,      minwidth=400,   stretch=tk.NO     )
-        #self.par_table.column("Type",           anchor=tk.CENTER,   width=75,       minwidth=75,    stretch=tk.NO       )
         self.par_table.column("Val",            anchor=tk.E,        width=120,      minwidth=100,    stretch=tk.NO       )
-        #self.par_table.column("Max",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
-        #self.par_table.column("Min",            anchor=tk.W,        width=100,       minwidth=100,    stretch=tk.NO       )
         self.par_table.column("Unit",            anchor=tk.W,   width=100,       minwidth=80,    stretch=tk.NO       )
-        #self.par_table.column("Type",           anchor=tk.CENTER,   width=80,       minwidth=80,    stretch=tk.NO       )
-        #self.par_table.column("Access",         anchor=tk.CENTER,   width=110,      minwidth=110,   stretch=tk.NO       )
-        #self.par_table.column("NVM",            anchor=tk.CENTER,   width=100,      minwidth=100,   stretch=tk.NO       )
         self.par_table.column("Description",        anchor=tk.W,        width=200,      minwidth=200,   stretch=tk.YES       )
 
         self.par_table.heading("#0",            text="",            anchor=tk.CENTER    )
         self.par_table.heading("ID",            text="ID",          anchor=tk.W         )
         self.par_table.heading("Name",          text="Name",        anchor=tk.W         )
-        #self.par_table.heading("Type",         text="Type",        anchor=tk.CENTER    )
         self.par_table.heading("Val",           text="Val",         anchor=tk.E         )
-        #self.par_table.heading("Max",          text="Max",         anchor=tk.W         )
-        #self.par_table.heading("Min",          text="Min",         anchor=tk.W         )
         self.par_table.heading("Unit",          text="Unit",        anchor=tk.W    )
-        #self.par_table.heading("Access",       text="Access",      anchor=tk.CENTER    )
-        #self.par_table.heading("NVM",          text="NVM",         anchor=tk.CENTER    )
         self.par_table.heading("Description",   text="Description", anchor=tk.W         )
 
         # Left mouse click bindings
         self.par_table.bind("<Button-1>", self.__right_m_click_table)
         self.par_table.bind("<Double-Button-1>", self.__double_right_m_click_table)
 
-
-
-
         # Buttons
-        #self.read_btn       = NormalButton(self, text="Read", command=self.__read_btn_click)    
-        #self.write_btn      = NormalButton(self, text="Write", command=self.__write_btn_click)
         self.read_all_btn   = NormalButton(self.par_ctrl_frame, text="Read All", command=self.__read_all_btn_click)    
         self.store_all_btn  = NormalButton(self.par_ctrl_frame, text="Store All", command=self.__store_all_btn_click)
 
@@ -173,10 +156,9 @@ class ParameterFrame(tk.Frame):
         # Parameter control frame
         self.read_all_btn.grid(     column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
         self.store_all_btn.grid(    column=0, row=3,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
-
         self.value_label.grid(      column=1, row=2,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
         self.value_entry.grid(      column=2, row=2,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
-        self.unit_label.grid(      column=3, row=2,                     sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
+        self.unit_label.grid(       column=3, row=2,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
         
     # ===============================================================================
     # @brief:   Insert parameter to table
@@ -471,7 +453,6 @@ class ParameterFrame(tk.Frame):
             # Update value entry
             self.value_entry.focus()
             self.value_entry.delete(0, tk.END)
-            self.value_entry.insert(0, par.val)
 
             # Update unit & parameter name                                       
             self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
