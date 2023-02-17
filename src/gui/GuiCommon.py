@@ -237,7 +237,7 @@ class NormalButton():
     def show_error(self):
 
         # Set error background
-        self.config(bg=GuiColor.btn_error_bg)
+        self.config(bg=GuiColor.btn_error_bg, fg="#000000")
 
         # Unbind until timeout
         self.btn.unbind("<Enter>")
@@ -255,7 +255,7 @@ class NormalButton():
     def show_success(self):
 
         # Set success background
-        self.config(bg=GuiColor.btn_success_bg)
+        self.config(bg=GuiColor.btn_success_bg, fg="#000000")
 
         # Unbind until timeout
         self.btn.unbind("<Enter>")
@@ -273,7 +273,7 @@ class NormalButton():
     def __show_timeout(self):
 
         # Change bg back to normal
-        self.config(bg=GuiColor.btn_bg)
+        self.config(bg=GuiColor.btn_bg, fg=GuiColor.btn_fg)
 
         # Bind command back
         self.btn.bind("<Enter>", self.__btn_enter)
