@@ -581,8 +581,11 @@ class MainWindow():
 
         # Parameter frame
         self.par_frame.read_all_btn.config(state=tk.NORMAL)
-        self.par_frame.read_btn.config(state=tk.NORMAL)
-        self.par_frame.write_btn.config(state=tk.NORMAL)
+
+        # TODO:
+        #self.par_frame.read_btn.config(state=tk.NORMAL)
+        #self.par_frame.write_btn.config(state=tk.NORMAL)
+        
         self.par_frame.store_all_btn.config(state=tk.NORMAL)
         self.par_frame.value_entry.config(state=tk.NORMAL)
 
@@ -599,8 +602,10 @@ class MainWindow():
 
         # Parameter frame
         self.par_frame.read_all_btn.config(state=tk.DISABLED)
-        self.par_frame.read_btn.config(state=tk.DISABLED)
-        self.par_frame.write_btn.config(state=tk.DISABLED)
+
+        # TODO: 
+        #self.par_frame.read_btn.config(state=tk.DISABLED)
+        #self.par_frame.write_btn.config(state=tk.DISABLED)
         self.par_frame.store_all_btn.config(state=tk.DISABLED)
         self.par_frame.value_entry.config(state=tk.DISABLED)
 

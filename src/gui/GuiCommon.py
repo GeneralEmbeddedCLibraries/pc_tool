@@ -114,6 +114,7 @@ class GuiFont():
     heading_1_bold: list = ("Calibri", 18, "bold")
     heading_2: list = ("Calibri", 16)
     heading_2_bold: list = ("Calibri", 16, "bold")
+    heading_2_italic: list = ("Calibri", 16, "italic")
 
     # Normal text
     normal: list = ("Calibri", 14)

@@ -109,6 +109,9 @@ class ParameterFrame(tk.Frame):
         # Parameter table
         self.par_table = ttk.Treeview(self, style="mystyle.Treeview", selectmode="browse")
 
+        # Parameter control & info frame
+        self.par_ctrl_frame = tk.Frame( self, bg=GuiColor.main_bg );
+
         # Define columns
         #self.par_table["columns"] = ("ID", "Name", "Val", "Max", "Min", "Unit", "Type", "Access", "NVM", "Comment" )
         self.par_table["columns"] = ("ID", "Name", "Val", "Unit", "Description" )
@@ -141,15 +144,19 @@ class ParameterFrame(tk.Frame):
         self.par_table.bind("<Button-1>", self.__right_m_click_table)
         self.par_table.bind("<Double-Button-1>", self.__double_right_m_click_table)
 
+
+
+
         # Buttons
-        self.read_btn       = NormalButton(self, text="Read", command=self.__read_btn_click)    
-        self.write_btn      = NormalButton(self, text="Write", command=self.__write_btn_click)
-        self.read_all_btn   = NormalButton(self, text="Read All", command=self.__read_all_btn_click)    
-        self.store_all_btn  = NormalButton(self, text="Store All", command=self.__store_all_btn_click)
+        #self.read_btn       = NormalButton(self, text="Read", command=self.__read_btn_click)    
+        #self.write_btn      = NormalButton(self, text="Write", command=self.__write_btn_click)
+        self.read_all_btn   = NormalButton(self.par_ctrl_frame, text="Read All", command=self.__read_all_btn_click)    
+        self.store_all_btn  = NormalButton(self.par_ctrl_frame, text="Store All", command=self.__store_all_btn_click)
 
         # Parameter value
-        self.value_label = tk.Label(self, text="Parameter Value", font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
-        self.value_entry = tk.Entry(self, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
+        self.value_label = tk.Label(self.par_ctrl_frame, text="Set \"parameter\" value:", justify=tk.RIGHT, font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.unit_label = tk.Label(self.par_ctrl_frame, text="Unit", justify=tk.LEFT, font=GuiFont.heading_2_italic, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.value_entry = tk.Entry(self.par_ctrl_frame, justify=tk.RIGHT, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, font=GuiFont.normal, borderwidth=0, width=10, disabledbackground=GuiColor.main_bg, disabledforeground=GuiColor.main_fg)
 
         # Entry validation
         vcmd = (self.register(self.__value_entry_validate), '%P')
@@ -159,17 +166,17 @@ class ParameterFrame(tk.Frame):
         self.value_entry.bind("<Return>", self.__value_entry_enter)
 
         # Self frame layout
-        self.frame_label.grid(      column=0, row=0,                    sticky=tk.W,                    padx=20, pady=10    )
-        self.par_table.grid(        column=0, row=1, columnspan=4,      sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10    )
+        self.frame_label.grid(      column=0, row=0, sticky=tk.W,                    padx=20, pady=10    )
+        self.par_table.grid(        column=0, row=1, sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10    )
+        self.par_ctrl_frame.grid(   column=0, row=2, sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10   )
 
-        self.read_btn.grid(         column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=10, pady=10    )
-        self.read_all_btn.grid(     column=0, row=3,                    sticky=tk.W+tk.N+tk.S,          padx=10, pady=10    )
+        # Parameter control frame
+        self.read_all_btn.grid(     column=0, row=2,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
+        self.store_all_btn.grid(    column=0, row=3,                    sticky=tk.W+tk.N+tk.S,          padx=20, pady=10    )
 
-        self.value_label.grid(      column=1, row=2,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
-        self.value_entry.grid(      column=2, row=2,                    sticky=tk.W+tk.E+tk.N+tk.S,     padx=10, pady=10    )
-
-        self.write_btn.grid(        column=3, row=2,                    sticky=tk.W+tk.E+tk.S,          padx=10, pady=10    )
-        self.store_all_btn.grid(    column=3, row=3,                    sticky=tk.W+tk.E+tk.N,          padx=10, pady=10    )
+        self.value_label.grid(      column=1, row=2,                    sticky=tk.W+tk.E+tk.S+tk.N,     padx=10, pady=10    )
+        self.value_entry.grid(      column=2, row=2,                    sticky=tk.E+tk.N+tk.S,          padx=0, pady=10    )
+        self.unit_label.grid(      column=3, row=2,                     sticky=tk.W+tk.E+tk.N+tk.S,     padx=0, pady=10    )
         
     # ===============================================================================
     # @brief:   Insert parameter to table
@@ -430,12 +437,18 @@ class ParameterFrame(tk.Frame):
         iid = self.par_table.identify_row(e.y)
         if iid:
             
-            val = self.__param_get_value(self.__par_table_get_id_by_row(iid))
-        
+            # Get parameter info
+            par_id = self.__par_table_get_id_by_row(iid)
+            par = self.__par_table_get_par_by_id( par_id )
+
             # Update value entry
             self.value_entry.focus()
             self.value_entry.delete(0, tk.END)
-            self.value_entry.insert(0, val)
+            self.value_entry.insert(0, par.val)
+
+            # Update unit & parameter name                                       
+            self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
+            self.unit_label["text"] = par.unit
     
     # ===============================================================================
     # @brief:   Double right click on table action
@@ -447,6 +460,22 @@ class ParameterFrame(tk.Frame):
     # ===============================================================================  
     def __double_right_m_click_table(self, e):
         self.__read_btn_click()
+
+        iid = self.par_table.identify_row(e.y)
+        if iid:
+            
+            # Get parameter info
+            par_id = self.__par_table_get_id_by_row(iid)
+            par = self.__par_table_get_par_by_id( par_id )
+
+            # Update value entry
+            self.value_entry.focus()
+            self.value_entry.delete(0, tk.END)
+            self.value_entry.insert(0, par.val)
+
+            # Update unit & parameter name                                       
+            self.value_label["text"] = ( "Set \"%s\" value:" % par.name )
+            self.unit_label["text"] = par.unit
 
     # ===============================================================================
     # @brief:   Value enter to write to device event
@@ -612,7 +641,6 @@ class ParameterFrame(tk.Frame):
             # Device response with error
             if "ERR" in dev_msg:
                 self.__par_table_signal_error()
-                self.read_btn.show_error()
             
             # Device response with success
             elif "OK" in dev_msg:
@@ -628,8 +656,6 @@ class ParameterFrame(tk.Frame):
 
                 # Signal OK
                 self.__par_table_signal_ok()
-                self.read_btn.show_success()
-
 
         # Reponse for saving command
         elif ParCmd.Store == self.__cmd:
