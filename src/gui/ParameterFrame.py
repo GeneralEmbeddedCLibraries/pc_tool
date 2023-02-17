@@ -392,7 +392,6 @@ class ParameterFrame(tk.Frame):
                     self.__cmd = ParCmd.Write
 
                     # Assemble command
-                    
                     dev_cmd = self.__cmd + " " + str(self.__cmd_par_id) + "," + val_str
 
                     # Raise callback for command send
@@ -408,8 +407,15 @@ class ParameterFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def __store_all_btn_click(self):
-        #TODO: 
-        pass
+
+        # Store paramterst into nwm
+        self.__cmd = ParCmd.Store
+
+        # Assemble command
+        dev_cmd = self.__cmd
+
+        # Raise callback for command send
+        self.btn_callbacks[0](dev_cmd)
 
     # ===============================================================================
     # @brief:   Single right click on table action
@@ -618,7 +624,22 @@ class ParameterFrame(tk.Frame):
         elif ParCmd.Store == self.__cmd:
             self.__cmd = ParCmd.Idle
 
-            # TODO: Further actions here...
+            print( "Response to Store: %s" % dev_msg )
+
+           # Device response with error
+            if "ERR" in dev_msg:
+                self.store_all_btn.show_error()
+            
+            # Device response with success
+            elif "OK" in dev_msg:
+                self.store_all_btn.show_success()
+
+            else:
+                # No actions
+                pass
+                
+
+
 
 
 #################################################################################################

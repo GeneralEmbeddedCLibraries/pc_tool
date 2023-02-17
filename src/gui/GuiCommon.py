@@ -51,6 +51,8 @@ class GuiColor():
     btn_bg: str = "#0e639c"
     btn_fg: str = "#ffffff"
     btn_hoover_bg: str = "#1177bb"
+    btn_error_bg: str = "#ff4d4d"
+    btn_success_bg: str = "#4dff4d"
 
     # Navigation button
     nav_btn_bg: str = sub_1_bg
@@ -222,6 +224,12 @@ class NormalButton():
     # ===============================================================================  
     def config(self, *args, **kwargs):
         self.btn.config(*args, **kwargs)
+
+    def show_error(self):
+        self.config(bg=GuiColor.btn_error_bg)
+
+    def show_success(self):
+        self.config(bg=GuiColor.btn_success_bg)
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse entry
