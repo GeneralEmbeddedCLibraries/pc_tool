@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## V0.3.0 - 17.02.2023
+
+### Added
+ - Showing paramter details (access, type, persistance)
+ - Feedback information on button press (Read All, Store All)
+ - Added support for store all parameter button (issue #7)
+
+### Changed
+ - Parameter layout control & info change (issue #8)
+
+---
 ## V0.2.0 - 17.02.2023
 
 ### Added
