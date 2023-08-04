@@ -316,7 +316,7 @@ class ParameterFrame(tk.Frame):
         if value == "" or value == "-":
             return True
         else:
-            if len(value) < 10:
+            if len(value) <= 10:
                 try:
                     float(value)
                     return True
