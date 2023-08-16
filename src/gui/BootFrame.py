@@ -49,6 +49,9 @@ class BootFrame(tk.Frame):
         #self.columnconfigure(0, weight=100)
         #self.columnconfigure(1, weight=1)
 
+        # Firmware image
+        self.fw_file = None
+
         # Init widgets
         self.__init_widgets()
 
@@ -62,9 +65,59 @@ class BootFrame(tk.Frame):
         # Create info label
         self.frame_label = tk.Label(self, text="Firmware Upgrade", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
+        # Boot frame
+        self.boot_frame = tk.Frame(self, bg=GuiColor.sub_1_bg, padx=20, pady=20)
+
+        # define the style
+        pb_style = ttk.Style()
+        print(pb_style.theme_names())
+        # ('winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative')
+        #pb_style.theme_use("clam")
+        pb_style.layout('text.Horizontal.TProgressbar', 
+                    [('Horizontal.Progressbar.trough',
+                    {'children': [('Horizontal.Progressbar.pbar',
+                                    {'side': 'left', 'sticky': 'ns'})],
+                        'sticky': 'nswe'}), 
+                    ('Horizontal.Progressbar.label', {'sticky': 'nswe'})])
+        pb_style.configure('text.Horizontal.TProgressbar', text='0 %', anchor='center', font=GuiFont.heading_2_bold, foreground=GuiColor.main_bg )
+
+        # Progress bar
+        self.progress_bar = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='indeterminate', length=300, style='text.Horizontal.TProgressbar' )
+        self.browse_btn = NormalButton( self.boot_frame, "Browse", command=self.__browse_btn_press)
+        self.update_btn = NormalButton( self.boot_frame, "Update", command=self.__update_btn_press)
+
+        self.update_btn.config(state=tk.DISABLED)
+
+        # Start moving progress bar
+        # TODO: Remove when not needed...
+        #self.progress_bar.start()
 
         # Self frame layout
         self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
+        self.boot_frame.grid(       column=0, row=1,                sticky=tk.W,                   padx=20, pady=10 )
+
+        # Boot frame layout
+        self.progress_bar.grid(     column=0, row=0,                sticky=tk.W,                   padx=20, pady=10    )
+        self.browse_btn.grid(              column=1, row=0,                sticky=tk.W,                   padx=20, pady=10    )
+        self.update_btn.grid(              column=1, row=1,                sticky=tk.W,                   padx=20, pady=10    )
+
+
+    def __browse_btn_press(self):
+
+        # Select file to visualize
+        self.fw_file =  tk.filedialog.askopenfilename(initialdir=self.fw_file, title = "Select firmware image",filetypes = (("Binary files","*.bin"),("all files","*.*")))
+        
+        # File selected
+        if self.fw_file:
+
+            print("Selected FW image: %s" % self.fw_file )
+
+            self.update_btn.config(state=tk.NORMAL)
+
+    def __update_btn_press(self):  
+
+        self.update_btn.text( "Cancel" )
+
 
 
 #################################################################################################
