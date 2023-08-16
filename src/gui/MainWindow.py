@@ -141,7 +141,7 @@ class MainWindow():
         self.com_frame      = ComFrame(self.master_win, btn_callbacks=[self.__com_btn_connect])
         self.par_frame      = ParameterFrame(self.master_win, btn_callbacks=[self.__par_com_request])
         self.plot_frame     = PlotFrame(self.master_win, import_callback=self.__file_import_callback)
-        self.boot_frame     = BootFrame(self.master_win)
+        self.boot_frame     = BootFrame(self.master_win, self.__ipc_send_msg)
 
         # Layout
         self.nav_frame.grid(        column=0, row=1, sticky=tk.E+tk.W+tk.N+tk.S, rowspan=2,     padx=0, pady=0    )
@@ -584,6 +584,9 @@ class MainWindow():
                 # Raw trafic for plotting purposes
                 else:
                     pass # TODO: Provide that data to plotter...
+            
+            # Handle received message
+            self.boot_frame.msg_receive(payload)
 
         # Update msg rx counter
         self.status_frame.set_rx_count(len(payload))
@@ -612,6 +615,9 @@ class MainWindow():
         self.par_frame.read_all_btn.config(state=tk.NORMAL)
         self.par_frame.store_all_btn.config(state=tk.NORMAL)
 
+        # Boot frame
+        self.boot_frame.browse_btn.config(state=tk.NORMAL)
+
     # ===============================================================================
     # @brief:   Deactivate connection related widgets
     #
@@ -626,6 +632,10 @@ class MainWindow():
         # Parameter frame
         self.par_frame.read_all_btn.config(state=tk.DISABLED)
         self.par_frame.store_all_btn.config(state=tk.DISABLED)
+
+        # Boot frame
+        self.boot_frame.browse_btn.config(state=tk.DISABLED)
+        self.boot_frame.update_btn.config(state=tk.DISABLED)
 
     # ===============================================================================
     # @brief:   File imported callback

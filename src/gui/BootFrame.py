@@ -18,10 +18,20 @@ import tkinter as tk
 from tkinter import ttk
 from gui.GuiCommon import *
 
+from com.IpcProtocol import IpcMsg, IpcMsgType
 
 #################################################################################################
 ##  DEFINITIONS
 #################################################################################################
+
+# Enter bootloader command (to application)
+BOOT_ENTER_BOOT_CMD         = "enter_boot"
+
+# Enter bootloader success command
+BOOT_ENTER_BOOT_RSP_CMD     = "OK, Entering bootloader..."
+
+# Serial command end symbol
+MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
 #################################################################################################
 ##  FUNCTIONS
@@ -39,18 +49,24 @@ from gui.GuiCommon import *
 # ===============================================================================
 class BootFrame(tk.Frame):
 
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, ipc_msg_send, *args, **kwargs):
         
         # Create frame
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.configure(bg=GuiColor.main_bg)
 
-        #self.rowconfigure(2, weight=1)
-        #self.columnconfigure(0, weight=100)
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=100)
         #self.columnconfigure(1, weight=1)
 
         # Firmware image
         self.fw_file = None
+
+        self.boot_in_progress = False
+
+        self.__ipc_msg_send = ipc_msg_send
+
+        self.com_rx_buf = ""
 
         # Init widgets
         self.__init_widgets()
@@ -68,8 +84,11 @@ class BootFrame(tk.Frame):
         # Boot frame
         self.boot_frame = tk.Frame(self, bg=GuiColor.sub_1_bg, padx=20, pady=20)
 
+        #self.boot_frame.rowconfigure(0, weight=1)
+        #self.boot_frame.columnconfigure(0, weight=100)
+
         # Progress bar
-        self.progress_bar   = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='indeterminate', length=300, style='text.Horizontal.TProgressbar' )
+        self.progress_bar   = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='indeterminate', style='text.Horizontal.TProgressbar' )
         self.progress_text  = tk.Label(self.boot_frame, text="0%", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
         self.file_text      = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
         self.browse_btn     = NormalButton( self.boot_frame, "Browse", command=self.__browse_btn_press)
@@ -82,17 +101,18 @@ class BootFrame(tk.Frame):
         #self.progress_bar.start()
 
         # Self frame layout
-        self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
-        self.boot_frame.grid(       column=0, row=1,                sticky=tk.W,                   padx=20, pady=10 )
+        self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                padx=20, pady=10 )
+        self.boot_frame.grid(       column=0, row=1,                sticky=tk.W+tk.N+tk.S+tk.E, padx=20, pady=10 )
 
         # Boot frame layout
-        self.progress_bar.grid(     column=0, row=0,                sticky=tk.W,                   padx=20, pady=10    )
-        self.progress_text.grid(    column=1, row=0,                sticky=tk.W,                   padx=20, pady=10    )
-        self.browse_btn.grid(       column=2, row=0,                sticky=tk.W,                   padx=20, pady=10    )
-        self.update_btn.grid(       column=2, row=1,                sticky=tk.W,                   padx=20, pady=10    )
+        self.browse_btn.grid(       column=0, row=0,                sticky=tk.W,                    padx=20, pady=10    )
+        self.update_btn.grid(       column=0, row=1,                sticky=tk.W,                    padx=20, pady=10    )
+        self.progress_bar.grid(     column=0, row=2, columnspan=2,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=20, pady=10    )
+        self.progress_text.grid(    column=2, row=2,                sticky=tk.W,                    padx=20, pady=10    )
+
         
-        self.file_text.grid(      column=0, row=2,                sticky=tk.W,                   padx=20, pady=10    )
-        tk.Label(self.boot_frame, text="File path:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=0, row=1, sticky=tk.W, padx=20, pady=10    )
+        self.file_text.grid(      column=2, row=1,                sticky=tk.W,                   padx=20, pady=10    )
+        tk.Label(self.boot_frame, text="File path:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=1, sticky=tk.W, padx=20, pady=10    )
 
 
     def __browse_btn_press(self):
@@ -106,13 +126,77 @@ class BootFrame(tk.Frame):
             print("Selected FW image: %s" % self.fw_file )
 
             self.update_btn.config(state=tk.NORMAL)
-            self.file_text["text"] = self.fw_file[:20]
+            self.file_text["text"] = self.fw_file
 
 
 
     def __update_btn_press(self):  
 
-        self.update_btn.text( "Cancel" )
+        # Update started
+        if False == self.boot_in_progress:
+
+            # Send message to enter bootloader
+            self.com_rx_buf = ""
+            self.msg_send( BOOT_ENTER_BOOT_CMD )
+
+
+        # Update canceled
+        else:
+
+            # Update button text
+            self.update_btn.text( "Update" )
+
+            
+
+
+
+    def msg_send(self, cmd):
+
+        # Append end string termiantion 
+        dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
+
+        # Send cmd to serial process
+        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
+        self.__ipc_msg_send(msg)
+
+
+
+    def msg_receive(self, payload):
+        print("Boot msg receive: %s" % payload )
+
+        # Append received chars to buffer
+        self.com_rx_buf += str(payload)
+
+        # Check for termiantion char
+        str_term = str(self.com_rx_buf).find(MAIN_WIN_COM_STRING_TERMINATION)
+
+        # Termination char founded
+        if str_term >= 0:
+
+            # Parsed response from device
+            dev_resp = self.com_rx_buf[:str_term]
+
+            # Error entering bootloader
+            if "ERR" in dev_resp:
+                self.update_btn.show_error()
+                
+                self.boot_in_progress = False
+
+            # Successfull enter to bootloader
+            elif "BOOT_ENTER_BOOT_RSP_CMD" in dev_resp:
+                self.update_btn.show_success()
+
+                self.boot_in_progress = True
+
+                # Update button text
+                self.update_btn.text( "Cancel" )
+
+            
+            # Ignore
+            else:
+                pass
+
+
 
 
 
