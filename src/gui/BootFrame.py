@@ -68,23 +68,12 @@ class BootFrame(tk.Frame):
         # Boot frame
         self.boot_frame = tk.Frame(self, bg=GuiColor.sub_1_bg, padx=20, pady=20)
 
-        # define the style
-        pb_style = ttk.Style()
-        print(pb_style.theme_names())
-        # ('winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative')
-        #pb_style.theme_use("clam")
-        pb_style.layout('text.Horizontal.TProgressbar', 
-                    [('Horizontal.Progressbar.trough',
-                    {'children': [('Horizontal.Progressbar.pbar',
-                                    {'side': 'left', 'sticky': 'ns'})],
-                        'sticky': 'nswe'}), 
-                    ('Horizontal.Progressbar.label', {'sticky': 'nswe'})])
-        pb_style.configure('text.Horizontal.TProgressbar', text='0 %', anchor='center', font=GuiFont.heading_2_bold, foreground=GuiColor.main_bg )
-
         # Progress bar
-        self.progress_bar = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='indeterminate', length=300, style='text.Horizontal.TProgressbar' )
-        self.browse_btn = NormalButton( self.boot_frame, "Browse", command=self.__browse_btn_press)
-        self.update_btn = NormalButton( self.boot_frame, "Update", command=self.__update_btn_press)
+        self.progress_bar   = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='indeterminate', length=300, style='text.Horizontal.TProgressbar' )
+        self.progress_text  = tk.Label(self.boot_frame, text="0%", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.file_text      = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.browse_btn     = NormalButton( self.boot_frame, "Browse", command=self.__browse_btn_press)
+        self.update_btn     = NormalButton( self.boot_frame, "Update", command=self.__update_btn_press)
 
         self.update_btn.config(state=tk.DISABLED)
 
@@ -98,8 +87,12 @@ class BootFrame(tk.Frame):
 
         # Boot frame layout
         self.progress_bar.grid(     column=0, row=0,                sticky=tk.W,                   padx=20, pady=10    )
-        self.browse_btn.grid(              column=1, row=0,                sticky=tk.W,                   padx=20, pady=10    )
-        self.update_btn.grid(              column=1, row=1,                sticky=tk.W,                   padx=20, pady=10    )
+        self.progress_text.grid(    column=1, row=0,                sticky=tk.W,                   padx=20, pady=10    )
+        self.browse_btn.grid(       column=2, row=0,                sticky=tk.W,                   padx=20, pady=10    )
+        self.update_btn.grid(       column=2, row=1,                sticky=tk.W,                   padx=20, pady=10    )
+        
+        self.file_text.grid(      column=0, row=2,                sticky=tk.W,                   padx=20, pady=10    )
+        tk.Label(self.boot_frame, text="File path:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=0, row=1, sticky=tk.W, padx=20, pady=10    )
 
 
     def __browse_btn_press(self):
@@ -113,6 +106,9 @@ class BootFrame(tk.Frame):
             print("Selected FW image: %s" % self.fw_file )
 
             self.update_btn.config(state=tk.NORMAL)
+            self.file_text["text"] = self.fw_file[:20]
+
+
 
     def __update_btn_press(self):  
 
