@@ -3,9 +3,9 @@
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
 ##
-## @file:       NavigationFrame.py
-## @brief:      Navigation frame for changing PC tool contex 
-## @date:		27.06.2022
+## @file:       BootFrame.py
+## @brief:      Device firmware upgrade
+## @date:		16.08.2023
 ## @author:		Ziga Miklosic
 ##
 #################################################################################################
@@ -15,39 +15,39 @@
 #################################################################################################
 from dataclasses import dataclass
 import tkinter as tk
-
-from gui.GuiCommon import GuiFont, GuiColor, NavigationButton
+from tkinter import ttk
+from gui.GuiCommon import *
 
 
 #################################################################################################
 ##  DEFINITIONS
 #################################################################################################
 
-
 #################################################################################################
 ##  FUNCTIONS
 #################################################################################################
-
 
 #################################################################################################
 ##  CLASSES
 #################################################################################################   
 
-# ===============================================================================
-#
-# @brief:   Navigation Frame
-#
-# ===============================================================================
-class NavigationFrame(tk.Frame):
 
-    def __init__(self, parent, btn_callbacks, *args, **kwargs):
+# ===============================================================================
+#
+# @brief:   Boot frame
+#
+# ===============================================================================
+class BootFrame(tk.Frame):
+
+    def __init__(self, parent, *args, **kwargs):
         
         # Create frame
         tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.configure(bg=GuiColor.sub_1_bg)
+        self.configure(bg=GuiColor.main_bg)
 
-        # Store button callbacks
-        self.btn_callbacks=btn_callbacks
+        #self.rowconfigure(2, weight=1)
+        #self.columnconfigure(0, weight=100)
+        #self.columnconfigure(1, weight=1)
 
         # Init widgets
         self.__init_widgets()
@@ -59,24 +59,18 @@ class NavigationFrame(tk.Frame):
     # ===============================================================================
     def __init_widgets(self):
 
-        # Create buttons
-        self.btn_com    = NavigationButton(self, text="COM", command=self.btn_callbacks[0])
-        self.btn_cli    = NavigationButton(self, text="CLI", command=self.btn_callbacks[1])
-        self.btn_par    = NavigationButton(self, text="PAR", command=self.btn_callbacks[2])
-        self.btn_plot   = NavigationButton(self, text="PLOT", command=self.btn_callbacks[3])
-        self.btn_boot   = NavigationButton(self, text="BOOT", command=self.btn_callbacks[4])
-        
-        # Setup layout
-        self.btn_com.pack(padx=0, pady=10, fill="x")
-        self.btn_cli.pack(padx=0, pady=10, fill="x")
-        self.btn_par.pack(padx=0, pady=10, fill="x")
-        self.btn_plot.pack(padx=0, pady=10, fill="x")
-        self.btn_boot.pack(padx=0, pady=10, fill="x")
+        # Create info label
+        self.frame_label = tk.Label(self, text="Firmware Upgrade", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+
+
+        # Self frame layout
+        self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
 
 
 #################################################################################################
 ##  END OF FILE
 #################################################################################################  
+
 
 
 
