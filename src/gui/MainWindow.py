@@ -586,7 +586,7 @@ class MainWindow():
                     pass # TODO: Provide that data to plotter...
             
             # Handle received message
-            self.boot_frame.msg_receive(payload)
+            self.boot_frame.msg_receive_cb(payload)
 
         # Update msg rx counter
         self.status_frame.set_rx_count(len(payload))

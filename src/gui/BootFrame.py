@@ -132,12 +132,16 @@ class BootFrame(tk.Frame):
 
     def __update_btn_press(self):  
 
+        self.__send_connect_cmd()
+
+        """
         # Update started
         if False == self.boot_in_progress:
 
             # Send message to enter bootloader
             self.com_rx_buf = ""
-            self.msg_send( BOOT_ENTER_BOOT_CMD )
+            #self.msg_send( BOOT_ENTER_BOOT_CMD )
+            pass
 
 
         # Update canceled
@@ -145,12 +149,12 @@ class BootFrame(tk.Frame):
 
             # Update button text
             self.update_btn.text( "Update" )
-
+        """
             
 
 
 
-    def msg_send(self, cmd):
+    def msg_send_ascii(self, cmd):
 
         # Append end string termiantion 
         dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
@@ -159,9 +163,63 @@ class BootFrame(tk.Frame):
         msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
         self.__ipc_msg_send(msg)
 
+    def msg_send_bin(self, cmd):
 
+        # Send cmd to serial process
+        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=cmd)
+        self.__ipc_msg_send(msg)
 
-    def msg_receive(self, payload):
+    def __send_connect_cmd(self):
+
+        # Assmemble connect command
+        connect_cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0x10, 0x00, 0x9B ]
+
+        # Send connect command
+        self.msg_send_bin( connect_cmd )
+
+    def __send_prepare_cmd(self):
+
+        payload = []
+
+        # Assmemble connect command
+        prepare_cmd = [ 0xB0, 0x07, 0x0C, 0x00, 0x2B, 0x20, 0x00, 0x00 ]
+
+        # Get FW size
+        fw_size = self.fw_file
+        payload.append( fw_size )
+
+        # Get FW version
+        fw_ver = 0
+        payload.append( fw_ver )
+
+        # Get HW version
+        hw_ver = 0
+        payload.append( hw_ver )
+
+        # Calculate crc
+        crc = self.__calc_crc8( [0x0C, 0x00] )  # Lenght
+        crc ^= self.__calc_crc8( [0x2B] )  # Source
+        crc ^= self.__calc_crc8( [0x20] )  # Command
+        crc ^= self.__calc_crc8( [0x00] )  # Status
+        crc ^= self.__calc_crc8( payload )
+
+        # Set CRC
+        prepare_cmd[7] = crc
+
+        # Append payload
+        prepare_cmd.append( payload )
+
+        # Send connect command
+        self.msg_send_bin( prepare_cmd )  
+
+    # ===============================================================================
+    # @brief:   Message received callback
+    #
+    # @note     Come here either ASCII or binary character is received!
+    #
+    # @return:      void
+    # ===============================================================================
+    def msg_receive_cb(self, payload):
         print("Boot msg receive: %s" % payload )
 
         # Append received chars to buffer
@@ -195,6 +253,29 @@ class BootFrame(tk.Frame):
             # Ignore
             else:
                 pass
+
+
+    # ===============================================================================
+    # @brief  Calculate CRC-8
+    #
+    # @param[in]    data    - Inputed data
+    # @return       crc8    - Calculated CRC8
+    # ===============================================================================
+    def __calc_crc8(data):
+        poly = 0x07
+        seed = 0xB6
+        crc8 = seed
+
+        for byte in data:
+            crc8 = (( crc8 ^ byte ) & 0xFF )
+
+            for n in range( 8 ):
+                if 0x80 == ( crc8 & 0x80 ):
+                    crc8 = (( crc8 << 1 ) ^ poly )
+                else:
+                    crc8 = ( crc8 << 1 );
+
+        return crc8 & 0xFF
 
 
 
