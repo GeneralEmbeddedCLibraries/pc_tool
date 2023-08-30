@@ -41,6 +41,7 @@ class IpcMsgType():
     IpcMsgType_ComDisconnect : int      = 12    # Disconnect from device
     IpcMsgType_ComRxFrame : int         = 13    # Received frame from embedded device
     IpcMsgType_ComTxFrame : int         = 14    # Transmit frame to embedded device
+    IpcMsgType_ComTxBinary : int        = 15    # Transmit binary to embedded device
 
 
 

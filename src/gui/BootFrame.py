@@ -166,8 +166,9 @@ class BootFrame(tk.Frame):
     def msg_send_bin(self, cmd):
 
         # Send cmd to serial process
-        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=cmd)
+        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxBinary, payload=cmd)
         self.__ipc_msg_send(msg)
+
 
     def __send_connect_cmd(self):
 
@@ -176,6 +177,7 @@ class BootFrame(tk.Frame):
 
         # Send connect command
         self.msg_send_bin( connect_cmd )
+
 
     def __send_prepare_cmd(self):
 

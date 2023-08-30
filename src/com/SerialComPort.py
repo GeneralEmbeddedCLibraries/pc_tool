@@ -165,6 +165,17 @@ class SerialComunication():
         self.port.send(str(payload))
 
     # ===============================================================================
+    # @brief:   Master GUI is requesing to send binary data to embedded device
+    #
+    # @param[in]:   payload - Message payload
+    # @return:      void
+    # ===============================================================================
+    def __ipc_tx_binary_cmd(self, payload):
+        
+        # Send to device
+        self.port.send_binary( payload )
+
+    # ===============================================================================
     # @brief:   Master GUI is requesting end of the thread
     #
     # @param[in]:   payload - Message payload
@@ -220,6 +231,7 @@ class SerialComunication():
                                 IpcMsgType.IpcMsgType_ComDisconnect :   self.__ipc_disconnect_cmd,  
                                 #IpcMsgType.IpcMsgType_ComRxFrame :      self.__ipc_rx_frame_cmd,  
                                 IpcMsgType.IpcMsgType_ComTxFrame :      self.__ipc_tx_frame_cmd,  
+                                IpcMsgType.IpcMsgType_ComTxBinary :      self.__ipc_tx_binary_cmd,  
                                 IpcMsgType.IpcMsgType_ComFinished :      self.__ipc_kill_cmd,  
         }
         
@@ -402,6 +414,14 @@ class SerialComPort(ComPortDesc):
         try:
             if self.is_connected():
                 self._com_port.write(self.__unicode_str__(str))
+        except:
+            pass
+
+
+    def send_binary(self, bin):
+        try:
+            if self.is_connected():
+                self._com_port.write( bin )
         except:
             pass
 
