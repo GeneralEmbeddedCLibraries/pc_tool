@@ -417,15 +417,12 @@ class SerialComPort(ComPortDesc):
         except:
             pass
 
-
     def send_binary(self, bin):
         try:
             if self.is_connected():
                 self._com_port.write( bin )
         except:
             pass
-
-
 
     def write(self, str):
         # NOTE: Implicit termination with CR
