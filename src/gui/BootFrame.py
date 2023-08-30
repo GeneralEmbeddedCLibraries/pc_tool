@@ -17,6 +17,7 @@ from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
 from gui.GuiCommon import *
+import struct
 
 from com.IpcProtocol import IpcMsg, IpcMsgType
 
@@ -134,6 +135,8 @@ class BootFrame(tk.Frame):
 
         self.__send_connect_cmd()
 
+        self.__send_prepare_cmd( 1, 1, 1 )
+
         """
         # Update started
         if False == self.boot_in_progress:
@@ -179,40 +182,38 @@ class BootFrame(tk.Frame):
         self.msg_send_bin( connect_cmd )
 
 
-    def __send_prepare_cmd(self):
-
-        payload = []
+    def __send_prepare_cmd(self, fw_size, fw_ver, hw_ver):
 
         # Assmemble connect command
         prepare_cmd = [ 0xB0, 0x07, 0x0C, 0x00, 0x2B, 0x20, 0x00, 0x00 ]
 
         # Get FW size
-        fw_size = self.fw_file
-        payload.append( fw_size )
+        #prepare_cmd.append( fw_size )
+        for byte in struct.pack('I', int(fw_size)):
+            prepare_cmd.append( byte )
 
         # Get FW version
-        fw_ver = 0
-        payload.append( fw_ver )
+        for byte in struct.pack('I', int(fw_ver)):
+            prepare_cmd.append( byte )
 
         # Get HW version
-        hw_ver = 0
-        payload.append( hw_ver )
+        for byte in struct.pack('I', int(hw_ver)):
+            prepare_cmd.append( byte )
 
         # Calculate crc
         crc = self.__calc_crc8( [0x0C, 0x00] )  # Lenght
         crc ^= self.__calc_crc8( [0x2B] )  # Source
         crc ^= self.__calc_crc8( [0x20] )  # Command
         crc ^= self.__calc_crc8( [0x00] )  # Status
-        crc ^= self.__calc_crc8( payload )
+        crc ^= self.__calc_crc8( [fw_size, fw_ver, hw_ver] )
 
         # Set CRC
         prepare_cmd[7] = crc
 
-        # Append payload
-        prepare_cmd.append( payload )
-
         # Send connect command
         self.msg_send_bin( prepare_cmd )  
+
+        print("Prepare cmd: %s" % prepare_cmd )
 
     # ===============================================================================
     # @brief:   Message received callback
@@ -263,7 +264,7 @@ class BootFrame(tk.Frame):
     # @param[in]    data    - Inputed data
     # @return       crc8    - Calculated CRC8
     # ===============================================================================
-    def __calc_crc8(data):
+    def __calc_crc8(self, data):
         poly = 0x07
         seed = 0xB6
         crc8 = seed
