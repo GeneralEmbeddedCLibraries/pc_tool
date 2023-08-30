@@ -15,6 +15,7 @@
 ##  IMPORTS
 #################################################################################################
 import os
+import struct
 
 
 #################################################################################################
@@ -128,25 +129,76 @@ class BootProtocol:
     # @brief:   Construct BootProtocol
     #
     # @param[in]:   rx_queue    - Reception queue
-    # @param[in]:   tx_queue    - Transmission queue
+    # @param[in]:   send_fn     - Send function def send(binary)
     # @return:      void
     # ===============================================================================
-    def __init__(self, fw_file, rx_queue, tx_queue, cb=None):
+    def __init__(self, send_fn, cb=None):
 
-        self.fw_file    = fw_file
-        self.q_rx       = rx_queue
-        self.q_tx       = tx_queue
+        self.send = send_fn
 
 
-    def parser(self):
+    def parser(self, rx_queue):
         pass
+
 
     def send_connect(self):
-        pass
 
-    def send_prepare(self):
-        pass
+        # Assemble connect comand
+        cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0x10, 0x00, 0x9B ]
 
+        # Send
+        self.send( cmd )
+
+
+    def send_prepare(self, fw_size, fw_ver, hw_ver):
+
+        # Assemble prepare command
+        prepare_cmd = [ 0xB0, 0x07, 0x0C, 0x00, 0x2B, 0x20, 0x00, 0x00 ]
+
+        # Assemble FW size
+        for byte in struct.pack('I', int(fw_size)):
+            prepare_cmd.append( byte )
+
+        # Assemble FW version
+        for byte in struct.pack('I', int(fw_ver)):
+            prepare_cmd.append( byte )
+
+        # Assemble HW version
+        for byte in struct.pack('I', int(hw_ver)):
+            prepare_cmd.append( byte )
+
+        # Calculate crc
+        prepare_cmd[7] = self.__calc_crc8( [0x0C, 0x00] )  # Lenght
+        prepare_cmd[7] ^= self.__calc_crc8( [0x2B] )  # Source
+        prepare_cmd[7] ^= self.__calc_crc8( [0x20] )  # Command
+        prepare_cmd[7] ^= self.__calc_crc8( [0x00] )  # Status
+        prepare_cmd[7] ^= self.__calc_crc8( [fw_size, fw_ver, hw_ver] )
+
+        # Send prepare command
+        self.send( prepare_cmd )  
+
+
+    # ===============================================================================
+    # @brief  Calculate CRC-8
+    #
+    # @param[in]    data    - Inputed data
+    # @return       crc8    - Calculated CRC8
+    # ===============================================================================
+    def __calc_crc8(self, data):
+        poly = 0x07
+        seed = 0xB6
+        crc8 = seed
+
+        for byte in data:
+            crc8 = (( crc8 ^ byte ) & 0xFF )
+
+            for n in range( 8 ):
+                if 0x80 == ( crc8 & 0x80 ):
+                    crc8 = (( crc8 << 1 ) ^ poly )
+                else:
+                    crc8 = ( crc8 << 1 );
+
+        return crc8 & 0xFF
 
 
         

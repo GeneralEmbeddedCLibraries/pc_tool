@@ -20,6 +20,7 @@ from gui.GuiCommon import *
 import struct
 
 from com.IpcProtocol import IpcMsg, IpcMsgType
+from com.BootProtocol import BootProtocol
 
 #################################################################################################
 ##  DEFINITIONS
@@ -71,6 +72,9 @@ class BootFrame(tk.Frame):
 
         # Init widgets
         self.__init_widgets()
+
+        # Create boot protocol
+        self.bootProtocol = BootProtocol(send_fn=self.msg_send_bin)
 
     # ===============================================================================
     # @brief:   Initialize widgets
@@ -133,9 +137,17 @@ class BootFrame(tk.Frame):
 
     def __update_btn_press(self):  
 
-        self.__send_connect_cmd()
+        self.bootProtocol.send_connect()
 
-        self.__send_prepare_cmd( 1, 1, 1 )
+        import time
+
+        time.sleep( 1 )
+
+        self.bootProtocol.send_prepare( 1, 0xFF00AA55, 0x11223344 )
+
+        #self.__send_connect_cmd()
+
+        #self.__send_prepare_cmd( 1, 1, 1 )
 
         """
         # Update started
