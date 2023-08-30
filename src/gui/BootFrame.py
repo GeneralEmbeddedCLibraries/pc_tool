@@ -18,6 +18,7 @@ import tkinter as tk
 from tkinter import ttk
 from gui.GuiCommon import *
 import struct
+import os
 
 from com.IpcProtocol import IpcMsg, IpcMsgType
 from com.BootProtocol import BootProtocol
@@ -35,6 +36,21 @@ BOOT_ENTER_BOOT_RSP_CMD     = "OK, Entering bootloader..."
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
+# Expected application header version
+APP_HEADER_VER_EXPECTED         = 1
+
+# Application header addresses
+APP_HEADER_APP_SW_VER_ADDR      = 0x00
+APP_HEADER_APP_HW_VER_ADDR      = 0x04
+APP_HEADER_APP_SIZE_ADDR        = 0x08
+APP_HEADER_APP_CRC_ADDR         = 0x0C
+APP_HEADER_VER_ADDR             = 0xFE
+APP_HEADER_CRC_ADDR             = 0xFF
+
+# Application header size in bytes
+APP_HEADER_SIZE_BYTE            = 0x100
+
+
 #################################################################################################
 ##  FUNCTIONS
 #################################################################################################
@@ -42,6 +58,85 @@ MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 #################################################################################################
 ##  CLASSES
 #################################################################################################   
+
+
+# ===============================================================================
+# @brief  Binary file Class
+# ===============================================================================
+class BinFile:
+
+    # Access type
+    READ_WRITE  = "r+b"      # Puts pointer to start of file 
+    WRITE_ONLY  = "wb"       # Erase complete file
+    READ_ONLY   = "rb"
+    APPEND      = "a+b"      # This mode puts pointer to EOF. Access: Read & Write
+
+    # ===============================================================================
+    # @brief  Binary file constructor
+    #
+    # @param[in]    file    - File name
+    # @param[in]    access  - Access level
+    # @return       void
+    # ===============================================================================
+    def __init__(self, file, access=READ_ONLY):
+
+        # Store file name
+        self.file_name = file
+
+        try:
+            if os.path.isfile(file):
+                self.file = open( file, access )
+        except Exception as e:
+            print(e)
+
+    # ===============================================================================
+    # @brief  Write to binary file
+    #
+    # @param[in]    addr    - Address to write to
+    # @param[in]    val     - Value to write as list
+    # @return       void
+    # ===============================================================================
+    def write(self, addr, val):
+        self.__set_ptr(addr)
+        self.file.write( bytearray( val ))
+
+    # ===============================================================================
+    # @brief  Read from binary file
+    #
+    # @param[in]    addr    - Address to read from
+    # @param[in]    size    - Sizeof read in bytes
+    # @return       data    - Readed data
+    # ===============================================================================
+    def read(self, addr, size):
+        self.__set_ptr(addr)
+        data = self.file.read(size)
+        return data
+    
+    # ===============================================================================
+    # @brief  Get size of binary file
+    #
+    # @return       data    - Readed data
+    # ===============================================================================    
+    def size(self):
+        return len( self.read( 0, None ))
+
+    # ===============================================================================
+    # @brief  Set file pointer
+    #
+    # @note     Pointer is being evaluated based on binary file value
+    #
+    # @param[in]    offset  - Pointer offset
+    # @return       void
+    # ===============================================================================
+    def __set_ptr(self, offset):
+        self.file.seek(offset) 
+
+
+
+class FwImage(BinFile):
+
+    def __init__(self, file):
+        self.file = BinFile(file=file, access=BinFile.READ_ONLY)
 
 
 # ===============================================================================
@@ -123,15 +218,18 @@ class BootFrame(tk.Frame):
     def __browse_btn_press(self):
 
         # Select file to visualize
-        self.fw_file =  tk.filedialog.askopenfilename(initialdir=self.fw_file, title = "Select firmware image",filetypes = (("Binary files","*.bin"),("all files","*.*")))
+        fw_file_path =  tk.filedialog.askopenfilename(initialdir=self.fw_file, title = "Select firmware image",filetypes = (("Binary files","*.bin"),("all files","*.*")))
         
         # File selected
-        if self.fw_file:
+        if fw_file_path:
 
-            print("Selected FW image: %s" % self.fw_file )
+            print("Selected FW image: %s" % fw_file_path )
 
             self.update_btn.config(state=tk.NORMAL)
-            self.file_text["text"] = self.fw_file
+            self.file_text["text"] = fw_file_path
+
+            # Open file
+            self.fw_file = BinFile(file=fw_file_path, access=BinFile.READ_ONLY)
 
 
 
@@ -141,9 +239,14 @@ class BootFrame(tk.Frame):
 
         import time
 
-        time.sleep( 1 )
+        time.sleep( 0.1 )
 
-        self.bootProtocol.send_prepare( 1, 0xFF00AA55, 0x11223344 )
+        # TODO: Convert to integer!!!!
+        sw_ver = self.fw_file.read( APP_HEADER_APP_SW_VER_ADDR, 4 )
+        hw_ver = self.fw_file.read( APP_HEADER_APP_HW_VER_ADDR, 4 )
+        fw_size = self.fw_file.read( APP_HEADER_APP_SIZE_ADDR, 4 )
+
+        self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
 
         #self.__send_connect_cmd()
 
@@ -178,54 +281,13 @@ class BootFrame(tk.Frame):
         msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
         self.__ipc_msg_send(msg)
 
+
     def msg_send_bin(self, cmd):
 
         # Send cmd to serial process
         msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxBinary, payload=cmd)
         self.__ipc_msg_send(msg)
 
-
-    def __send_connect_cmd(self):
-
-        # Assmemble connect command
-        connect_cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0x10, 0x00, 0x9B ]
-
-        # Send connect command
-        self.msg_send_bin( connect_cmd )
-
-
-    def __send_prepare_cmd(self, fw_size, fw_ver, hw_ver):
-
-        # Assmemble connect command
-        prepare_cmd = [ 0xB0, 0x07, 0x0C, 0x00, 0x2B, 0x20, 0x00, 0x00 ]
-
-        # Get FW size
-        #prepare_cmd.append( fw_size )
-        for byte in struct.pack('I', int(fw_size)):
-            prepare_cmd.append( byte )
-
-        # Get FW version
-        for byte in struct.pack('I', int(fw_ver)):
-            prepare_cmd.append( byte )
-
-        # Get HW version
-        for byte in struct.pack('I', int(hw_ver)):
-            prepare_cmd.append( byte )
-
-        # Calculate crc
-        crc = self.__calc_crc8( [0x0C, 0x00] )  # Lenght
-        crc ^= self.__calc_crc8( [0x2B] )  # Source
-        crc ^= self.__calc_crc8( [0x20] )  # Command
-        crc ^= self.__calc_crc8( [0x00] )  # Status
-        crc ^= self.__calc_crc8( [fw_size, fw_ver, hw_ver] )
-
-        # Set CRC
-        prepare_cmd[7] = crc
-
-        # Send connect command
-        self.msg_send_bin( prepare_cmd )  
-
-        print("Prepare cmd: %s" % prepare_cmd )
 
     # ===============================================================================
     # @brief:   Message received callback
@@ -268,31 +330,6 @@ class BootFrame(tk.Frame):
             # Ignore
             else:
                 pass
-
-
-    # ===============================================================================
-    # @brief  Calculate CRC-8
-    #
-    # @param[in]    data    - Inputed data
-    # @return       crc8    - Calculated CRC8
-    # ===============================================================================
-    def __calc_crc8(self, data):
-        poly = 0x07
-        seed = 0xB6
-        crc8 = seed
-
-        for byte in data:
-            crc8 = (( crc8 ^ byte ) & 0xFF )
-
-            for n in range( 8 ):
-                if 0x80 == ( crc8 & 0x80 ):
-                    crc8 = (( crc8 << 1 ) ^ poly )
-                else:
-                    crc8 = ( crc8 << 1 );
-
-        return crc8 & 0xFF
-
-
 
 
 

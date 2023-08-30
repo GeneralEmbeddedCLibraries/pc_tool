@@ -32,86 +32,6 @@ import struct
 ##  CLASSES
 #################################################################################################   
 
-# ===============================================================================
-# @brief  Binary file Class
-# ===============================================================================
-class BinFile:
-
-    # Access type
-    READ_WRITE  = "r+b"      # Puts pointer to start of file 
-    WRITE_ONLY  = "wb"       # Erase complete file
-    READ_ONLY   = "rb"
-    APPEND      = "a+b"      # This mode puts pointer to EOF. Access: Read & Write
-
-    # ===============================================================================
-    # @brief  Binary file constructor
-    #
-    # @param[in]    file    - File name
-    # @param[in]    access  - Access level
-    # @return       void
-    # ===============================================================================
-    def __init__(self, file, access=READ_ONLY):
-
-        # Store file name
-        self.file_name = file
-
-        try:
-            if os.path.isfile(file):
-                self.file = open( file, access )
-        except Exception as e:
-            print(e)
-
-    # ===============================================================================
-    # @brief  Write to binary file
-    #
-    # @param[in]    addr    - Address to write to
-    # @param[in]    val     - Value to write as list
-    # @return       void
-    # ===============================================================================
-    def write(self, addr, val):
-        self.__set_ptr(addr)
-        self.file.write( bytearray( val ))
-
-    # ===============================================================================
-    # @brief  Read from binary file
-    #
-    # @param[in]    addr    - Address to read from
-    # @param[in]    size    - Sizeof read in bytes
-    # @return       data    - Readed data
-    # ===============================================================================
-    def read(self, addr, size):
-        self.__set_ptr(addr)
-        data = self.file.read(size)
-        return data
-    
-    # ===============================================================================
-    # @brief  Get size of binary file
-    #
-    # @return       data    - Readed data
-    # ===============================================================================    
-    def size(self):
-        return len( self.read( 0, None ))
-
-    # ===============================================================================
-    # @brief  Set file pointer
-    #
-    # @note     Pointer is being evaluated based on binary file value
-    #
-    # @param[in]    offset  - Pointer offset
-    # @return       void
-    # ===============================================================================
-    def __set_ptr(self, offset):
-        self.file.seek(offset) 
-
-
-
-class FwImage(BinFile):
-
-    def __init__(self, file):
-        self.file = BinFile(file=file, access=BinFile.READ_ONLY)
-
-
-
 
 # ===============================================================================
 # @brief:   Boot Protocol class
@@ -172,7 +92,7 @@ class BootProtocol:
         prepare_cmd[7] ^= self.__calc_crc8( [0x2B] )  # Source
         prepare_cmd[7] ^= self.__calc_crc8( [0x20] )  # Command
         prepare_cmd[7] ^= self.__calc_crc8( [0x00] )  # Status
-        prepare_cmd[7] ^= self.__calc_crc8( [fw_size, fw_ver, hw_ver] )
+        prepare_cmd[7] ^= self.__calc_crc8( prepare_cmd[8:]) # Payload
 
         # Send prepare command
         self.send( prepare_cmd )  
