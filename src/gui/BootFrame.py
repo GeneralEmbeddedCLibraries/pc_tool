@@ -276,11 +276,28 @@ class BootFrame(tk.Frame):
         addr = 0
         SIZE = 64
 
-        for _ in range( 16 ):
+        #for _ in range( 16 ):
         
-            self.bootProtocol.send_flash_data( self.fw_file.read( addr, SIZE ), SIZE )
-            addr += SIZE
-            time.sleep(0.1)
+        while True:
+
+
+            data = self.fw_file.read( addr, SIZE )
+            data_len = len( data )
+
+            if data_len > 0:
+                self.bootProtocol.send_flash_data( data, data_len )
+                addr += data_len
+            else:
+                break
+                
+
+            time.sleep(0.01)
+
+
+
+        time.sleep(0.01)
+        self.bootProtocol.send_exit()
+
 
         #self.__send_connect_cmd()
 

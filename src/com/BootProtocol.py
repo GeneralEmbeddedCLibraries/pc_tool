@@ -119,6 +119,13 @@ class BootProtocol:
         self.send( flash_cmd )  
 
 
+    def send_exit(self):
+
+        # Assemble exit comand
+        cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0x40, 0x00, 0x2C ]
+
+        # Send
+        self.send( cmd )     
 
     # ===============================================================================
     # @brief  Calculate CRC-8
