@@ -36,20 +36,6 @@ BOOT_ENTER_BOOT_RSP_CMD     = "OK, Entering bootloader..."
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
-# Expected application header version
-APP_HEADER_VER_EXPECTED         = 1
-
-# Application header addresses
-APP_HEADER_APP_SW_VER_ADDR      = 0x00
-APP_HEADER_APP_HW_VER_ADDR      = 0x04
-APP_HEADER_APP_SIZE_ADDR        = 0x08
-APP_HEADER_APP_CRC_ADDR         = 0x0C
-APP_HEADER_VER_ADDR             = 0xFE
-APP_HEADER_CRC_ADDR             = 0xFF
-
-# Application header size in bytes
-APP_HEADER_SIZE_BYTE            = 0x100
-
 
 #################################################################################################
 ##  FUNCTIONS
@@ -135,9 +121,41 @@ class BinFile:
 
 class FwImage(BinFile):
 
+    # Expected application header version
+    APP_HEADER_VER_EXPECTED         = 1
+
+    # Application header addresses
+    APP_HEADER_APP_SW_VER_ADDR      = 0x00
+    APP_HEADER_APP_HW_VER_ADDR      = 0x04
+    APP_HEADER_APP_SIZE_ADDR        = 0x08
+    APP_HEADER_APP_CRC_ADDR         = 0x0C
+    APP_HEADER_VER_ADDR             = 0xFE
+    APP_HEADER_CRC_ADDR             = 0xFF
+
+    # Application header size in bytes
+    APP_HEADER_SIZE_BYTE            = 0x100
+
     def __init__(self, file):
         self.file = BinFile(file=file, access=BinFile.READ_ONLY)
 
+
+    def get_sw_ver(self):
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 ), byteorder="little" )
+    
+    def get_sw_ver_raw(self):
+        return self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 )
+
+    def get_hw_ver(self):
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 ), byteorder="little" )
+
+    def get_hw_ver_raw(self):
+        return self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 )
+
+    def get_fw_size(self):
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SIZE_ADDR, 4 ), byteorder="little" )
+
+    def read(self, addr, size):
+        return self.file.read( addr, size )
 
 # ===============================================================================
 #
@@ -229,7 +247,9 @@ class BootFrame(tk.Frame):
             self.file_text["text"] = fw_file_path
 
             # Open file
-            self.fw_file = BinFile(file=fw_file_path, access=BinFile.READ_ONLY)
+            self.fw_file = FwImage(file=fw_file_path)
+
+
 
 
 
@@ -241,12 +261,26 @@ class BootFrame(tk.Frame):
 
         time.sleep( 0.1 )
 
-        # TODO: Convert to integer!!!!
-        sw_ver = self.fw_file.read( APP_HEADER_APP_SW_VER_ADDR, 4 )
-        hw_ver = self.fw_file.read( APP_HEADER_APP_HW_VER_ADDR, 4 )
-        fw_size = self.fw_file.read( APP_HEADER_APP_SIZE_ADDR, 4 )
+        fw_size = self.fw_file.get_fw_size()
+        sw_ver = self.fw_file.get_sw_ver()
+        hw_ver = self.fw_file.get_hw_ver()
+
+        print( "Firmware size: %s kB" % ( fw_size/1024 ))
+        print( "SW version: %s" % self.fw_file.get_sw_ver_raw() )
+        print( "HW version: %s" % self.fw_file.get_hw_ver_raw() )
 
         self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
+
+        time.sleep( 3.0 )
+
+        addr = 0
+        SIZE = 64
+
+        for _ in range( 16 ):
+        
+            self.bootProtocol.send_flash_data( self.fw_file.read( addr, SIZE ), SIZE )
+            addr += SIZE
+            time.sleep(0.1)
 
         #self.__send_connect_cmd()
 

@@ -88,7 +88,7 @@ class BootProtocol:
             prepare_cmd.append( byte )
 
         # Calculate crc
-        prepare_cmd[7] = self.__calc_crc8( [0x0C, 0x00] )  # Lenght
+        prepare_cmd[7] = self.__calc_crc8( prepare_cmd[2:4] )  # Lenght
         prepare_cmd[7] ^= self.__calc_crc8( [0x2B] )  # Source
         prepare_cmd[7] ^= self.__calc_crc8( [0x20] )  # Command
         prepare_cmd[7] ^= self.__calc_crc8( [0x00] )  # Status
@@ -96,6 +96,26 @@ class BootProtocol:
 
         # Send prepare command
         self.send( prepare_cmd )  
+
+    def send_flash_data(self, data, size):
+
+        # Assemble flash data command
+        flash_cmd = [ 0xB0, 0x07, ( size & 0xFF ), (( size >> 8 ) & 0xFF ), 0x2B, 0x30, 0x00, 0x00 ]
+
+        # Calculate CRC
+        flash_cmd[7] = self.__calc_crc8( [flash_cmd[2], flash_cmd[3]] )  # Lenght
+        flash_cmd[7] ^= self.__calc_crc8( [0x2B] )  # Source
+        flash_cmd[7] ^= self.__calc_crc8( [0x30] )  # Command
+        flash_cmd[7] ^= self.__calc_crc8( [0x00] )  # Status
+
+        # Add payload and calculate CRC
+        for byte in data:
+            flash_cmd.append( byte )
+            flash_cmd[7] ^= self.__calc_crc8( [byte] ) 
+
+        # Send prepare command
+        self.send( flash_cmd )  
+
 
 
     # ===============================================================================
