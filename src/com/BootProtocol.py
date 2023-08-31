@@ -108,10 +108,12 @@ class BootProtocol:
         flash_cmd[7] ^= self.__calc_crc8( [0x30] )  # Command
         flash_cmd[7] ^= self.__calc_crc8( [0x00] )  # Status
 
-        # Add payload and calculate CRC
+        # Add payload
         for byte in data:
             flash_cmd.append( byte )
-            flash_cmd[7] ^= self.__calc_crc8( [byte] ) 
+            
+        # Calcualte payload CRC
+        flash_cmd[7] ^= self.__calc_crc8( data ) 
 
         # Send prepare command
         self.send( flash_cmd )  
