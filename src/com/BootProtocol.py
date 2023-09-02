@@ -85,13 +85,18 @@ class BootProtocol:
         # Data received
         if len( self.rx_q ) >= 8:
 
-            #print( self.rx_q )
+            print( self.rx_q )
 
             # Header valid
             if 0xB0 == self.rx_q[0] and 0x07 == self.rx_q[1]:
 
                 # Calculate crc
-                calc_crc = self.__calc_crc8( self.rx_q[2:7] )
+                calc_crc = self.__calc_crc8( self.rx_q[2:4] )  # Lenght
+                calc_crc ^= self.__calc_crc8( [self.rx_q[4]] )  # Source
+                calc_crc ^= self.__calc_crc8( [self.rx_q[5]] )  # Command
+                calc_crc ^= self.__calc_crc8( [self.rx_q[6]] )  # Status
+
+                print( calc_crc )
 
                 # CRC OK
                 if calc_crc == self.rx_q[7]:
