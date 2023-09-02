@@ -111,6 +111,7 @@ class MainWindow():
                                 IpcMsgType.IpcMsgType_ComConnect :      self.__ipc_connect_cmd,  
                                 IpcMsgType.IpcMsgType_ComDisconnect :   self.__ipc_disconnect_cmd,  
                                 IpcMsgType.IpcMsgType_ComRxFrame :      self.__ipc_rx_frame_cmd,  
+                                IpcMsgType.IpcMsgType_ComRxBinary :      self.__ipc_rx_binary_cmd,  
                                 IpcMsgType.IpcMsgType_ComTxFrame :      self.__ipc_tx_frame_cmd,  
         }
         # =============================================================================================
@@ -584,12 +585,23 @@ class MainWindow():
                 # Raw trafic for plotting purposes
                 else:
                     pass # TODO: Provide that data to plotter...
-            
-            # Handle received message
-            self.boot_frame.msg_receive_cb(payload)
 
         # Update msg rx counter
         self.status_frame.set_rx_count(len(payload))
+
+    # ===============================================================================
+    # @brief:   Response from RX frame BINARY command to (Serial Process) via IPC
+    #
+    # @param[in]:   payload - Message payload
+    # @return:      void
+    # ===============================================================================
+    def __ipc_rx_binary_cmd(self, payload):
+        #print( "0x%02X" % int(payload, 16 ))
+        print( "%s" % payload )
+
+        # Handle received message
+        self.boot_frame.msg_receive_cb(payload)
+
 
     # ===============================================================================
     # @brief:   Response from TX frame command (to Serial Process) via IPC

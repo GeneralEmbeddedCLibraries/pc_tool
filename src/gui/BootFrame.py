@@ -251,12 +251,22 @@ class BootFrame(tk.Frame):
 
 
 
+    def __com_timeout_event(self):
+        print( "Communication timeouted" );
+    
+        self.bootProtocol.com_timeout_event()
 
 
     def __update_btn_press(self):  
 
         self.bootProtocol.send_connect()
 
+        self.after( 100, self.__com_timeout_event) 
+
+
+
+
+        """
         import time
 
         time.sleep( 0.1 )
@@ -288,8 +298,7 @@ class BootFrame(tk.Frame):
                 self.bootProtocol.send_flash_data( data, data_len )
                 addr += data_len
             else:
-                break
-                
+                break                
 
             time.sleep(0.01)
 
@@ -297,7 +306,7 @@ class BootFrame(tk.Frame):
 
         time.sleep(0.01)
         self.bootProtocol.send_exit()
-
+        """
 
         #self.__send_connect_cmd()
 
@@ -348,6 +357,10 @@ class BootFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def msg_receive_cb(self, payload):
+
+        self.bootProtocol.parser( payload )
+
+        """
         print("Boot msg receive: %s" % payload )
 
         # Append received chars to buffer
@@ -381,7 +394,7 @@ class BootFrame(tk.Frame):
             # Ignore
             else:
                 pass
-
+        """
 
 
 #################################################################################################

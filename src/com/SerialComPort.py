@@ -210,11 +210,24 @@ class SerialComunication():
     def __dev_rx_hndl(self):
 
         # Read message from embedded device
-        dev_msg = self.port.read()
+        dev_msg_bin = self.port.read()
 
-        if dev_msg:
-            msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxFrame, payload=dev_msg)
-            self.__ipc_send_msg(msg)
+        if len(dev_msg_bin) > 0:
+            
+            try:
+                dev_msg = dev_msg_bin.decode( "utf-8" )
+                msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxFrame, payload=dev_msg)
+                self.__ipc_send_msg(msg)
+            except:
+                pass
+
+            #ev_msg_bin = dev_msg.encode( "utf-8" )
+
+            print( "Dev msg_bin: %s" % dev_msg_bin )
+
+            msg_bin = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxBinary, payload=dev_msg_bin)
+            self.__ipc_send_msg(msg_bin)
+
 
     # ===============================================================================
     # @brief:   Main process loop
@@ -429,11 +442,16 @@ class SerialComPort(ComPortDesc):
         self._com_port.write(self.__unicode_str__(str + '\r'))
 
     def read(self):
+
+        rx_data = []
         try:
             if self.is_connected():
-                return self._com_port.read().decode("utf-8")
+                #rx_data = self._com_port.read().decode("utf-8")
+                rx_data = self._com_port.read()
         except:
             pass
+
+        return rx_data
 
     def __unicode_str__(self, str):
         return str.encode("utf-8")

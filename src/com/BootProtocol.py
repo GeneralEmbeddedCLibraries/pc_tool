@@ -17,6 +17,7 @@
 import os
 import struct
 
+import multiprocessing
 
 #################################################################################################
 ##  DEFINITIONS
@@ -45,6 +46,19 @@ import struct
 # ===============================================================================
 class BootProtocol:
 
+
+    CONNECT_RSP_OK                  = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x11, 0x00, 0x5A ]
+    CONNECT_RSP_ERROR_INVALID_REQ   = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x11, 0x02, 0x54 ]
+
+    PREPARE_RSP_OK                  = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x21, 0x00, 0xCA ]
+    PREPARE_RSP_ERROR_INVALID_REQ   = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x21, 0x02, 0xC4 ]
+    PREPARE_RSP_ERROR_INVALID_REQ   = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x21, 0x02, 0xC4 ]
+
+
+
+
+
+
     # ===============================================================================
     # @brief:   Construct BootProtocol
     #
@@ -56,9 +70,40 @@ class BootProtocol:
 
         self.send = send_fn
 
+        self.rx_q = []
 
-    def parser(self, rx_queue):
-        pass
+
+    def parser(self, payload):
+        
+
+
+        for byte in payload:
+            self.rx_q.append( byte )
+
+        print( self.rx_q )
+
+        # Data received
+        if len( self.rx_q ) >= 7:
+
+            print( self.rx_q )
+
+            # Header valid
+            if 0xB0 == self.rx_q[0] and 0x07 == self.rx_q[1]:
+
+                # Calculate crc
+                calc_crc = self.__calc_crc8( self.rx_q[2:7] )
+
+                # CRC OK
+                if calc_crc == self.rx_q[7]:
+                    print( "msg crc OK" )
+                else:
+                    print( "msg CRC Fail" )
+
+
+    def com_timeout_event(self):
+        self.rx_q = []
+
+
 
 
     def send_connect(self):
