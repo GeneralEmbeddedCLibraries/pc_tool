@@ -217,7 +217,7 @@ class BootFrame(tk.Frame):
         #self.boot_frame.columnconfigure(0, weight=100)
 
         # Progress bar
-        self.progress_bar   = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='indeterminate', style='text.Horizontal.TProgressbar' )
+        self.progress_bar   = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='determinate', style='text.Horizontal.TProgressbar' )
         self.progress_text  = tk.Label(self.boot_frame, text="0%", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
         self.file_text      = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
         self.browse_btn     = NormalButton( self.boot_frame, "Browse", command=self.__browse_btn_press)
@@ -271,8 +271,9 @@ class BootFrame(tk.Frame):
     def __update_btn_press(self):  
 
         self.bootProtocol.send_connect()
+        self.progress_bar.start()
 
-        self.after( 100, self.__com_timeout_event) 
+        #self.after( 100, self.__com_timeout_event) 
 
 
 
@@ -379,6 +380,10 @@ class BootFrame(tk.Frame):
         # Bootloader connect success
         if BootProtocol.MSG_OK == status:
 
+            self.progress_bar.stop()
+            self.progress_bar["value"] = 0
+
+
             # Get firmware info
             fw_size = self.fw_file.get_fw_size()
             sw_ver = self.fw_file.get_sw_ver()
@@ -422,6 +427,12 @@ class BootFrame(tk.Frame):
             # No more bytes to flash
             else:
                 self.bootProtocol.send_exit()
+
+        # Calculate progress
+        progress = (( self.working_addr / self.fw_file.get_fw_size()) * 100 )
+
+        self.progress_text["text"] = "%d %%" % progress
+        self.progress_bar["value"] = progress
 
 
     def __boot_exit_rx_cmpt_cb(self, status):
