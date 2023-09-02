@@ -46,16 +46,24 @@ import multiprocessing
 # ===============================================================================
 class BootProtocol:
 
+    PREAMBLE = [ 0xB0, 0x07 ]
 
-    CONNECT_RSP_OK                  = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x11, 0x00, 0x5A ]
-    CONNECT_RSP_ERROR_INVALID_REQ   = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x11, 0x02, 0x54 ]
+    # Command type
+    CMD_CONNECT_RSP     = 0x11
+    CMD_PREPARE_RSP     = 0x21
+    CMD_FLASH_RSP       = 0x31
+    CMD_EXIT_RSP        = 0x41
+    CMD_INFO_RSP        = 0x51
 
-    PREPARE_RSP_OK                  = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x21, 0x00, 0xCA ]
-    PREPARE_RSP_ERROR_INVALID_REQ   = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x21, 0x02, 0xC4 ]
-    PREPARE_RSP_ERROR_INVALID_REQ   = [ 0xB0, 0x07, 0x00, 0x00, 0xB2, 0x21, 0x02, 0xC4 ]
-
-
-
+    # Message status
+    MSG_OK                  = 0x00
+    MSG_ERROR_VALIDATION    = 0x01
+    MSG_ERROR_INV_REQUEST   = 0x02
+    MSG_ERROR_FLASH_WRITE   = 0x04
+    MSG_ERROR_FLASH_ERASE   = 0x08
+    MSG_ERROR_FW_SIZE       = 0x10
+    MSG_ERROR_FW_VER        = 0x20
+    MSG_ERROR_HW_VER        = 0x40
 
 
 
@@ -72,15 +80,16 @@ class BootProtocol:
 
         self.rx_q = []
 
+        self.cmd_type = [ BootProtocol.CMD_CONNECT_RSP, BootProtocol.CMD_PREPARE_RSP, BootProtocol.CMD_FLASH_RSP, BootProtocol.CMD_EXIT_RSP, BootProtocol.CMD_INFO_RSP  ]
+
+        self.cb = cb
 
     def parser(self, payload):
         
 
-
+        # Accumulate queue
         for byte in payload:
             self.rx_q.append( byte )
-
-        #print( self.rx_q )
 
         # Data received
         if len( self.rx_q ) >= 8:
@@ -88,21 +97,35 @@ class BootProtocol:
             print( self.rx_q )
 
             # Header valid
-            if 0xB0 == self.rx_q[0] and 0x07 == self.rx_q[1]:
+            if BootProtocol.PREAMBLE == self.rx_q[0:2]:
+
+                # Get fields
+                lenght  = self.rx_q[2:4]
+                source  = self.rx_q[4]
+                command = self.rx_q[5]
+                status  = self.rx_q[6]
 
                 # Calculate crc
-                calc_crc = self.__calc_crc8( self.rx_q[2:4] )  # Lenght
-                calc_crc ^= self.__calc_crc8( [self.rx_q[4]] )  # Source
-                calc_crc ^= self.__calc_crc8( [self.rx_q[5]] )  # Command
-                calc_crc ^= self.__calc_crc8( [self.rx_q[6]] )  # Status
+                calc_crc = self.__calc_crc8( lenght )       # Lenght
+                calc_crc ^= self.__calc_crc8( [source] )    # Source
+                calc_crc ^= self.__calc_crc8( [command] )   # Command
+                calc_crc ^= self.__calc_crc8( [status] )    # Status
 
                 print( calc_crc )
 
                 # CRC OK
                 if calc_crc == self.rx_q[7]:
-                    print( "msg crc OK" )
+                    
+                    for n, cmd in enumerate( self.cmd_type ):
+                        if cmd == command:
+                            self.cb[n]( status )
+
+                # CRC error
                 else:
-                    print( "msg CRC Fail" )
+                    pass
+
+                # Empty queue
+                self.rx_q = []
 
 
     def com_timeout_event(self):

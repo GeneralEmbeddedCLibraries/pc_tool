@@ -37,7 +37,7 @@ import time
 # Fast timer period
 #
 # Unit: ms
-MAIN_WIN_FAST_TIM_PERIOD    = 100
+MAIN_WIN_FAST_TIM_PERIOD    = 1
 
 # Slow timer period
 #

@@ -37,6 +37,10 @@ BOOT_ENTER_BOOT_RSP_CMD     = "OK, Entering bootloader..."
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
 
+# Number of bytes to transfer in flash data
+BOOT_FLASH_DATA_FRAME_SIZE      = 64 #bytes
+
+
 #################################################################################################
 ##  FUNCTIONS
 #################################################################################################
@@ -187,7 +191,14 @@ class BootFrame(tk.Frame):
         self.__init_widgets()
 
         # Create boot protocol
-        self.bootProtocol = BootProtocol(send_fn=self.msg_send_bin)
+        callbacks = [   self.__boot_connect_rx_cmpt_cb, self.__boot_prepare_rx_cmpt_cb, 
+                        self.__boot_flash_rx_cmpt_cb, self.__boot_exit_rx_cmpt_cb, self.__boot_info_rx_cmpt_cb ]
+
+        self.bootProtocol = BootProtocol(send_fn=self.msg_send_bin, cb=callbacks)
+
+        # Working address for bootloader
+        self.working_addr = 0
+
 
     # ===============================================================================
     # @brief:   Initialize widgets
@@ -359,6 +370,67 @@ class BootFrame(tk.Frame):
     def msg_receive_cb(self, payload):
 
         self.bootProtocol.parser( payload )
+
+
+
+    def __boot_connect_rx_cmpt_cb(self, status):
+        print( "Connect callback: %s" % status )
+
+        # Bootloader connect success
+        if BootProtocol.MSG_OK == status:
+
+            # Get firmware info
+            fw_size = self.fw_file.get_fw_size()
+            sw_ver = self.fw_file.get_sw_ver()
+            hw_ver = self.fw_file.get_hw_ver()
+
+            # Send prepare message
+            self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
+
+
+    def __boot_prepare_rx_cmpt_cb(self, status):
+        print( "Prepare callback: %s" % status )
+
+        # Bootloader prepare success
+        if BootProtocol.MSG_OK == status:
+
+            # Reset working address
+            self.working_addr = 0
+
+            data = self.fw_file.read( self.working_addr, BOOT_FLASH_DATA_FRAME_SIZE )
+            data_len = len( data )
+
+            if data_len > 0:
+                self.bootProtocol.send_flash_data( data, data_len )
+                self.working_addr += data_len
+
+
+
+    def __boot_flash_rx_cmpt_cb(self, status):
+        print( "Flash callback: %s" % status )
+
+        # Bootloader flashing success
+        if BootProtocol.MSG_OK == status:
+
+            data = self.fw_file.read( self.working_addr, BOOT_FLASH_DATA_FRAME_SIZE )
+            data_len = len( data )
+
+            if data_len > 0:
+                self.bootProtocol.send_flash_data( data, data_len )
+                self.working_addr += data_len
+
+            # No more bytes to flash
+            else:
+                self.bootProtocol.send_exit()
+
+
+    def __boot_exit_rx_cmpt_cb(self, status):
+        print( "Exit callback: %s" % status )
+
+    def __boot_info_rx_cmpt_cb(self, status):
+        print( "Info callback: %s" % status )
+
+
 
         """
         print("Boot msg receive: %s" % payload )
