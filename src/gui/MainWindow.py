@@ -596,8 +596,6 @@ class MainWindow():
     # @return:      void
     # ===============================================================================
     def __ipc_rx_binary_cmd(self, payload):
-        #print( "0x%02X" % int(payload, 16 ))
-        print( "%s" % payload )
 
         # Handle received message
         self.boot_frame.msg_receive_cb(payload)

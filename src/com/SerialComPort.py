@@ -215,16 +215,16 @@ class SerialComunication():
         if len(dev_msg_bin) > 0:
             
             try:
+                # Try to decode
                 dev_msg = dev_msg_bin.decode( "utf-8" )
+                
+                # Send UTF-8 format string to Main Window process
                 msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxFrame, payload=dev_msg)
                 self.__ipc_send_msg(msg)
             except:
                 pass
-
-            #ev_msg_bin = dev_msg.encode( "utf-8" )
-
-            print( "Dev msg_bin: %s" % dev_msg_bin )
-
+            
+            # Send binary message to MainWindow process
             msg_bin = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxBinary, payload=dev_msg_bin)
             self.__ipc_send_msg(msg_bin)
 
@@ -446,7 +446,6 @@ class SerialComPort(ComPortDesc):
         rx_data = []
         try:
             if self.is_connected():
-                #rx_data = self._com_port.read().decode("utf-8")
                 rx_data = self._com_port.read()
         except:
             pass

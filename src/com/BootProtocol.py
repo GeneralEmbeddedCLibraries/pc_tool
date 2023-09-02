@@ -80,12 +80,12 @@ class BootProtocol:
         for byte in payload:
             self.rx_q.append( byte )
 
-        print( self.rx_q )
+        #print( self.rx_q )
 
         # Data received
-        if len( self.rx_q ) >= 7:
+        if len( self.rx_q ) >= 8:
 
-            print( self.rx_q )
+            #print( self.rx_q )
 
             # Header valid
             if 0xB0 == self.rx_q[0] and 0x07 == self.rx_q[1]:
