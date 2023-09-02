@@ -213,35 +213,36 @@ class BootFrame(tk.Frame):
         # Boot frame
         self.boot_frame = tk.Frame(self, bg=GuiColor.sub_1_bg, padx=20, pady=20)
 
-        #self.boot_frame.rowconfigure(0, weight=1)
+        self.boot_frame.rowconfigure(5, weight=1)
         #self.boot_frame.columnconfigure(0, weight=100)
 
         # Progress bar
-        self.progress_bar   = ttk.Progressbar( self.boot_frame, orient='horizontal', mode='determinate', style='text.Horizontal.TProgressbar' )
-        self.progress_text  = tk.Label(self.boot_frame, text="0%", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.progress_bar   = ttk.Progressbar( self, orient='horizontal', mode='determinate', style='text.Horizontal.TProgressbar' )
+        self.progress_text  = tk.Label(self, text="   0%", font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         self.file_text      = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.fw_ver_text    = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
         self.browse_btn     = NormalButton( self.boot_frame, "Browse", command=self.__browse_btn_press)
         self.update_btn     = NormalButton( self.boot_frame, "Update", command=self.__update_btn_press)
 
         self.update_btn.config(state=tk.DISABLED)
 
-        # Start moving progress bar
-        # TODO: Remove when not needed...
-        #self.progress_bar.start()
 
         # Self frame layout
         self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                padx=20, pady=10 )
-        self.boot_frame.grid(       column=0, row=1,                sticky=tk.W+tk.N+tk.S+tk.E, padx=20, pady=10 )
+        self.boot_frame.grid(       column=0, row=1, columnspan=3,  sticky=tk.W+tk.N+tk.S+tk.E, padx=20, pady=10 )
 
         # Boot frame layout
         self.browse_btn.grid(       column=0, row=0,                sticky=tk.W,                    padx=20, pady=10    )
         self.update_btn.grid(       column=0, row=1,                sticky=tk.W,                    padx=20, pady=10    )
-        self.progress_bar.grid(     column=0, row=2, columnspan=2,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=20, pady=10    )
-        self.progress_text.grid(    column=2, row=2,                sticky=tk.W,                    padx=20, pady=10    )
+        self.progress_bar.grid(     column=0, row=6,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=20, pady=20    )
+        self.progress_text.grid(    column=2, row=6,                sticky=tk.W+tk.N+tk.S+tk.E,     padx=20, pady=20    )
 
         
         self.file_text.grid(      column=2, row=1,                sticky=tk.W,                   padx=20, pady=10    )
-        tk.Label(self.boot_frame, text="File path:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=1, sticky=tk.W, padx=20, pady=10    )
+        tk.Label(self.boot_frame, text="Firmware file:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=1, sticky=tk.W, padx=20, pady=10    )
+        tk.Label(self.boot_frame, text="Firmware size:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=2, sticky=tk.W, padx=20, pady=10    )
+        tk.Label(self.boot_frame, text="Firmware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=3, sticky=tk.W, padx=20, pady=10    )
+        tk.Label(self.boot_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=4, sticky=tk.W, padx=20, pady=10    )
 
 
     def __browse_btn_press(self):
@@ -255,7 +256,7 @@ class BootFrame(tk.Frame):
             print("Selected FW image: %s" % fw_file_path )
 
             self.update_btn.config(state=tk.NORMAL)
-            self.file_text["text"] = fw_file_path
+            self.file_text["text"] = fw_file_path.split("/")[-1]
 
             # Open file
             self.fw_file = FwImage(file=fw_file_path)
@@ -270,6 +271,7 @@ class BootFrame(tk.Frame):
 
     def __update_btn_press(self):  
 
+        self.progress_text["text"] = "%3d%%" % 0
         self.bootProtocol.send_connect()
         self.progress_bar.start()
 
@@ -412,7 +414,6 @@ class BootFrame(tk.Frame):
 
 
     def __boot_flash_rx_cmpt_cb(self, status):
-        print( "Flash callback: %s" % status )
 
         # Bootloader flashing success
         if BootProtocol.MSG_OK == status:
@@ -431,7 +432,7 @@ class BootFrame(tk.Frame):
         # Calculate progress
         progress = (( self.working_addr / self.fw_file.get_fw_size()) * 100 )
 
-        self.progress_text["text"] = "%d %%" % progress
+        self.progress_text["text"] = "%3d%%" % progress
         self.progress_bar["value"] = progress
 
 
