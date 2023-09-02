@@ -213,7 +213,7 @@ class BootFrame(tk.Frame):
         # Boot frame
         self.boot_frame = tk.Frame(self, bg=GuiColor.sub_1_bg, padx=20, pady=20)
 
-        self.boot_frame.rowconfigure(5, weight=1)
+        self.boot_frame.rowconfigure(10, weight=1)
         #self.boot_frame.columnconfigure(0, weight=100)
 
         # Progress bar
@@ -221,6 +221,9 @@ class BootFrame(tk.Frame):
         self.progress_text  = tk.Label(self, text="   0%", font=GuiFont.heading_2_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         self.file_text      = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
         self.fw_ver_text    = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.fw_size_text   = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.hw_ver_text    = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.status_text    = tk.Label(self.boot_frame, text="", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
         self.browse_btn     = NormalButton( self.boot_frame, "Browse", command=self.__browse_btn_press)
         self.update_btn     = NormalButton( self.boot_frame, "Update", command=self.__update_btn_press)
 
@@ -238,11 +241,16 @@ class BootFrame(tk.Frame):
         self.progress_text.grid(    column=2, row=6,                sticky=tk.W+tk.N+tk.S+tk.E,     padx=20, pady=20    )
 
         
-        self.file_text.grid(      column=2, row=1,                sticky=tk.W,                   padx=20, pady=10    )
-        tk.Label(self.boot_frame, text="Firmware file:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=1, sticky=tk.W, padx=20, pady=10    )
-        tk.Label(self.boot_frame, text="Firmware size:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=2, sticky=tk.W, padx=20, pady=10    )
-        tk.Label(self.boot_frame, text="Firmware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=3, sticky=tk.W, padx=20, pady=10    )
-        tk.Label(self.boot_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid( column=1, row=4, sticky=tk.W, padx=20, pady=10    )
+        self.file_text.grid(        column=1, row=2,                sticky=tk.W,                   padx=10, pady=10    )
+        self.fw_size_text.grid(     column=1, row=3,                sticky=tk.W,                   padx=10, pady=10    )
+        self.fw_ver_text.grid(      column=1, row=4,                sticky=tk.W,                   padx=10, pady=10    )
+        self.hw_ver_text.grid(      column=1, row=5,                sticky=tk.W,                   padx=10, pady=10    )
+        self.status_text.grid(      column=1, row=6,                sticky=tk.W,                   padx=10, pady=10    )
+        tk.Label(self.boot_frame, text="Firmware file:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid(  column=0, row=2, sticky=tk.E,    padx=10, pady=10    )
+        tk.Label(self.boot_frame, text="Firmware size:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid(  column=0, row=3, sticky=tk.E,    padx=10, pady=10    )
+        tk.Label(self.boot_frame, text="Firmware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid(   column=0, row=4, sticky=tk.E,     padx=10, pady=10    )
+        tk.Label(self.boot_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid(   column=0, row=5, sticky=tk.E,     padx=10, pady=10    )
+        tk.Label(self.boot_frame, text="Status:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg).grid(         column=0, row=6, sticky=tk.E,     padx=10, pady=10    )
 
 
     def __browse_btn_press(self):
@@ -261,6 +269,17 @@ class BootFrame(tk.Frame):
             # Open file
             self.fw_file = FwImage(file=fw_file_path)
 
+            fw_size = self.fw_file.get_fw_size()
+            sw_ver = self.fw_file.get_sw_ver()
+            sw_ver = struct.pack('I', int(sw_ver))
+            hw_ver = self.fw_file.get_hw_ver()
+            hw_ver = struct.pack('I', int(hw_ver))
+
+            self.fw_size_text["text"] = "%d kB" % ( fw_size / 1024 )
+            self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
+            self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
+
+            self.status_text["text"] = "Idle"
 
 
     def __com_timeout_event(self):
@@ -274,6 +293,8 @@ class BootFrame(tk.Frame):
         self.progress_text["text"] = "%3d%%" % 0
         self.bootProtocol.send_connect()
         self.progress_bar.start()
+
+        self.status_text["text"] = "Connecting"
 
         #self.after( 100, self.__com_timeout_event) 
 
@@ -382,8 +403,7 @@ class BootFrame(tk.Frame):
         # Bootloader connect success
         if BootProtocol.MSG_OK == status:
 
-            self.progress_bar.stop()
-            self.progress_bar["value"] = 0
+
 
 
             # Get firmware info
@@ -394,12 +414,17 @@ class BootFrame(tk.Frame):
             # Send prepare message
             self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
 
+            self.status_text["text"] = "Preparing"
+
 
     def __boot_prepare_rx_cmpt_cb(self, status):
         print( "Prepare callback: %s" % status )
 
         # Bootloader prepare success
         if BootProtocol.MSG_OK == status:
+
+            self.progress_bar.stop()
+            self.progress_bar["value"] = 0
 
             # Reset working address
             self.working_addr = 0
@@ -410,6 +435,8 @@ class BootFrame(tk.Frame):
             if data_len > 0:
                 self.bootProtocol.send_flash_data( data, data_len )
                 self.working_addr += data_len
+
+            self.status_text["text"] = "Flashing"
 
 
 
@@ -438,6 +465,9 @@ class BootFrame(tk.Frame):
 
     def __boot_exit_rx_cmpt_cb(self, status):
         print( "Exit callback: %s" % status )
+
+        self.status_text["text"] = "Done"
+
 
     def __boot_info_rx_cmpt_cb(self, status):
         print( "Info callback: %s" % status )

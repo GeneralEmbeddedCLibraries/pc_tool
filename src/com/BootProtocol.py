@@ -86,15 +86,12 @@ class BootProtocol:
 
     def parser(self, payload):
         
-
         # Accumulate queue
         for byte in payload:
             self.rx_q.append( byte )
 
         # Data received
         if len( self.rx_q ) >= 8:
-
-            print( self.rx_q )
 
             # Header valid
             if BootProtocol.PREAMBLE == self.rx_q[0:2]:
