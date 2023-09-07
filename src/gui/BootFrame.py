@@ -19,9 +19,12 @@ from tkinter import ttk
 from gui.GuiCommon import *
 import struct
 import os
+import time
 
 from com.IpcProtocol import IpcMsg, IpcMsgType
 from com.BootProtocol import BootProtocol
+
+from com.Timer import _TimerReset
 
 #################################################################################################
 ##  DEFINITIONS
@@ -200,6 +203,9 @@ class BootFrame(tk.Frame):
         self.working_addr = 0
 
 
+        self.com_timer = _TimerReset( interval=1000, function=self.com_timer_expire )
+
+
     # ===============================================================================
     # @brief:   Initialize widgets
     #
@@ -282,89 +288,53 @@ class BootFrame(tk.Frame):
             self.status_text["text"] = "Idle"
 
 
-    def __com_timeout_event(self):
+
+    def com_timer_expire(self):
         print( "Communication timeouted" );
-    
-        self.bootProtocol.com_timeout_event()
+
+        # Reset progress bar
+        self.progress_text["text"] = "%3d%%" % 0
+        self.progress_bar.stop()
+
+        # Update status
+        self.status_text["text"] = "Communication with bootloader timeouted!"
 
 
     def __update_btn_press(self):  
 
-        self.progress_text["text"] = "%3d%%" % 0
+        # If in application -> reset and enter bootloader
+        self.msg_send_ascii( "reset" )
+        
+        # Wait for 20 ms
+        time.sleep( 0.02 )
+
+        # Connect to bootloader
         self.bootProtocol.send_connect()
+
+        # Reset progress bar
+        self.progress_text["text"] = "%3d%%" % 0
         self.progress_bar.start()
 
+        # Update status
         self.status_text["text"] = "Connecting"
 
-        #self.after( 100, self.__com_timeout_event) 
-
-
-
-
-        """
-        import time
-
-        time.sleep( 0.1 )
-
-        fw_size = self.fw_file.get_fw_size()
-        sw_ver = self.fw_file.get_sw_ver()
-        hw_ver = self.fw_file.get_hw_ver()
-
-        print( "Firmware size: %s kB" % ( fw_size/1024 ))
-        print( "SW version: %s" % self.fw_file.get_sw_ver_raw() )
-        print( "HW version: %s" % self.fw_file.get_hw_ver_raw() )
-
-        self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
-
-        time.sleep( 3.0 )
-
-        addr = 0
-        SIZE = 64
-
-        #for _ in range( 16 ):
+        # Start timeout timer
+        self.com_timer.reset( 1 )
+        #self.com_timer.start()
         
-        while True:
+        ##self.waiting_for_connect_rsp = True
+        ##self.after( 1000, self.connecting_timeout )
 
 
-            data = self.fw_file.read( addr, SIZE )
-            data_len = len( data )
+    def connecting_timeout(self):
 
-            if data_len > 0:
-                self.bootProtocol.send_flash_data( data, data_len )
-                addr += data_len
-            else:
-                break                
+        if self.waiting_for_connect_rsp:
+            # Reset progress bar
+            self.progress_text["text"] = "%3d%%" % 0
+            self.progress_bar.stop()
 
-            time.sleep(0.01)
-
-
-
-        time.sleep(0.01)
-        self.bootProtocol.send_exit()
-        """
-
-        #self.__send_connect_cmd()
-
-        #self.__send_prepare_cmd( 1, 1, 1 )
-
-        """
-        # Update started
-        if False == self.boot_in_progress:
-
-            # Send message to enter bootloader
-            self.com_rx_buf = ""
-            #self.msg_send( BOOT_ENTER_BOOT_CMD )
-            pass
-
-
-        # Update canceled
-        else:
-
-            # Update button text
-            self.update_btn.text( "Update" )
-        """
-            
-
+            # Update status
+            self.status_text["text"] = "Connecting with bootloader timeouted!"
 
 
     def msg_send_ascii(self, cmd):
@@ -400,11 +370,11 @@ class BootFrame(tk.Frame):
     def __boot_connect_rx_cmpt_cb(self, status):
         print( "Connect callback: %s" % status )
 
+        # At that point we are conected to bootloader
+        self.waiting_for_connect_rsp = False
+
         # Bootloader connect success
         if BootProtocol.MSG_OK == status:
-
-
-
 
             # Get firmware info
             fw_size = self.fw_file.get_fw_size()
@@ -414,11 +384,37 @@ class BootFrame(tk.Frame):
             # Send prepare message
             self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
 
+            # Update status
             self.status_text["text"] = "Preparing"
+
+            # Start timeout timer
+            #self.waiting_for_prepare_rsp = True
+            #self.after( 5000, self.preparation_timeout )
+
+            self.com_timer.reset( 5 )
+            #self.com_timer.start()
+
+        else:
+            self.status_text["text"] = self.bootProtocol.get_status_str( status )
+
+
+    def preparation_timeout(self):
+
+        if self.waiting_for_prepare_rsp:
+            # Reset progress bar
+            self.progress_text["text"] = "%3d%%" % 0
+            self.progress_bar.stop()
+
+            # Update status
+            self.status_text["text"] = "Preparation timeouted!"       
+
 
 
     def __boot_prepare_rx_cmpt_cb(self, status):
         print( "Prepare callback: %s" % status )
+
+        # At that point we are done with preparation
+        self.waiting_for_prepare_rsp = False
 
         # Bootloader prepare success
         if BootProtocol.MSG_OK == status:
@@ -436,11 +432,24 @@ class BootFrame(tk.Frame):
                 self.bootProtocol.send_flash_data( data, data_len )
                 self.working_addr += data_len
 
-            self.status_text["text"] = "Flashing"
+                # Start timeout timer
+                #self.waiting_for_flash_rsp = True
+                #self.after( 100, self.flashing_timeout )
 
+
+
+            self.status_text["text"] = "Flashing"
+        else:
+            self.status_text["text"] = self.bootProtocol.get_status_str( status )
+
+        self.com_timer.reset( 0.1 )
+        #self.com_timer.start()
 
 
     def __boot_flash_rx_cmpt_cb(self, status):
+
+        # Response received from flash command
+        self.waiting_for_flash_rsp = False
 
         # Bootloader flashing success
         if BootProtocol.MSG_OK == status:
@@ -452,9 +461,16 @@ class BootFrame(tk.Frame):
                 self.bootProtocol.send_flash_data( data, data_len )
                 self.working_addr += data_len
 
+                # Start timeout timer
+                #self.waiting_for_flash_rsp = True
+                #self.after( 100, self.flashing_timeout )
+
             # No more bytes to flash
             else:
                 self.bootProtocol.send_exit()
+
+        else:
+            self.status_text["text"] = self.bootProtocol.get_status_str( status )
 
         # Calculate progress
         progress = (( self.working_addr / self.fw_file.get_fw_size()) * 100 )
@@ -462,11 +478,36 @@ class BootFrame(tk.Frame):
         self.progress_text["text"] = "%3d%%" % progress
         self.progress_bar["value"] = progress
 
+        self.com_timer.reset( 0.1 )
+        #self.com_timer.start()
+
+
+
+    def flashing_timeout(self):
+
+        if self.waiting_for_flash_rsp:
+            # Reset progress bar
+            self.progress_text["text"] = "%3d%%" % 0
+            self.progress_bar.stop()
+
+            # Update status
+            self.status_text["text"] = "ERROR: Flashing timeouted!" 
+
+
 
     def __boot_exit_rx_cmpt_cb(self, status):
         print( "Exit callback: %s" % status )
 
-        self.status_text["text"] = "Done"
+        self.com_timer.cancel()
+
+        # Bootloader exit success
+        if BootProtocol.MSG_OK == status:
+            self.status_text["text"] = "Done"
+        else:
+            self.status_text["text"] = self.bootProtocol.get_status_str( status )
+
+        
+
 
 
     def __boot_info_rx_cmpt_cb(self, status):

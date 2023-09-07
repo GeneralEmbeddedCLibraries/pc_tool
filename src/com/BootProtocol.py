@@ -64,7 +64,17 @@ class BootProtocol:
     MSG_ERROR_FW_SIZE       = 0x10
     MSG_ERROR_FW_VER        = 0x20
     MSG_ERROR_HW_VER        = 0x40
-
+    
+    MSG_ERROR_STR = {   
+                        MSG_OK                  : "OK",
+                        MSG_ERROR_VALIDATION    : "Validation error",
+                        MSG_ERROR_INV_REQUEST   : "Invalid request (wrong sequence)",
+                        MSG_ERROR_FLASH_WRITE   : "Error during flash write",
+                        MSG_ERROR_FLASH_ERASE   : "Error during flash erase",
+                        MSG_ERROR_FW_SIZE       : "Firmware image size error",
+                        MSG_ERROR_FW_VER        : "Firmware version compatibility error",
+                        MSG_ERROR_HW_VER        : "Hardware version compatibility error",
+                    }
 
 
     # ===============================================================================
@@ -107,8 +117,6 @@ class BootProtocol:
                 calc_crc ^= self.__calc_crc8( [source] )    # Source
                 calc_crc ^= self.__calc_crc8( [command] )   # Command
                 calc_crc ^= self.__calc_crc8( [status] )    # Status
-
-                print( calc_crc )
 
                 # CRC OK
                 if calc_crc == self.rx_q[7]:
@@ -195,7 +203,19 @@ class BootProtocol:
         cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0x40, 0x00, 0x2C ]
 
         # Send
-        self.send( cmd )     
+        self.send( cmd )   
+
+    def send_info(self):
+
+        # Assemble info comand
+        cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0x40, 0x00, 0x2C ]
+
+        # Send
+        self.send( cmd )      
+
+    def get_status_str(self, status):
+        return BootProtocol.MSG_ERROR_STR[status]
+
 
     # ===============================================================================
     # @brief  Calculate CRC-8
