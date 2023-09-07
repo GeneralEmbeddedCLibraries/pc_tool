@@ -203,8 +203,6 @@ class BootFrame(tk.Frame):
         self.working_addr = 0
 
 
-        self.com_timer = _TimerReset( interval=1000, function=self.com_timer_expire )
-
 
     # ===============================================================================
     # @brief:   Initialize widgets
@@ -299,6 +297,8 @@ class BootFrame(tk.Frame):
         # Update status
         self.status_text["text"] = "Communication with bootloader timeouted!"
 
+        del self.com_timer
+
 
     def __update_btn_press(self):  
 
@@ -319,8 +319,8 @@ class BootFrame(tk.Frame):
         self.status_text["text"] = "Connecting"
 
         # Start timeout timer
-        self.com_timer.reset( 1 )
-        #self.com_timer.start()
+        self.com_timer = _TimerReset( interval=1000, function=self.com_timer_expire )
+        self.com_timer.start()
         
         ##self.waiting_for_connect_rsp = True
         ##self.after( 1000, self.connecting_timeout )
