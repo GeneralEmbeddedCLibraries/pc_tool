@@ -133,7 +133,7 @@ class BootProtocol:
                 self.rx_q = []
 
 
-    def com_timeout_event(self):
+    def reset(self):
         self.rx_q = []
 
 
