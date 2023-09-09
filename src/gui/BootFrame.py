@@ -125,7 +125,9 @@ class BinFile:
         self.file.seek(offset) 
 
 
-
+# ===============================================================================
+# @brief  Firmware Image Class
+# ===============================================================================
 class FwImage(BinFile):
 
     # Expected application header version
@@ -142,22 +144,52 @@ class FwImage(BinFile):
     # Application header size in bytes
     APP_HEADER_SIZE_BYTE            = 0x100
 
+    # ===============================================================================
+    # @brief    Firmware Image Constructor
+    #
+    # @param[in]    file - Inputed firmware image file
+    # @return       void
+    # =============================================================================== 
     def __init__(self, file):
         self.file = BinFile(file=file, access=BinFile.READ_ONLY)
 
-
+    # ===============================================================================
+    # @brief    Get firmware image software version
+    #
+    # @return       sw version
+    # =============================================================================== 
     def get_sw_ver(self):
         return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 ), byteorder="little" )
     
+    # ===============================================================================
+    # @brief    Get firmware image software version in raw format
+    #
+    # @return       sw version in raw
+    # =============================================================================== 
     def get_sw_ver_raw(self):
         return self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 )
 
+    # ===============================================================================
+    # @brief    Get firmware image hardware version
+    #
+    # @return       hw version
+    # =============================================================================== 
     def get_hw_ver(self):
         return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 ), byteorder="little" )
 
+    # ===============================================================================
+    # @brief    Get firmware image hardware version in raw format
+    #
+    # @return       hw version raw
+    # =============================================================================== 
     def get_hw_ver_raw(self):
         return self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 )
 
+    # ===============================================================================
+    # @brief    Get firmware image size in bytes
+    #
+    # @return       firmware image size
+    # =============================================================================== 
     def get_fw_size(self):
         return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SIZE_ADDR, 4 ), byteorder="little" )
 
@@ -337,7 +369,7 @@ class BootFrame(tk.Frame):
         
         else:
             del self.com_timer
-            self.bootProtocol.reset()
+            self.bootProtocol.reset_rx_queue()
 
             # Reset progress bar
             self.progress_text["text"] = "%3d%%" % 0

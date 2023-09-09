@@ -14,10 +14,7 @@
 #################################################################################################
 ##  IMPORTS
 #################################################################################################
-import os
 import struct
-
-import multiprocessing
 
 #################################################################################################
 ##  DEFINITIONS
@@ -86,14 +83,24 @@ class BootProtocol:
     # ===============================================================================
     def __init__(self, send_fn, cb=None):
 
+        # Send function
         self.send = send_fn
 
+        # Reception queue
         self.rx_q = []
 
+        # Supported bootloader commands
         self.cmd_type = [ BootProtocol.CMD_CONNECT_RSP, BootProtocol.CMD_PREPARE_RSP, BootProtocol.CMD_FLASH_RSP, BootProtocol.CMD_EXIT_RSP, BootProtocol.CMD_INFO_RSP  ]
 
+        # Receive command callbacks
         self.cb = cb
 
+    # ===============================================================================
+    # @brief  Parse bootloader messages
+    #
+    # @param[in]    payload - Received pyload
+    # @return       void
+    # ===============================================================================
     def parser(self, payload):
         
         # Accumulate queue
@@ -132,13 +139,19 @@ class BootProtocol:
                 # Empty queue
                 self.rx_q = []
 
-
-    def reset(self):
+    # ===============================================================================
+    # @brief  Reset reception queue
+    #
+    # @return       void
+    # ===============================================================================
+    def reset_rx_queue(self):
         self.rx_q = []
 
-
-
-
+    # ===============================================================================
+    # @brief  Send connect command
+    #
+    # @return       void
+    # ===============================================================================
     def send_connect(self):
 
         # Assemble connect comand
@@ -147,7 +160,14 @@ class BootProtocol:
         # Send
         self.send( cmd )
 
-
+    # ===============================================================================
+    # @brief  Send prepare command
+    #
+    # @param[in]    fw_size     - Size of firmware image
+    # @param[in]    fw_ver      - Firmware version
+    # @param[in]    hw_ver      - Hardware version
+    # @return       void
+    # ===============================================================================
     def send_prepare(self, fw_size, fw_ver, hw_ver):
 
         # Assemble prepare command
@@ -175,6 +195,13 @@ class BootProtocol:
         # Send prepare command
         self.send( prepare_cmd )  
 
+    # ===============================================================================
+    # @brief  Send flash data command
+    #
+    # @param[in]    data    - Binary data to flash
+    # @param[in]    size    - Size of binary data
+    # @return       void
+    # ===============================================================================
     def send_flash_data(self, data, size):
 
         # Assemble flash data command
@@ -196,7 +223,11 @@ class BootProtocol:
         # Send prepare command
         self.send( flash_cmd )  
 
-
+    # ===============================================================================
+    # @brief  Send exit bootloader command
+    #
+    # @return       void
+    # ===============================================================================
     def send_exit(self):
 
         # Assemble exit comand
@@ -205,6 +236,11 @@ class BootProtocol:
         # Send
         self.send( cmd )   
 
+    # ===============================================================================
+    # @brief  Send information command
+    #
+    # @return       void
+    # ===============================================================================
     def send_info(self):
 
         # Assemble info comand
@@ -213,9 +249,14 @@ class BootProtocol:
         # Send
         self.send( cmd )      
 
+    # ===============================================================================
+    # @brief  Get stringed status
+    #
+    # @param[in]    status  - Message status
+    # @return       stringed status format
+    # ===============================================================================
     def get_status_str(self, status):
         return BootProtocol.MSG_ERROR_STR[status]
-
 
     # ===============================================================================
     # @brief  Calculate CRC-8
