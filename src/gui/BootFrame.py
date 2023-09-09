@@ -466,9 +466,15 @@ class BootFrame(tk.Frame):
                     self.bootProtocol.send_flash_data( data, data_len )
                     self.working_addr += data_len
 
+                    # Restart communiction timeout timer
+                    self.com_timer.reset( 0.1 )
+
                 # No more bytes to flash
                 else:
                     self.bootProtocol.send_exit()
+
+                    # Restart communiction timeout timer
+                    self.com_timer.reset( 0.5 )
 
             else:
                 self.status_text["text"] = self.bootProtocol.get_status_str( status )
@@ -479,8 +485,7 @@ class BootFrame(tk.Frame):
             self.progress_text["text"] = "%3d%%" % progress
             self.progress_bar["value"] = progress
 
-            # Restart communiction timeout timer
-            self.com_timer.reset( 0.1 )
+
 
 
     def __boot_exit_rx_cmpt_cb(self, status):
