@@ -327,6 +327,7 @@ class BootFrame(tk.Frame):
 
             # Reset progress bar
             self.progress_text["text"] = "%3d%%" % 0
+            self.progress_bar["mode"] = "determinate"
             self.progress_bar.stop()
 
             # Update status
@@ -337,6 +338,7 @@ class BootFrame(tk.Frame):
         else:
             # Reset progress bar
             self.progress_text["text"] = "%3d%%" % 0
+            self.progress_bar["mode"] = "determinate"
             self.progress_bar.stop()
 
             # Update status
@@ -364,6 +366,7 @@ class BootFrame(tk.Frame):
 
             # Reset progress bar
             self.progress_text["text"] = "%3d%%" % 0
+            self.progress_bar["mode"] = "indeterminate"
             self.progress_bar.start()
 
             # Update status
@@ -372,9 +375,6 @@ class BootFrame(tk.Frame):
             # Start timeout timer
             self.com_timer = _TimerReset( interval=3, function=self.com_timer_expire )
             self.com_timer.start()
-            
-            ##self.waiting_for_connect_rsp = True
-            ##self.after( 1000, self.connecting_timeout )
         
         else:
             self.com_timer.cancel()
@@ -539,6 +539,7 @@ class BootFrame(tk.Frame):
             # Calculate progress
             progress = (( self.working_addr / self.fw_file.get_fw_size()) * 100 )
 
+            self.progress_bar["mode"] = "determinate"
             self.progress_text["text"] = "%3d%%" % progress
             self.progress_bar["value"] = progress
 
@@ -556,7 +557,7 @@ class BootFrame(tk.Frame):
 
             # Bootloader exit success
             if BootProtocol.MSG_OK == status:
-                self.status_text["text"] = "Done"
+                self.status_text["text"] = "Application successfully upgraded"
             else:
                 self.status_text["text"] = self.bootProtocol.get_status_str( status )
 
