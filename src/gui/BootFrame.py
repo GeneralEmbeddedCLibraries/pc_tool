@@ -234,6 +234,9 @@ class BootFrame(tk.Frame):
         # Working address for bootloader
         self.working_addr = 0
 
+        # Start tick
+        self.start_tick = 0
+
 
 
     # ===============================================================================
@@ -450,6 +453,9 @@ class BootFrame(tk.Frame):
 
             self.update_btn.text( "Cancel" )
 
+            # Store start time
+            self.start_tick = time.time()
+
             # Get firmware info
             fw_size = self.fw_file.get_fw_size()
             sw_ver = self.fw_file.get_sw_ver()
@@ -570,8 +576,12 @@ class BootFrame(tk.Frame):
 
             # Bootloader exit success
             if BootProtocol.MSG_OK == status:
+
+                # Calculate total firmware upgade duration
+                total_time = time.time() - self.start_tick
+
                 self.status_text["fg"] = GuiColor.btn_success_bg
-                self.status_text["text"] = "Application successfully upgraded"
+                self.status_text["text"] = "Application successfully upgraded in %.2f sec!" % total_time
             else:
                 self.status_text["fg"] = "red"
                 self.status_text["text"] = "ERROR: " + self.bootProtocol.get_status_str( status )
