@@ -39,9 +39,14 @@ BOOT_ENTER_BOOT_RSP_CMD     = "OK, Entering bootloader..."
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
-
 # Number of bytes to transfer in flash data
 BOOT_FLASH_DATA_FRAME_SIZE      = 64 #bytes
+
+# Communication timeout settings
+BOOT_COM_CONNECT_TIMEOUT_SEC    = 3.0
+BOOT_COM_PREPARE_TIMEOUT_SEC    = 5.0
+BOOT_COM_FLASH_TIMEOUT_SEC      = 0.5
+BOOT_COM_EXIT_TIMEOUT_SEC       = 1.0
 
 
 #################################################################################################
@@ -376,10 +381,10 @@ class BootFrame(tk.Frame):
         if "Upgrade" == self.update_btn.get_text():
 
             # If in application -> reset and enter bootloader
-            self.msg_send_ascii( "reset" )
+            #self.msg_send_ascii( "reset" )
             
-            # Wait for 20 ms
-            time.sleep( 0.02 )
+            # Wait for 200 ms
+            #time.sleep( 0.2 )
 
             # Connect to bootloader
             self.bootProtocol.send_connect()
@@ -394,7 +399,7 @@ class BootFrame(tk.Frame):
             self.status_text["text"] = "Connecting..."
 
             # Start timeout timer
-            self.com_timer = _TimerReset( interval=3, function=self.com_timer_expire )
+            self.com_timer = _TimerReset( interval=BOOT_COM_CONNECT_TIMEOUT_SEC, function=self.com_timer_expire )
             self.com_timer.start()
         
         else:
@@ -466,10 +471,10 @@ class BootFrame(tk.Frame):
 
             # Update status
             self.status_text["fg"] = GuiColor.sub_1_fg
-            self.status_text["text"] = "Preparing"
+            self.status_text["text"] = "Preparing..."
 
             # Restart communiction timeout timer
-            self.com_timer.reset( 5 )
+            self.com_timer.reset( BOOT_COM_PREPARE_TIMEOUT_SEC )
 
         else:
             self.status_text["fg"] = "red"
@@ -504,10 +509,10 @@ class BootFrame(tk.Frame):
                     self.working_addr += data_len
 
                 self.status_text["fg"] = GuiColor.sub_1_fg
-                self.status_text["text"] = "Flashing"
+                self.status_text["text"] = "Flashing..."
 
                 # Restart communiction timeout timer
-                self.com_timer.reset( 0.1 )
+                self.com_timer.reset( BOOT_COM_FLASH_TIMEOUT_SEC )
 
             else:
                 self.status_text["fg"] = "red"
@@ -538,14 +543,14 @@ class BootFrame(tk.Frame):
                     self.working_addr += data_len
 
                     # Restart communiction timeout timer
-                    self.com_timer.reset( 0.1 )
+                    self.com_timer.reset( BOOT_COM_FLASH_TIMEOUT_SEC )
 
                 # No more bytes to flash
                 else:
                     self.bootProtocol.send_exit()
 
                     # Restart communiction timeout timer
-                    self.com_timer.reset( 0.5 )
+                    self.com_timer.reset( BOOT_COM_EXIT_TIMEOUT_SEC )
 
             else:
                 self.status_text["fg"] = "red"
