@@ -33,9 +33,6 @@ from com.Timer import _TimerReset
 # Enter bootloader command (to application)
 BOOT_ENTER_BOOT_CMD             = "enter_boot"
 
-# Enter bootloader success command
-BOOT_ENTER_BOOT_RSP_CMD         = "OK, Entering bootloader..."
-
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
@@ -483,13 +480,16 @@ class BootFrame(tk.Frame):
             # Disable browse button
             self.browse_btn.config(state=tk.DISABLED)
 
-            # If in application -> reset and enter bootloader
-            #self.msg_send_ascii( "reset" )
+            # Enter bootloader
+            self.msg_send_ascii( BOOT_ENTER_BOOT_CMD )
             
-            # Wait for 200 ms
-            #time.sleep( 0.2 )
+            # Wait for 50 ms
+            time.sleep( 0.050 )
 
-            # Get bootlaoder info
+            # Reset input queue 
+            self.bootProtocol.reset_rx_queue()
+
+            # Get bootloader info
             self.bootProtocol.send_info()
             time.sleep(0.01)
 
