@@ -198,8 +198,74 @@ class FwImage(BinFile):
     def get_fw_size(self):
         return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SIZE_ADDR, 4 ), byteorder="little" )
 
+    # ===============================================================================
+    # @brief  Read from binary file
+    #
+    # @param[in]    addr    - Address to read from
+    # @param[in]    size    - Sizeof read in bytes
+    # @return       data    - Readed data
+    # ===============================================================================
     def read(self, addr, size):
         return self.file.read( addr, size )
+    
+    # ===============================================================================
+    # @brief  Check if application image is OK
+    #
+    # @return       valid    - Validation flag
+    # ===============================================================================
+    def validate(self):
+
+        valid = False
+
+        # Calculate header crc
+        crc_calc = self.__calc_header_crc()
+
+        # App Header crc
+        app_header_crc = self.read( FwImage.APP_HEADER_CRC_ADDR, 1 )[0]
+
+        # Check crc
+        if crc_calc == app_header_crc:
+            valid = True
+
+        return valid
+
+    # ===============================================================================
+    # @brief  Calculate application header CRC
+    #
+    # @return       app_header_crc - Appplication header CRC
+    # ===============================================================================
+    def __calc_header_crc(self):
+
+        # Calculate application header CRC
+        # NOTE: Ignore last CRC field!
+        app_header_crc = self.__calc_crc8( self.file.read( 0, FwImage.APP_HEADER_SIZE_BYTE - 1 ))
+
+        return app_header_crc
+
+    # ===============================================================================
+    # @brief  Calculate CRC-8
+    #
+    # @param[in]    data    - Inputed data
+    # @return       crc8    - Calculated CRC8
+    # ===============================================================================
+    def __calc_crc8(self, data):
+        poly = 0x07
+        seed = 0xB6
+        crc8 = seed
+
+        for byte in data:
+            crc8 = (( crc8 ^ byte ) & 0xFF )
+
+            for n in range( 8 ):
+                if 0x80 == ( crc8 & 0x80 ):
+                    crc8 = (( crc8 << 1 ) ^ poly )
+                else:
+                    crc8 = ( crc8 << 1 );
+
+        return crc8 & 0xFF
+
+
+
 
 # ===============================================================================
 #
@@ -319,27 +385,59 @@ class BootFrame(tk.Frame):
         # File selected
         if fw_file_path:
 
-            print("Selected FW image: %s" % fw_file_path )
-
-            self.update_btn.config(state=tk.NORMAL)
+            # Get file name
             self.file_text["text"] = fw_file_path.split("/")[-1]
 
             # Open file
             self.fw_file = FwImage(file=fw_file_path)
 
-            fw_size = self.fw_file.get_fw_size()
-            sw_ver = self.fw_file.get_sw_ver()
-            sw_ver = struct.pack('I', int(sw_ver))
-            hw_ver = self.fw_file.get_hw_ver()
-            hw_ver = struct.pack('I', int(hw_ver))
+            # Application image valid
+            if self.fw_file.validate():
 
-            self.fw_size_text["text"] = "%d kB" % ( fw_size / 1024 )
-            self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
-            self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
+                # Get FW image size
+                fw_size = self.fw_file.get_fw_size()
 
-            self.status_text["fg"] = GuiColor.sub_1_fg
-            self.status_text["text"] = "Idle"
+                # Get FW image SW version
+                sw_ver = self.fw_file.get_sw_ver()
+                sw_ver = struct.pack('I', int(sw_ver))
 
+                # Get HW image SW version
+                hw_ver = self.fw_file.get_hw_ver()
+                hw_ver = struct.pack('I', int(hw_ver))
+
+                # Show firmware imfo
+                self.fw_size_text["text"] = "%d kB" % ( fw_size / 1024 )
+                self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
+                self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
+
+                self.file_text["fg"]    = GuiColor.sub_1_fg
+                self.fw_size_text["fg"] = GuiColor.sub_1_fg
+                self.fw_ver_text["fg"]  = GuiColor.sub_1_fg
+                self.hw_ver_text["fg"]  = GuiColor.sub_1_fg
+
+                # Change status to idle
+                self.status_text["fg"] = GuiColor.sub_1_fg
+                self.status_text["text"] = "Idle"
+
+                # Enable update button
+                self.update_btn.config(state=tk.NORMAL)
+
+            else:
+                self.fw_size_text["text"]   = "Invalid application!"
+                self.fw_ver_text["text"]    = "Invalid application!"
+                self.hw_ver_text["text"]    = "Invalid application!"
+
+                self.file_text["fg"]    = "red"
+                self.fw_size_text["fg"] = "red"
+                self.fw_ver_text["fg"]  = "red"
+                self.hw_ver_text["fg"]  = "red"
+
+                # Change status to idle
+                self.status_text["fg"] = GuiColor.sub_1_fg
+                self.status_text["text"] = "---"
+
+                # Enable update button
+                self.update_btn.config(state=tk.DISABLED)
 
 
     def com_timer_expire(self):
@@ -369,6 +467,7 @@ class BootFrame(tk.Frame):
             self.status_text["fg"] = "red"
             self.status_text["text"] = "ERROR: Connecting with bootloader timeouted!"
 
+        self.bootProtocol.reset_rx_queue()
 
         # Delete timer
         del self.com_timer
