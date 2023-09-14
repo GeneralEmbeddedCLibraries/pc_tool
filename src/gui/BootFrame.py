@@ -265,8 +265,6 @@ class FwImage(BinFile):
         return crc8 & 0xFF
 
 
-
-
 # ===============================================================================
 #
 # @brief:   Boot frame
@@ -282,16 +280,12 @@ class BootFrame(tk.Frame):
 
         self.rowconfigure(1, weight=1)
         self.columnconfigure(0, weight=100)
-        #self.columnconfigure(1, weight=1)
 
         # Firmware image
         self.fw_file = None
 
-        self.boot_in_progress = False
-
+        # Send message function
         self.__ipc_msg_send = ipc_msg_send
-
-        self.com_rx_buf = ""
 
         # Init widgets
         self.__init_widgets()
@@ -308,7 +302,45 @@ class BootFrame(tk.Frame):
         # Start tick
         self.start_tick = 0
 
+    # ===============================================================================
+    # @brief:   Send ASCII format of message
+    #
+    # @param[in]:   cmd - Message to send
+    # @return:      void
+    # ===============================================================================
+    def msg_send_ascii(self, cmd):
 
+        # Append end string termiantion 
+        dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
+
+        # Send cmd to serial process
+        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
+        self.__ipc_msg_send(msg)
+
+    # ===============================================================================
+    # @brief:   Send binary format of message
+    #
+    # @param[in]:   cmd - Message to send
+    # @return:      void
+    # ===============================================================================
+    def msg_send_bin(self, cmd):
+
+        # Send cmd to serial process
+        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxBinary, payload=cmd)
+        self.__ipc_msg_send(msg)
+
+
+    # ===============================================================================
+    # @brief:   Message received callback
+    #
+    # @note     Come here either ASCII or binary character is received!
+    #
+    # @return:      void
+    # ===============================================================================
+    def msg_receive_cb(self, payload):
+        
+        # Bootloader protocol parser
+        self.bootProtocol.parser( payload )
 
     # ===============================================================================
     # @brief:   Initialize widgets
@@ -377,6 +409,11 @@ class BootFrame(tk.Frame):
         tk.Label(self.app_frame, text="Software ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=4, sticky=tk.E,    padx=5, pady=5    )
         tk.Label(self.app_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=5, sticky=tk.E,    padx=5, pady=5    )
 
+    # ===============================================================================
+    # @brief:   Browse button pressed
+    #
+    # @return:      void
+    # ===============================================================================
     def __browse_btn_press(self):
 
         # Select file to visualize
@@ -440,44 +477,12 @@ class BootFrame(tk.Frame):
                 self.update_btn.config(state=tk.DISABLED)
 
 
-    def com_timer_expire(self):
-
-        # Reset progress bar
-        self.progress_text["text"] = "%3d%%" % 0
-        self.progress_bar["mode"] = "determinate"
-        self.progress_bar.stop()
-
-        # Update status
-        self.status_text["fg"] = "red"
-
-        # Are we in upgrade process
-        if "Cancel" == self.update_btn.get_text():
-
-            # Update status
-            self.status_text["text"] = "ERROR: Communication with bootloader timeouted!"
-
-            # Allowing upgrade again
-            self.update_btn.text( "Upgrade" )
-
-        # We are in connecting state
-        else:
-
-            # Update status
-            self.status_text["text"] = "ERROR: Connecting with bootloader timeouted!"
-
-        # Reset input queue on timeout
-        self.bootProtocol.reset_rx_queue()
-
-        # Delete timer
-        try:
-            del self.com_timer
-        except:
-            pass
-
-
+    # ===============================================================================
+    # @brief:   Update button pressed
+    #
+    # @return:      void
+    # ===============================================================================
     def __update_btn_press(self):  
-
-        print( self.update_btn.get_text() )
 
         if "Upgrade" == self.update_btn.get_text():
 
@@ -500,7 +505,7 @@ class BootFrame(tk.Frame):
             self.status_text["text"] = "Connecting..."
 
             # Start timeout timer
-            self.com_timer = _TimerReset( interval=BOOT_COM_CONNECT_TIMEOUT_SEC, function=self.com_timer_expire )
+            self.com_timer = _TimerReset( interval=BOOT_COM_CONNECT_TIMEOUT_SEC, function=self.__com_timer_expire )
             self.com_timer.start()
         
         else:
@@ -523,44 +528,58 @@ class BootFrame(tk.Frame):
 
             # Update status
             self.status_text["fg"] = "yellow"
-            self.status_text["text"] = "Upgrade canceled!"
+            self.status_text["text"] = "WARNING: Upgrade canceled!"
 
             # Allowing upgrade again
             self.update_btn.text( "Upgrade" )
 
 
-    def msg_send_ascii(self, cmd):
-
-        # Append end string termiantion 
-        dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
-
-        # Send cmd to serial process
-        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
-        self.__ipc_msg_send(msg)
-
-
-    def msg_send_bin(self, cmd):
-
-        # Send cmd to serial process
-        msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxBinary, payload=cmd)
-        self.__ipc_msg_send(msg)
-
-
     # ===============================================================================
-    # @brief:   Message received callback
-    #
-    # @note     Come here either ASCII or binary character is received!
+    # @brief:   Communication timeout event
     #
     # @return:      void
     # ===============================================================================
-    def msg_receive_cb(self, payload):
+    def __com_timer_expire(self):
 
-        self.bootProtocol.parser( payload )
+        # Are we in upgrade process
+        if "Cancel" == self.update_btn.get_text():
 
+            # Update status
+            self.status_text["text"] = "ERROR: Communication with bootloader timeouted!"
 
+            # Allowing upgrade again
+            self.update_btn.text( "Upgrade" )
 
+        # We are in connecting state
+        else:
+
+            # Update status
+            self.status_text["text"] = "ERROR: Connecting with bootloader timeouted!"
+
+        # Reset progress bar
+        self.progress_text["text"] = "%3d%%" % 0
+        self.progress_bar["mode"] = "determinate"
+        self.progress_bar.stop()
+
+        # Update status
+        self.status_text["fg"] = "red"
+
+        # Reset input queue on timeout
+        self.bootProtocol.reset_rx_queue()
+
+        # Delete timer
+        try:
+            del self.com_timer
+        except:
+            pass
+
+    # ===============================================================================
+    # @brief:   Connect response message from bootlaoder receive callback
+    #
+    # @param[in]:   status  - Status of message
+    # @return:      void
+    # ===============================================================================
     def __boot_connect_rx_cmpt_cb(self, status):
-        print( "Connect callback: %s" % status )
 
         # At that point we are conected to bootloader
         self.waiting_for_connect_rsp = False
@@ -597,9 +616,13 @@ class BootFrame(tk.Frame):
             self.progress_bar.stop()
             self.update_btn.text( "Upgrade" )
 
-
+    # ===============================================================================
+    # @brief:   Prepare response message from bootlaoder receive callback
+    #
+    # @param[in]:   status  - Status of message
+    # @return:      void
+    # ===============================================================================
     def __boot_prepare_rx_cmpt_cb(self, status):
-        print( "Prepare callback: %s" % status )
 
         # Are we in upgrade process
         if "Cancel" == self.update_btn.get_text():
@@ -635,7 +658,12 @@ class BootFrame(tk.Frame):
                 self.progress_bar.stop()
                 self.update_btn.text( "Upgrade" )
 
-
+    # ===============================================================================
+    # @brief:   Flash data response message from bootlaoder receive callback
+    #
+    # @param[in]:   status  - Status of message
+    # @return:      void
+    # ===============================================================================
     def __boot_flash_rx_cmpt_cb(self, status):
 
         # Are we in upgrade process
@@ -679,9 +707,12 @@ class BootFrame(tk.Frame):
             self.progress_text["text"] = "%3d%%" % progress
             self.progress_bar["value"] = progress
 
-
-
-
+    # ===============================================================================
+    # @brief:   Exit response message from bootlaoder receive callback
+    #
+    # @param[in]:   status  - Status of message
+    # @return:      void
+    # ===============================================================================
     def __boot_exit_rx_cmpt_cb(self, status):
         print( "Exit callback: %s" % status )
 
@@ -707,10 +738,24 @@ class BootFrame(tk.Frame):
             self.update_btn.text( "Upgrade" )
 
         
-
-    def __boot_info_rx_cmpt_cb(self, status):
+    # ===============================================================================
+    # @brief:   Info response message from bootlaoder receive callback
+    #
+    # @param[in]:   status  - Status of message
+    # @return:      void
+    # ===============================================================================
+    def __boot_info_rx_cmpt_cb(self, status, boot_ver):
         print( "Info callback: %s" % status )
+        print( "Bootloader version: %s" % boot_ver )
 
+        # Bootloader info msg success
+        if BootProtocol.MSG_OK == status:
+
+            # Get bootloader version
+            boot_ver = struct.pack('I', int(boot_ver))
+
+            # Show bootloader version
+            self.boot_ver_text["text"] = "V%d.%d.%d.%d" % ( boot_ver[3], boot_ver[2], boot_ver[1], boot_ver[0] )
 
 
 
