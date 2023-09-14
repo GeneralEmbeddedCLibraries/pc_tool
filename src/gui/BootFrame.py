@@ -322,10 +322,10 @@ class BootFrame(tk.Frame):
 
         # Boot frame
         self.boot_frame         = tk.Frame(self, bg=GuiColor.sub_1_bg, padx=10, pady=20)
-        self.boot_frame_label   = tk.Label(self, text="Bootloader Informations", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.boot_frame_label   = tk.Label(self, text="Bootloader informations", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         
         self.app_frame          = tk.Frame(self, bg=GuiColor.sub_1_bg, padx=10, pady=20)
-        self.app_frame_label    = tk.Label(self, text="Application Infromations", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.app_frame_label    = tk.Label(self, text="Application informations", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
         self.rowconfigure(1, weight=1)
         
@@ -361,21 +361,21 @@ class BootFrame(tk.Frame):
         self.progress_text.grid(            column=2, row=8,                sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=20  )
 
         # Boot frame layout
-        self.boot_ver_text.grid(    column=1, row=0,                sticky=tk.W,                   padx=5, pady=10    )
-        self.status_text.grid(      column=1, row=1,                sticky=tk.W,                   padx=5, pady=10    )
-        tk.Label(self.boot_frame, text="Status:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,               width=20, anchor=tk.E ).grid(                 column=0, row=1, sticky=tk.E,     padx=5, pady=10    )
-        tk.Label(self.boot_frame, text="Bootloader version:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,   width=20, anchor=tk.E ).grid(     column=0, row=0, sticky=tk.E,     padx=5, pady=10    )
+        self.boot_ver_text.grid(    column=1, row=0,                sticky=tk.W,                   padx=5, pady=5    )
+        self.status_text.grid(      column=1, row=1,                sticky=tk.W,                   padx=5, pady=5    )
+        tk.Label(self.boot_frame, text="General status:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,               width=20, anchor=tk.E ).grid(   column=0, row=1, sticky=tk.E,     padx=5, pady=5    )
+        tk.Label(self.boot_frame, text="Bootloader version:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,   width=20, anchor=tk.E ).grid(           column=0, row=0, sticky=tk.E,     padx=5, pady=5    )
 
         # App frame layout
-        self.file_text.grid(        column=1, row=2,                sticky=tk.W,                   padx=5, pady=10    )
-        self.fw_size_text.grid(     column=1, row=3,                sticky=tk.W,                   padx=5, pady=10    )
-        self.fw_ver_text.grid(      column=1, row=4,                sticky=tk.W,                   padx=5, pady=10    )
-        self.hw_ver_text.grid(      column=1, row=5,                sticky=tk.W,                   padx=5, pady=10    )
+        self.file_text.grid(        column=1, row=2,                sticky=tk.W,                   padx=5, pady=5    )
+        self.fw_size_text.grid(     column=1, row=3,                sticky=tk.W,                   padx=5, pady=5    )
+        self.fw_ver_text.grid(      column=1, row=4,                sticky=tk.W,                   padx=5, pady=5    )
+        self.hw_ver_text.grid(      column=1, row=5,                sticky=tk.W,                   padx=5, pady=5    )
         
-        tk.Label(self.app_frame, text="Application file:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E  ).grid(    column=0, row=2, sticky=tk.E,    padx=5, pady=10    )
-        tk.Label(self.app_frame, text="Application size:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E ).grid(    column=0, row=3, sticky=tk.E,    padx=5, pady=10    )
-        tk.Label(self.app_frame, text="Software ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(        column=0, row=4, sticky=tk.E,    padx=5, pady=10    )
-        tk.Label(self.app_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(        column=0, row=5, sticky=tk.E,    padx=5, pady=10    )
+        tk.Label(self.app_frame, text="Application file:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E  ).grid(      column=0, row=2, sticky=tk.E,    padx=5, pady=5    )
+        tk.Label(self.app_frame, text="Application size:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E ).grid(       column=0, row=3, sticky=tk.E,    padx=5, pady=5    )
+        tk.Label(self.app_frame, text="Software ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=4, sticky=tk.E,    padx=5, pady=5    )
+        tk.Label(self.app_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=5, sticky=tk.E,    padx=5, pady=5    )
 
     def __browse_btn_press(self):
 
@@ -406,11 +406,11 @@ class BootFrame(tk.Frame):
                 hw_ver = struct.pack('I', int(hw_ver))
 
                 # Show firmware imfo
-                self.fw_size_text["text"] = "%d kB" % ( fw_size / 1024 )
+                self.fw_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
                 self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
                 self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
 
-                self.file_text["fg"]    = GuiColor.sub_1_fg
+                self.file_text["fg"]    = GuiColor.btn_success_bg
                 self.fw_size_text["fg"] = GuiColor.sub_1_fg
                 self.fw_ver_text["fg"]  = GuiColor.sub_1_fg
                 self.hw_ver_text["fg"]  = GuiColor.sub_1_fg
@@ -441,36 +441,38 @@ class BootFrame(tk.Frame):
 
 
     def com_timer_expire(self):
-        print( "Communication timeouted" );
+
+        # Reset progress bar
+        self.progress_text["text"] = "%3d%%" % 0
+        self.progress_bar["mode"] = "determinate"
+        self.progress_bar.stop()
+
+        # Update status
+        self.status_text["fg"] = "red"
 
         # Are we in upgrade process
         if "Cancel" == self.update_btn.get_text():
 
-            # Reset progress bar
-            self.progress_text["text"] = "%3d%%" % 0
-            self.progress_bar["mode"] = "determinate"
-            self.progress_bar.stop()
-
             # Update status
-            self.status_text["fg"] = "red"
             self.status_text["text"] = "ERROR: Communication with bootloader timeouted!"
 
+            # Allowing upgrade again
             self.update_btn.text( "Upgrade" )
 
+        # We are in connecting state
         else:
-            # Reset progress bar
-            self.progress_text["text"] = "%3d%%" % 0
-            self.progress_bar["mode"] = "determinate"
-            self.progress_bar.stop()
 
             # Update status
-            self.status_text["fg"] = "red"
             self.status_text["text"] = "ERROR: Connecting with bootloader timeouted!"
 
+        # Reset input queue on timeout
         self.bootProtocol.reset_rx_queue()
 
         # Delete timer
-        del self.com_timer
+        try:
+            del self.com_timer
+        except:
+            pass
 
 
     def __update_btn_press(self):  
@@ -502,17 +504,28 @@ class BootFrame(tk.Frame):
             self.com_timer.start()
         
         else:
+
+            # Stop communication timeout timer
             self.com_timer.cancel()
-            del self.com_timer
+
+            # Delete timer
+            try:
+                del self.com_timer
+            except:
+                pass
+
+            # Reset input queue 
             self.bootProtocol.reset_rx_queue()
 
             # Reset progress bar
             self.progress_text["text"] = "%3d%%" % 0
             self.progress_bar.stop()
 
-            self.status_text["fg"] = GuiColor.sub_1_fg
+            # Update status
+            self.status_text["fg"] = "yellow"
             self.status_text["text"] = "Upgrade canceled!"
 
+            # Allowing upgrade again
             self.update_btn.text( "Upgrade" )
 
 
