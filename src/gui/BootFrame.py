@@ -492,6 +492,10 @@ class BootFrame(tk.Frame):
             # Wait for 200 ms
             #time.sleep( 0.2 )
 
+            # Get bootlaoder info
+            self.bootProtocol.send_info()
+            time.sleep(0.01)
+
             # Connect to bootloader
             self.bootProtocol.send_connect()
 
@@ -577,9 +581,10 @@ class BootFrame(tk.Frame):
     # @brief:   Connect response message from bootlaoder receive callback
     #
     # @param[in]:   status  - Status of message
+    # @param[in]:   payload - Message payload
     # @return:      void
     # ===============================================================================
-    def __boot_connect_rx_cmpt_cb(self, status):
+    def __boot_connect_rx_cmpt_cb(self, status, payload):
 
         # At that point we are conected to bootloader
         self.waiting_for_connect_rsp = False
@@ -620,9 +625,10 @@ class BootFrame(tk.Frame):
     # @brief:   Prepare response message from bootlaoder receive callback
     #
     # @param[in]:   status  - Status of message
+    # @param[in]:   payload - Message payload
     # @return:      void
     # ===============================================================================
-    def __boot_prepare_rx_cmpt_cb(self, status):
+    def __boot_prepare_rx_cmpt_cb(self, status, payload):
 
         # Are we in upgrade process
         if "Cancel" == self.update_btn.get_text():
@@ -662,9 +668,10 @@ class BootFrame(tk.Frame):
     # @brief:   Flash data response message from bootlaoder receive callback
     #
     # @param[in]:   status  - Status of message
+    # @param[in]:   payload - Message payload
     # @return:      void
     # ===============================================================================
-    def __boot_flash_rx_cmpt_cb(self, status):
+    def __boot_flash_rx_cmpt_cb(self, status, payload):
 
         # Are we in upgrade process
         if "Cancel" == self.update_btn.get_text():
@@ -711,10 +718,10 @@ class BootFrame(tk.Frame):
     # @brief:   Exit response message from bootlaoder receive callback
     #
     # @param[in]:   status  - Status of message
+    # @param[in]:   payload - Message payload
     # @return:      void
     # ===============================================================================
-    def __boot_exit_rx_cmpt_cb(self, status):
-        print( "Exit callback: %s" % status )
+    def __boot_exit_rx_cmpt_cb(self, status, payload):
 
         # Are we in upgrade process
         if "Cancel" == self.update_btn.get_text():
@@ -742,17 +749,17 @@ class BootFrame(tk.Frame):
     # @brief:   Info response message from bootlaoder receive callback
     #
     # @param[in]:   status  - Status of message
+    # @param[in]:   payload - Message payload
     # @return:      void
     # ===============================================================================
-    def __boot_info_rx_cmpt_cb(self, status, boot_ver):
+    def __boot_info_rx_cmpt_cb(self, status, payload):
         print( "Info callback: %s" % status )
-        print( "Bootloader version: %s" % boot_ver )
 
         # Bootloader info msg success
         if BootProtocol.MSG_OK == status:
-
+            
             # Get bootloader version
-            boot_ver = struct.pack('I', int(boot_ver))
+            boot_ver = payload
 
             # Show bootloader version
             self.boot_ver_text["text"] = "V%d.%d.%d.%d" % ( boot_ver[3], boot_ver[2], boot_ver[1], boot_ver[0] )

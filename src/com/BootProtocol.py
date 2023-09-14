@@ -50,7 +50,7 @@ class BootProtocol:
     CMD_PREPARE_RSP     = 0x21
     CMD_FLASH_RSP       = 0x31
     CMD_EXIT_RSP        = 0x41
-    CMD_INFO_RSP        = 0x51
+    CMD_INFO_RSP        = 0xA1
 
     # Message status
     MSG_OK                  = 0x00
@@ -119,26 +119,52 @@ class BootProtocol:
                 command = self.rx_q[5]
                 status  = self.rx_q[6]
 
-                # Calculate crc
-                calc_crc = self.__calc_crc8( lenght )       # Lenght
-                calc_crc ^= self.__calc_crc8( [source] )    # Source
-                calc_crc ^= self.__calc_crc8( [command] )   # Command
-                calc_crc ^= self.__calc_crc8( [status] )    # Status
+                # Convert to value
+                lenght_val = int((( lenght[1] << 8 ) | lenght[0] & 0xFF ) & 0xFFFF )
+                
+                # All data received
+                if ( len( self.rx_q ) - 8 ) >= lenght_val:
 
-                # CRC OK
-                if calc_crc == self.rx_q[7]:
-                    
-                    for n, cmd in enumerate( self.cmd_type ):
-                        if cmd == command:
-                            self.cb[n]( status )
+                    # Calculate crc
+                    calc_crc = self.__calc_crc8( lenght )       # Lenght
+                    calc_crc ^= self.__calc_crc8( [source] )    # Source
+                    calc_crc ^= self.__calc_crc8( [command] )   # Command
+                    calc_crc ^= self.__calc_crc8( [status] )    # Status
 
-                # CRC error
-                else:
-                    pass
+                    # Is payload in message
+                    if lenght_val > 0:
 
-                # Empty queue
-                self.rx_q = []
+                        # Get payload
+                        payload = self.rx_q[8:] 
 
+                        # Apply payload to CRC
+                        calc_crc ^= self.__calc_crc8( payload ) # Payload
+                    else:
+                        payload = []
+
+                    # CRC OK
+                    if calc_crc == self.rx_q[7]:
+                        
+                        # Go thru all commands
+                        for n, cmd in enumerate( self.cmd_type ):
+                            
+                            # Find command
+                            if cmd == command:
+
+                                # Raise callback
+                                self.cb[n]( status, payload )
+
+                    # CRC error
+                    else:
+                        pass
+
+                    # Reset queue
+                    self.reset_rx_queue()
+
+            # Frame received in between -> reset rx queue
+            else:
+                self.reset_rx_queue()         
+            
     # ===============================================================================
     # @brief  Reset reception queue
     #
@@ -244,7 +270,7 @@ class BootProtocol:
     def send_info(self):
 
         # Assemble info comand
-        cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0x40, 0x00, 0x2C ]
+        cmd = [ 0xB0, 0x07, 0x00, 0x00, 0x2B, 0xA0, 0x00, 0x82 ]
 
         # Send
         self.send( cmd )      
