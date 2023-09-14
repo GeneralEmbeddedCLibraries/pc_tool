@@ -486,6 +486,9 @@ class BootFrame(tk.Frame):
 
         if "Upgrade" == self.update_btn.get_text():
 
+            # Disable browse button
+            self.browse_btn.config(state=tk.DISABLED)
+
             # If in application -> reset and enter bootloader
             #self.msg_send_ascii( "reset" )
             
@@ -537,6 +540,9 @@ class BootFrame(tk.Frame):
             # Allowing upgrade again
             self.update_btn.text( "Upgrade" )
 
+            # Enable browse button back
+            self.browse_btn.config(state=tk.NORMAL)
+
 
     # ===============================================================================
     # @brief:   Communication timeout event
@@ -570,6 +576,9 @@ class BootFrame(tk.Frame):
 
         # Reset input queue on timeout
         self.bootProtocol.reset_rx_queue()
+
+        # Enable browse button back
+        self.browse_btn.config(state=tk.NORMAL)
 
         # Delete timer
         try:
@@ -737,12 +746,17 @@ class BootFrame(tk.Frame):
 
                 self.status_text["fg"] = GuiColor.btn_success_bg
                 self.status_text["text"] = "Application successfully upgraded in %.2f sec!" % total_time
+            
+            # Bootloader exit error
             else:
                 self.status_text["fg"] = "red"
                 self.status_text["text"] = "ERROR: " + self.bootProtocol.get_status_str( status )
 
             # Final step -> change back to upgrade
             self.update_btn.text( "Upgrade" )
+
+            # Enable browse button back
+            self.browse_btn.config(state=tk.NORMAL)
 
         
     # ===============================================================================
