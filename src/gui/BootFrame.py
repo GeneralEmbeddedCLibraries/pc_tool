@@ -334,6 +334,15 @@ class BootFrame(tk.Frame):
 
             self.update_btn.text( "Upgrade" )
 
+        else:
+            # Reset progress bar
+            self.progress_text["text"] = "%3d%%" % 0
+            self.progress_bar.stop()
+
+            # Update status
+            self.status_text["text"] = "Connecting with bootloader timeouted!"
+
+
         # Delete timer
         del self.com_timer
 
@@ -361,13 +370,14 @@ class BootFrame(tk.Frame):
             self.status_text["text"] = "Connecting"
 
             # Start timeout timer
-            self.com_timer = _TimerReset( interval=1000, function=self.com_timer_expire )
+            self.com_timer = _TimerReset( interval=3, function=self.com_timer_expire )
             self.com_timer.start()
             
             ##self.waiting_for_connect_rsp = True
             ##self.after( 1000, self.connecting_timeout )
         
         else:
+            self.com_timer.cancel()
             del self.com_timer
             self.bootProtocol.reset_rx_queue()
 
@@ -449,6 +459,11 @@ class BootFrame(tk.Frame):
         else:
             self.status_text["text"] = self.bootProtocol.get_status_str( status )
 
+            # Stop communication timeout timer
+            self.com_timer.cancel()
+            self.progress_bar.stop()
+            self.update_btn.text( "Upgrade" )
+
 
     def __boot_prepare_rx_cmpt_cb(self, status):
         print( "Prepare callback: %s" % status )
@@ -473,11 +488,17 @@ class BootFrame(tk.Frame):
                     self.working_addr += data_len
 
                 self.status_text["text"] = "Flashing"
+
+                # Restart communiction timeout timer
+                self.com_timer.reset( 0.1 )
+
             else:
                 self.status_text["text"] = self.bootProtocol.get_status_str( status )
 
-            # Restart communiction timeout timer
-            self.com_timer.reset( 0.1 )
+                # Stop communication timeout timer
+                self.com_timer.cancel()
+                self.progress_bar.stop()
+                self.update_btn.text( "Upgrade" )
 
 
     def __boot_flash_rx_cmpt_cb(self, status):
@@ -511,6 +532,10 @@ class BootFrame(tk.Frame):
             else:
                 self.status_text["text"] = self.bootProtocol.get_status_str( status )
 
+                # Stop communication timeout timer
+                self.com_timer.cancel()
+                self.update_btn.text( "Upgrade" )
+
             # Calculate progress
             progress = (( self.working_addr / self.fw_file.get_fw_size()) * 100 )
 
@@ -534,6 +559,9 @@ class BootFrame(tk.Frame):
                 self.status_text["text"] = "Done"
             else:
                 self.status_text["text"] = self.bootProtocol.get_status_str( status )
+
+            # Final step -> change back to upgrade
+            self.update_btn.text( "Upgrade" )
 
         
 
