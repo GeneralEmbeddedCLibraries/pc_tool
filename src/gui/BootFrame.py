@@ -57,7 +57,6 @@ BOOT_COM_EXIT_TIMEOUT_SEC       = 1.0
 ##  CLASSES
 #################################################################################################   
 
-
 # ===============================================================================
 # @brief  Binary file Class
 # ===============================================================================
@@ -472,7 +471,6 @@ class BootFrame(tk.Frame):
                 # Enable update button
                 self.update_btn.config(state=tk.DISABLED)
 
-
     # ===============================================================================
     # @brief:   Update button pressed
     #
@@ -538,7 +536,6 @@ class BootFrame(tk.Frame):
 
             # Enable browse button back
             self.browse_btn.config(state=tk.NORMAL)
-
 
     # ===============================================================================
     # @brief:   Communication timeout event
@@ -753,7 +750,6 @@ class BootFrame(tk.Frame):
 
             # Enable browse button back
             self.browse_btn.config(state=tk.NORMAL)
-
         
     # ===============================================================================
     # @brief:   Info response message from bootlaoder receive callback
