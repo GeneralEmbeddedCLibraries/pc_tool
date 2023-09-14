@@ -31,10 +31,10 @@ from com.Timer import _TimerReset
 #################################################################################################
 
 # Enter bootloader command (to application)
-BOOT_ENTER_BOOT_CMD         = "enter_boot"
+BOOT_ENTER_BOOT_CMD             = "enter_boot"
 
 # Enter bootloader success command
-BOOT_ENTER_BOOT_RSP_CMD     = "OK, Entering bootloader..."
+BOOT_ENTER_BOOT_RSP_CMD         = "OK, Entering bootloader..."
 
 # Serial command end symbol
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
@@ -214,7 +214,6 @@ class FwImage(BinFile):
     # @return       valid    - Validation flag
     # ===============================================================================
     def validate(self):
-
         valid = False
 
         # Calculate header crc
@@ -329,7 +328,6 @@ class BootFrame(tk.Frame):
         msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxBinary, payload=cmd)
         self.__ipc_msg_send(msg)
 
-
     # ===============================================================================
     # @brief:   Message received callback
     #
@@ -360,9 +358,7 @@ class BootFrame(tk.Frame):
         self.app_frame_label    = tk.Label(self, text="Application informations", font=GuiFont.title, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
 
         self.rowconfigure(1, weight=1)
-        
         self.boot_frame.rowconfigure(10, weight=1)
-        #self.boot_frame.columnconfigure(0, weight=100)
 
         # Self frame widgets
         self.progress_bar   = ttk.Progressbar( self, orient='horizontal', mode='determinate', style='text.Horizontal.TProgressbar' )
@@ -417,7 +413,7 @@ class BootFrame(tk.Frame):
     def __browse_btn_press(self):
 
         # Select file to visualize
-        fw_file_path =  tk.filedialog.askopenfilename(initialdir=self.fw_file, title = "Select firmware image",filetypes = (("Binary files","*.bin"),("all files","*.*")))
+        fw_file_path = tk.filedialog.askopenfilename(initialdir=self.fw_file, title = "Select firmware image",filetypes = (("Binary files","*.bin"),("all files","*.*")))
         
         # File selected
         if fw_file_path:
@@ -767,7 +763,6 @@ class BootFrame(tk.Frame):
     # @return:      void
     # ===============================================================================
     def __boot_info_rx_cmpt_cb(self, status, payload):
-        print( "Info callback: %s" % status )
 
         # Bootloader info msg success
         if BootProtocol.MSG_OK == status:
@@ -777,9 +772,6 @@ class BootFrame(tk.Frame):
 
             # Show bootloader version
             self.boot_ver_text["text"] = "V%d.%d.%d.%d" % ( boot_ver[3], boot_ver[2], boot_ver[1], boot_ver[0] )
-
-
-
 
 
 #################################################################################################
