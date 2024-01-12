@@ -33,8 +33,8 @@ import matplotlib.animation as animation
 ##  DEFINITIONS
 #################################################################################################
 
-# Streaming period in secodns
-LOG_FILE_FIXED_TIMESTAMP        = 0.1
+# Default timestamp in miliseconds
+LOG_FILE_FIXED_TIMESTAMP_MS     = 10
 
 # File delimiter
 LOG_FILE_DELIMITER              = ";"
@@ -67,7 +67,7 @@ class PlotFrame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.configure(bg=GuiColor.main_bg)
 
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(3, weight=1)
         self.columnconfigure(0, weight=100)
         self.columnconfigure(1, weight=1)
 
@@ -146,6 +146,11 @@ class PlotFrame(tk.Frame):
         self.plot_num_combo.set("1")
         self.num_of_plot = 1
 
+        # Timestamp option
+        self.timestamp_label = tk.Label(self, text="Timestamp [ms]:", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.timestamp_entry = tk.Entry(self, font=GuiFont.normal, bg=GuiColor.sub_1_fg, fg=GuiColor.sub_1_bg, borderwidth=0, width=8)
+        self.timestamp_entry.insert(0,LOG_FILE_FIXED_TIMESTAMP_MS)
+
         # Bind to change        
         self.plot_num_combo.bind("<<ComboboxSelected>>", self.__plot_num_change)
 
@@ -161,13 +166,16 @@ class PlotFrame(tk.Frame):
 
         # Self frame layout
         self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
-        self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0,  pady=0 )
+        self.plot_frame.grid(       column=0, row=1, rowspan=5,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0,  pady=0 )
         self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
         self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.par_plot_table.grid(   column=1, row=2, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.refresh_btn.grid(      column=1, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
-        self.clear_all_btn.grid(    column=2, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
-        self.import_btn.grid(       column=1, row=4, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=10 )
+        self.timestamp_label.grid(  column=1, row=2,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
+        self.timestamp_entry.grid(  column=2, row=2,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+
+        self.par_plot_table.grid(   column=1, row=3, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+        self.refresh_btn.grid(      column=1, row=4, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.clear_all_btn.grid(    column=2, row=4, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.import_btn.grid(       column=1, row=5, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=10 )
 
         # Refresh plot configs
         self.__refresh_plot_configs()
@@ -208,6 +216,9 @@ class PlotFrame(tk.Frame):
     # ===============================================================================
     def __parse_meas_file(self):
 
+        # Get fixed timestamp in seconds
+        fixed_timestamp_sec = ( int(self.timestamp_entry.get()) / 1000 )
+
         # Open file for reading
         with open(self.meas_file, "r") as csvfile: 
 
@@ -232,7 +243,7 @@ class PlotFrame(tk.Frame):
                     if idx == 1:
                         self.timestamp.append( 0 )
                     else:
-                        self.timestamp.append( self.timestamp[-1] + LOG_FILE_FIXED_TIMESTAMP )
+                        self.timestamp.append( self.timestamp[-1] + fixed_timestamp_sec )
                 
 
                     # Get signal data
