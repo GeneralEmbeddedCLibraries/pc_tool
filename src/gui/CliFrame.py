@@ -19,7 +19,7 @@ import datetime
 import tkinter as tk
 from tkinter import scrolledtext
 
-from gui.GuiCommon import GuiFont, GuiColor, NormalButton, SwitchButton, AddRemoveButton
+from gui.GuiCommon import *
 
 #################################################################################################
 ##  DEFINITIONS
@@ -390,8 +390,8 @@ class CliConfig():
     # ===============================================================================   
     def add_switch(self, id, text, initial_state=False):
 
-        # Create switch    
-        sw = CliConfigSwitch(self.frame, initial_state=initial_state, text=text)
+        # Create config switch    
+        sw = ConfigSwitch(self.frame, initial_state=initial_state, text=text)
     
         # Add to grid
         sw.grid(column=0, row=len(self.switches)+1, sticky=tk.E+tk.W+tk.N+tk.S, padx=5, pady=5)
@@ -422,55 +422,6 @@ class CliConfig():
     # ===============================================================================  
     def grid(self, *args, **kwargs):
         self.frame.grid(*args, **kwargs)
-
-
-# ===============================================================================
-#
-#  @brief:   Boolean (ON/OFF) option for CLI configuration
-#
-# ===============================================================================  
-class CliConfigSwitch():
-
-    # ===============================================================================
-    # @brief:   Boolean CLI configuration option
-    #
-    # @param[in]:   root            - Root window
-    # @param[in]:   text            - Name of configuration
-    # @param[in]:   initial_state   - Initial state of configuration
-    # @return:      void
-    # ===============================================================================  
-    def __init__(self, root, text, initial_state):
-        
-        # Settings selection
-        self.frame = tk.Frame(root, bg=GuiColor.sub_1_bg, padx=0, pady=0)
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=1)
-
-        # Setting button & label
-        self.btn = SwitchButton(root=self.frame, initial_state=initial_state)
-        self.label = tk.Label(self.frame, text=text, font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
-
-        # Settings frame layout
-        self.label.grid(    column=0, row=0, sticky=tk.W, padx=10, pady=0    )
-        self.btn.grid(      column=1, row=0, sticky=tk.E, padx=0, pady=0     )
-
-    # ===============================================================================
-    # @brief:   Put button on grid
-    #
-    # @param[in]:   args, kwargs - Arguments
-    # @return:      void
-    # ===============================================================================  
-    def grid(self, *args, **kwargs):
-        self.frame.grid(*args, **kwargs)
-
-    # ===============================================================================
-    # @brief:   Get swtich button state
-    #
-    # @param[in]:   args, kwargs - Arguments
-    # @return:      void
-    # ===============================================================================   
-    def state(self):
-        return self.btn.state
 
 
 # ===============================================================================

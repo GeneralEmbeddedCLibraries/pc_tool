@@ -426,7 +426,7 @@ class SwitchButton():
     # @param[in]:   command     - Callback function registration on press event
     # @return:      void
     # ===============================================================================  
-    def __init__(self, root, initial_state=False):
+    def __init__(self, root, initial_state=False, command=None):
 
         # Switch button state
         self.state = initial_state
@@ -440,6 +440,9 @@ class SwitchButton():
         # Bind button actions
         self.btn.bind("<Enter>", self.__btn_enter)
         self.btn.bind("<Leave>", self.__btn_leave)
+        
+        # Store command
+        self.command = command
 
     # ===============================================================================
     # @brief:   Get current button label
@@ -544,6 +547,10 @@ class SwitchButton():
 
         # Update appearance
         self.__update_appear(self.state)
+
+        # Execute callback on pressed
+        if None != self.command:
+            self.command()
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse entry
@@ -762,7 +769,53 @@ class GuiCombobox():
     def configure(self, *args, **kwargs):
         self.combo.configure(*args, **kwargs)
 
+# ===============================================================================
+#
+#  @brief:   Boolean (ON/OFF) option for CLI configuration
+#
+# ===============================================================================  
+class ConfigSwitch():
 
+    # ===============================================================================
+    # @brief:   Boolean CLI configuration option
+    #
+    # @param[in]:   root            - Root window
+    # @param[in]:   text            - Name of configuration
+    # @param[in]:   initial_state   - Initial state of configuration
+    # @return:      void
+    # ===============================================================================  
+    def __init__(self, root, text, initial_state, command=None):
+        
+        # Settings selection
+        self.frame = tk.Frame(root, bg=GuiColor.sub_1_bg, padx=0, pady=0)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1)
+
+        # Setting button & label
+        self.btn = SwitchButton(root=self.frame, initial_state=initial_state, command=command)
+        self.label = tk.Label(self.frame, text=text, font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+
+        # Settings frame layout
+        self.label.grid(    column=0, row=0, sticky=tk.W, padx=10, pady=0    )
+        self.btn.grid(      column=1, row=0, sticky=tk.E, padx=0, pady=0     )
+
+    # ===============================================================================
+    # @brief:   Put button on grid
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def grid(self, *args, **kwargs):
+        self.frame.grid(*args, **kwargs)
+
+    # ===============================================================================
+    # @brief:   Get swtich button state
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================   
+    def state(self):
+        return self.btn.state
 
 
 #################################################################################################
