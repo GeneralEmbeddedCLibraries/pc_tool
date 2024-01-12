@@ -67,7 +67,7 @@ class PlotFrame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.configure(bg=GuiColor.main_bg)
 
-        self.rowconfigure(3, weight=1)
+        self.rowconfigure(4, weight=1)
         self.columnconfigure(0, weight=100)
         self.columnconfigure(1, weight=1)
 
@@ -154,6 +154,16 @@ class PlotFrame(tk.Frame):
         timestamp_vcmd = (self.register(self.__timestamp_entry_validate), '%P')
         self.timestamp_entry.config(validate='key', validatecommand=timestamp_vcmd)
 
+        # Sample points show
+        #self.samp_points_btn = SwitchButton(self, initial_state=False)
+        #self.samp_points_label = tk.Label(self, text="Show sampled points", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+
+        self.samp_points = ConfigSwitch( self, initial_state=False, text="Show sampled points", command=None )
+
+
+    
+
+
         # Bind to change        
         self.plot_num_combo.bind("<<ComboboxSelected>>", self.__plot_num_change)
 
@@ -169,16 +179,17 @@ class PlotFrame(tk.Frame):
 
         # Self frame layout
         self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
-        self.plot_frame.grid(       column=0, row=1, rowspan=5,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0,  pady=0 )
+        self.plot_frame.grid(       column=0, row=1, rowspan=6,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0,  pady=0 )
         self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
         self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
         self.timestamp_label.grid(  column=1, row=2,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
-        self.timestamp_entry.grid(  column=2, row=2,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+        self.timestamp_entry.grid(  column=2, row=2,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )        
+        self.samp_points.grid(      column=1, row=3, columnspan=2,  sticky=tk.E+tk.W+tk.N+tk.S,    padx=10, pady=10 )
 
-        self.par_plot_table.grid(   column=1, row=3, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.refresh_btn.grid(      column=1, row=4, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
-        self.clear_all_btn.grid(    column=2, row=4, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
-        self.import_btn.grid(       column=1, row=5, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=10 )
+        self.par_plot_table.grid(   column=1, row=4, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+        self.refresh_btn.grid(      column=1, row=5, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.clear_all_btn.grid(    column=2, row=5, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.import_btn.grid(       column=1, row=6, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=10 )
 
         # Refresh plot configs
         self.__refresh_plot_configs()
