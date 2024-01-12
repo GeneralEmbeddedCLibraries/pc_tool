@@ -5,17 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V0.4.0 - xx.xx.2024
+## V0.4.0 - 12.01.2024
 
 ### Notice
  This version has new CLI interface format, compatible with CLI V1.3.0 on
 
 ### Added
  - Bootloader tab and support for non-crypted firmware upgrade
-
-### Changed
  - Adding timestamp option to plot displaying
-
+ - Adding sample points show option to plot displaying
 
 ---
 ## V0.3.0 - 17.02.2023
