@@ -155,14 +155,8 @@ class PlotFrame(tk.Frame):
         self.timestamp_entry.config(validate='key', validatecommand=timestamp_vcmd)
 
         # Sample points show
-        #self.samp_points_btn = SwitchButton(self, initial_state=False)
-        #self.samp_points_label = tk.Label(self, text="Show sampled points", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
-
-        self.samp_points = ConfigSwitch( self, initial_state=False, text="Show sampled points", command=None )
-
-
-    
-
+        self.samp_points = ConfigSwitch( self, initial_state=False, text="Show sampled points", command=self.__sample_points_btn_press )
+        self.samp_points.config( state="disable" )
 
         # Bind to change        
         self.plot_num_combo.bind("<<ComboboxSelected>>", self.__plot_num_change)
@@ -222,6 +216,9 @@ class PlotFrame(tk.Frame):
 
             # Enable multiplot selection
             self.plot_num_combo.configure(state="readonly")
+
+            # Enable sample point showing
+            self.samp_points.config( state="normal" )
 
     # ===============================================================================
     # @brief:   Parse imported file
@@ -634,6 +631,10 @@ class PlotFrame(tk.Frame):
         else:
             return False
 
+
+    def __sample_points_btn_press(self, state):
+
+        print( "Sample button show pressed. State: %s" % state )
 
 #################################################################################################
 ##  END OF FILE

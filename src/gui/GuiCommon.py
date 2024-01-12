@@ -445,6 +445,15 @@ class SwitchButton():
         self.command = command
 
     # ===============================================================================
+    # @brief:   Post-init configurations
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def config(self, *args, **kwargs):
+        self.btn.config(*args, **kwargs)
+
+    # ===============================================================================
     # @brief:   Get current button label
     #
     # @return:      text of button
@@ -550,7 +559,7 @@ class SwitchButton():
 
         # Execute callback on pressed
         if None != self.command:
-            self.command()
+            self.command( self.state )
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse entry
@@ -600,6 +609,15 @@ class AddRemoveButton():
         # Bind button actions
         self.btn.bind("<Enter>", self.__btn_enter)
         self.btn.bind("<Leave>", self.__btn_leave)   
+
+    # ===============================================================================
+    # @brief:   Post-init configurations
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def config(self, *args, **kwargs):
+        self.btn.config(*args, **kwargs)
 
     # ===============================================================================
     # @brief:   Connect button callback on mouse entry
@@ -798,6 +816,15 @@ class ConfigSwitch():
         # Settings frame layout
         self.label.grid(    column=0, row=0, sticky=tk.W, padx=10, pady=0    )
         self.btn.grid(      column=1, row=0, sticky=tk.E, padx=0, pady=0     )
+
+    # ===============================================================================
+    # @brief:   Post-init configurations
+    #
+    # @param[in]:   args, kwargs - Arguments
+    # @return:      void
+    # ===============================================================================  
+    def config(self, *args, **kwargs):
+        self.btn.config(*args, **kwargs)
 
     # ===============================================================================
     # @brief:   Put button on grid
