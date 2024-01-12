@@ -1,4 +1,4 @@
-## Copyright (c) 2023 Ziga Miklosic
+## Copyright (c) 2024 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -28,13 +28,12 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-
 #################################################################################################
 ##  DEFINITIONS
 #################################################################################################
 
-# Streaming period in secodns
-LOG_FILE_FIXED_TIMESTAMP        = 0.1
+# Default timestamp in miliseconds
+LOG_FILE_FIXED_TIMESTAMP_MS     = 10
 
 # File delimiter
 LOG_FILE_DELIMITER              = ";"
@@ -44,12 +43,9 @@ LOG_FILE_DELIMITER              = ";"
 ##  FUNCTIONS
 #################################################################################################
 
-
-
 #################################################################################################
 ##  CLASSES
 #################################################################################################   
-
 
 # ===============================================================================
 #
@@ -67,7 +63,7 @@ class PlotFrame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.configure(bg=GuiColor.main_bg)
 
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(4, weight=1)
         self.columnconfigure(0, weight=100)
         self.columnconfigure(1, weight=1)
 
@@ -105,7 +101,10 @@ class PlotFrame(tk.Frame):
         PLOT_ADJUST_TOP         = 0.99
         PLOT_ADJUST_WSPACE		= 0.2
         PLOT_ADJUST_HSPACE		= 0.08
-            
+
+        # Plot marker
+        self.marker = None            
+
         # Plot frame
         self.plot_frame = tk.Frame(self, bg=GuiColor.main_bg)
 
@@ -146,6 +145,18 @@ class PlotFrame(tk.Frame):
         self.plot_num_combo.set("1")
         self.num_of_plot = 1
 
+        # Timestamp option
+        self.timestamp_label = tk.Label(self, text="Timestamp [ms]:", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.timestamp_entry = tk.Entry(self, font=GuiFont.normal, bg=GuiColor.sub_1_fg, fg=GuiColor.sub_1_bg, borderwidth=0, width=8)
+        self.timestamp_entry.insert(0,LOG_FILE_FIXED_TIMESTAMP_MS)
+
+        timestamp_vcmd = (self.register(self.__timestamp_entry_validate), '%P')
+        self.timestamp_entry.config(validate='key', validatecommand=timestamp_vcmd)
+
+        # Sample points show
+        self.samp_points = ConfigSwitch( self, initial_state=False, text="Show sampled points", command=self.__sample_points_btn_press )
+        self.samp_points.config( state="disable" )
+
         # Bind to change        
         self.plot_num_combo.bind("<<ComboboxSelected>>", self.__plot_num_change)
 
@@ -161,13 +172,17 @@ class PlotFrame(tk.Frame):
 
         # Self frame layout
         self.frame_label.grid(      column=0, row=0,                sticky=tk.W,                   padx=20, pady=10 )
-        self.plot_frame.grid(       column=0, row=1, rowspan=4,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0,  pady=0 )
+        self.plot_frame.grid(       column=0, row=1, rowspan=6,     sticky=tk.W+tk.N+tk.E+tk.S,    padx=0,  pady=0 )
         self.plot_num_label.grid(   column=1, row=1,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
         self.plot_num_combo.grid(   column=2, row=1,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.par_plot_table.grid(   column=1, row=2, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
-        self.refresh_btn.grid(      column=1, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
-        self.clear_all_btn.grid(    column=2, row=3, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
-        self.import_btn.grid(       column=1, row=4, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=10 )
+        self.timestamp_label.grid(  column=1, row=2,                sticky=tk.S+tk.E+tk.N,         padx=0,  pady=10 )
+        self.timestamp_entry.grid(  column=2, row=2,                sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )        
+        self.samp_points.grid(      column=1, row=3, columnspan=2,  sticky=tk.E+tk.W+tk.N+tk.S,    padx=10, pady=10 )
+
+        self.par_plot_table.grid(   column=1, row=4, columnspan=2,  sticky=tk.W+tk.S+tk.E+tk.N,    padx=10, pady=10 )
+        self.refresh_btn.grid(      column=1, row=5, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.clear_all_btn.grid(    column=2, row=5, columnspan=1,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=5 )
+        self.import_btn.grid(       column=1, row=6, columnspan=2,  sticky=tk.W+tk.S+tk.E,         padx=5,  pady=10 )
 
         # Refresh plot configs
         self.__refresh_plot_configs()
@@ -201,12 +216,18 @@ class PlotFrame(tk.Frame):
             # Enable multiplot selection
             self.plot_num_combo.configure(state="readonly")
 
+            # Enable sample point showing
+            self.samp_points.config( state="normal" )
+
     # ===============================================================================
     # @brief:   Parse imported file
     #
     # @return:      void
     # ===============================================================================
     def __parse_meas_file(self):
+
+        # Get fixed timestamp in seconds
+        fixed_timestamp_sec = ( int(self.timestamp_entry.get()) / 1000 )
 
         # Open file for reading
         with open(self.meas_file, "r") as csvfile: 
@@ -232,7 +253,7 @@ class PlotFrame(tk.Frame):
                     if idx == 1:
                         self.timestamp.append( 0 )
                     else:
-                        self.timestamp.append( self.timestamp[-1] + LOG_FILE_FIXED_TIMESTAMP )
+                        self.timestamp.append( self.timestamp[-1] + fixed_timestamp_sec )
                 
 
                     # Get signal data
@@ -289,7 +310,7 @@ class PlotFrame(tk.Frame):
 
                     # Plot only signals that are assign to 0 plot
                     if 0 == plot:
-                        signal["line"]  = self.ax.plot( self.timestamp, data, label=name )
+                        signal["line"]  = self.ax.plot( self.timestamp, data, marker=self.marker, label=name )
                         self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Multi plot
@@ -297,7 +318,7 @@ class PlotFrame(tk.Frame):
                     
                     # Draw only if plot is available
                     if plot < self.num_of_plot:
-                        signal["line"] = self.ax[plot].plot( self.timestamp, data, label=name )
+                        signal["line"] = self.ax[plot].plot( self.timestamp, data, marker=self.marker, label=name )
                         self.ax[plot].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
         # Refresh plot configs
@@ -420,10 +441,10 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if 1 == self.num_of_plot:
-                lines = self.ax.plot( self.timestamp, data, label=name )
+                lines = self.ax.plot( self.timestamp, data, marker=self.marker, label=name )
                 self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
             else:
-                lines = self.ax[0].plot( self.timestamp, data, label=name )
+                lines = self.ax[0].plot( self.timestamp, data, marker=self.marker, label=name )
                 self.ax[0].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
             # Assign plot line
@@ -458,7 +479,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 1:
-                line = self.ax[1].plot( self.timestamp, data, label=name)
+                line = self.ax[1].plot( self.timestamp, data, marker=self.marker, label=name)
                 self.ax[1].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -492,7 +513,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 2:
-                line = self.ax[2].plot( self.timestamp, data, label=name)
+                line = self.ax[2].plot( self.timestamp, data, marker=self.marker, label=name)
                 self.ax[2].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -526,7 +547,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 3:
-                line = self.ax[3].plot( self.timestamp, data, label=name)
+                line = self.ax[3].plot( self.timestamp, data, marker=self.marker, label=name)
                 self.ax[3].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -593,6 +614,35 @@ class PlotFrame(tk.Frame):
             self.par_selected = idx
             self.__remove_selected_line_from_plot()
 
+    # ===============================================================================
+    # @brief:   Entry validation for baudrate selection. This function is triggered
+    #           on any keyboard press.
+    #
+    # @param[in]:   value - Value of key pressed
+    # @return:      void
+    # ===============================================================================  
+    def __timestamp_entry_validate(self, value):
+        if value.isdigit() or value == "":
+            if len(value) < 9:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    # ===============================================================================
+    # @brief:   Callback on enabling/disabling sample points show
+    #
+    # @param[in]:   state - Current state of show points state
+    # @return:      void
+    # ===============================================================================  
+    def __sample_points_btn_press(self, state):
+
+        # Toggle marker
+        if state:
+            self.marker = "o"
+        else:
+            self.marker = None   
 
 #################################################################################################
 ##  END OF FILE
