@@ -151,6 +151,9 @@ class PlotFrame(tk.Frame):
         self.timestamp_entry = tk.Entry(self, font=GuiFont.normal, bg=GuiColor.sub_1_fg, fg=GuiColor.sub_1_bg, borderwidth=0, width=8)
         self.timestamp_entry.insert(0,LOG_FILE_FIXED_TIMESTAMP_MS)
 
+        timestamp_vcmd = (self.register(self.__timestamp_entry_validate), '%P')
+        self.timestamp_entry.config(validate='key', validatecommand=timestamp_vcmd)
+
         # Bind to change        
         self.plot_num_combo.bind("<<ComboboxSelected>>", self.__plot_num_change)
 
@@ -603,6 +606,22 @@ class PlotFrame(tk.Frame):
         for idx, _ in enumerate( self.meas_signals ):
             self.par_selected = idx
             self.__remove_selected_line_from_plot()
+
+    # ===============================================================================
+    # @brief:   Entry validation for baudrate selection. This function is triggered
+    #           on any keyboard press.
+    #
+    # @param[in]:   value - Value of key pressed
+    # @return:      void
+    # ===============================================================================  
+    def __timestamp_entry_validate(self, value):
+        if value.isdigit() or value == "":
+            if len(value) < 9:
+                return True
+            else:
+                return False
+        else:
+            return False
 
 
 #################################################################################################
