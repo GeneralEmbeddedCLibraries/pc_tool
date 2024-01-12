@@ -23,6 +23,7 @@ from gui.NavigationFrame import NavigationFrame
 from gui.StatusFrame import StatusFrame, GeneralInfoFrame
 from gui.ParameterFrame import ParameterFrame
 from gui.PlotFrame import PlotFrame
+from gui.BootFrame import BootFrame
 from gui.GuiCommon import GuiFont, GuiColor
 
 from com.IpcProtocol import IpcMsg, IpcMsgType
@@ -36,7 +37,7 @@ import time
 # Fast timer period
 #
 # Unit: ms
-MAIN_WIN_FAST_TIM_PERIOD    = 100
+MAIN_WIN_FAST_TIM_PERIOD    = 1
 
 # Slow timer period
 #
@@ -110,6 +111,7 @@ class MainWindow():
                                 IpcMsgType.IpcMsgType_ComConnect :      self.__ipc_connect_cmd,  
                                 IpcMsgType.IpcMsgType_ComDisconnect :   self.__ipc_disconnect_cmd,  
                                 IpcMsgType.IpcMsgType_ComRxFrame :      self.__ipc_rx_frame_cmd,  
+                                IpcMsgType.IpcMsgType_ComRxBinary :      self.__ipc_rx_binary_cmd,  
                                 IpcMsgType.IpcMsgType_ComTxFrame :      self.__ipc_tx_frame_cmd,  
         }
         # =============================================================================================
@@ -133,13 +135,14 @@ class MainWindow():
     def __init_frames(self):
 
         # Create frames
-        self.nav_frame      = NavigationFrame(self.master_win, btn_callbacks=[self.__nav_btn_com_action, self.__nav_btn_cli_action, self.__nav_btn_par_action, self.__nav_btn_plot_action])
+        self.nav_frame      = NavigationFrame(self.master_win, btn_callbacks=[self.__nav_btn_com_action, self.__nav_btn_cli_action, self.__nav_btn_par_action, self.__nav_btn_plot_action, self.__nav_btn_boot_action])
         self.status_frame   = StatusFrame(self.master_win)
         self.gen_info_frame = GeneralInfoFrame(self.master_win)
         self.cli_frame      = CliFrame(self.master_win, btn_callbacks=[self.__cli_btn_enter])
         self.com_frame      = ComFrame(self.master_win, btn_callbacks=[self.__com_btn_connect])
         self.par_frame      = ParameterFrame(self.master_win, btn_callbacks=[self.__par_com_request])
         self.plot_frame     = PlotFrame(self.master_win, import_callback=self.__file_import_callback)
+        self.boot_frame     = BootFrame(self.master_win, self.__ipc_send_msg)
 
         # Layout
         self.nav_frame.grid(        column=0, row=1, sticky=tk.E+tk.W+tk.N+tk.S, rowspan=2,     padx=0, pady=0    )
@@ -154,6 +157,7 @@ class MainWindow():
         self.nav_frame.btn_cli.set_active(0)
         self.nav_frame.btn_par.set_active(0)
         self.nav_frame.btn_plot.set_active(0)
+        self.nav_frame.btn_boot.set_active(0)
 
     # Leave for future improvements
     def __init_menu_bar(self):
@@ -179,12 +183,14 @@ class MainWindow():
         self.cli_frame.grid_forget()
         self.par_frame.grid_forget()
         self.plot_frame.grid_forget()
+        self.boot_frame.grid_forget()
         self.com_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)
 
         self.nav_frame.btn_com.set_active(1)
         self.nav_frame.btn_cli.set_active(0)
         self.nav_frame.btn_par.set_active(0)
         self.nav_frame.btn_plot.set_active(0)
+        self.nav_frame.btn_boot.set_active(0)
   
     # ===============================================================================
     # @brief:   Change main window to command line interface frame
@@ -195,6 +201,7 @@ class MainWindow():
         self.com_frame.grid_forget()
         self.par_frame.grid_forget()
         self.plot_frame.grid_forget()
+        self.boot_frame.grid_forget()
         self.cli_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)
         
         # Focus on command entry
@@ -204,6 +211,7 @@ class MainWindow():
         self.nav_frame.btn_cli.set_active(1)
         self.nav_frame.btn_par.set_active(0)
         self.nav_frame.btn_plot.set_active(0)
+        self.nav_frame.btn_boot.set_active(0)
       
     # ===============================================================================
     # @brief:   Change main window to device parameter frame
@@ -214,12 +222,14 @@ class MainWindow():
         self.com_frame.grid_forget()
         self.cli_frame.grid_forget()
         self.plot_frame.grid_forget()
+        self.boot_frame.grid_forget()
         self.par_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)     
 
         self.nav_frame.btn_com.set_active(0)
         self.nav_frame.btn_cli.set_active(0)
         self.nav_frame.btn_par.set_active(1)
         self.nav_frame.btn_plot.set_active(0) 
+        self.nav_frame.btn_boot.set_active(0) 
 
     # ===============================================================================
     # @brief:   Change main window to plot frame
@@ -230,12 +240,32 @@ class MainWindow():
         self.com_frame.grid_forget()
         self.cli_frame.grid_forget()
         self.par_frame.grid_forget()
+        self.boot_frame.grid_forget()
         self.plot_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
 
         self.nav_frame.btn_com.set_active(0)
         self.nav_frame.btn_cli.set_active(0)
         self.nav_frame.btn_par.set_active(0)
         self.nav_frame.btn_plot.set_active(1)
+        self.nav_frame.btn_boot.set_active(0)
+
+    # ===============================================================================
+    # @brief:   Change main window to bootloader frame
+    #
+    # @return: void
+    # ===============================================================================
+    def __nav_btn_boot_action(self):
+        self.com_frame.grid_forget()
+        self.cli_frame.grid_forget()
+        self.par_frame.grid_forget()
+        self.par_frame.grid_forget()
+        self.boot_frame.grid(column=1, row=1, sticky=tk.E+tk.W+tk.N+tk.S, padx=0, pady=0)      
+
+        self.nav_frame.btn_com.set_active(0)
+        self.nav_frame.btn_cli.set_active(0)
+        self.nav_frame.btn_par.set_active(0)
+        self.nav_frame.btn_plot.set_active(0)
+        self.nav_frame.btn_boot.set_active(1)
 
     # ===============================================================================
     # @brief:   Change default table style
@@ -560,6 +590,18 @@ class MainWindow():
         self.status_frame.set_rx_count(len(payload))
 
     # ===============================================================================
+    # @brief:   Response from RX frame BINARY command to (Serial Process) via IPC
+    #
+    # @param[in]:   payload - Message payload
+    # @return:      void
+    # ===============================================================================
+    def __ipc_rx_binary_cmd(self, payload):
+
+        # Handle received message
+        self.boot_frame.msg_receive_cb(payload)
+
+
+    # ===============================================================================
     # @brief:   Response from TX frame command (to Serial Process) via IPC
     #
     # @param[in]:   payload - Message payload
@@ -583,6 +625,9 @@ class MainWindow():
         self.par_frame.read_all_btn.config(state=tk.NORMAL)
         self.par_frame.store_all_btn.config(state=tk.NORMAL)
 
+        # Boot frame
+        self.boot_frame.browse_btn.config(state=tk.NORMAL)
+
     # ===============================================================================
     # @brief:   Deactivate connection related widgets
     #
@@ -597,6 +642,10 @@ class MainWindow():
         # Parameter frame
         self.par_frame.read_all_btn.config(state=tk.DISABLED)
         self.par_frame.store_all_btn.config(state=tk.DISABLED)
+
+        # Boot frame
+        self.boot_frame.browse_btn.config(state=tk.DISABLED)
+        self.boot_frame.update_btn.config(state=tk.DISABLED)
 
     # ===============================================================================
     # @brief:   File imported callback

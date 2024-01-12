@@ -1,4 +1,4 @@
-## Copyright (c) 2023 Ziga Miklosic
+## Copyright (c) 2024 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -165,6 +165,17 @@ class SerialComunication():
         self.port.send(str(payload))
 
     # ===============================================================================
+    # @brief:   Master GUI is requesing to send binary data to embedded device
+    #
+    # @param[in]:   payload - Message payload
+    # @return:      void
+    # ===============================================================================
+    def __ipc_tx_binary_cmd(self, payload):
+        
+        # Send to device
+        self.port.send_binary( payload )
+
+    # ===============================================================================
     # @brief:   Master GUI is requesting end of the thread
     #
     # @param[in]:   payload - Message payload
@@ -199,11 +210,24 @@ class SerialComunication():
     def __dev_rx_hndl(self):
 
         # Read message from embedded device
-        dev_msg = self.port.read()
+        dev_msg_bin = self.port.read()
 
-        if dev_msg:
-            msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxFrame, payload=dev_msg)
-            self.__ipc_send_msg(msg)
+        if len(dev_msg_bin) > 0:
+            
+            try:
+                # Try to decode
+                dev_msg = dev_msg_bin.decode( "utf-8" )
+                
+                # Send UTF-8 format string to Main Window process
+                msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxFrame, payload=dev_msg)
+                self.__ipc_send_msg(msg)
+            except:
+                pass
+            
+            # Send binary message to MainWindow process
+            msg_bin = IpcMsg(type=IpcMsgType.IpcMsgType_ComRxBinary, payload=dev_msg_bin)
+            self.__ipc_send_msg(msg_bin)
+
 
     # ===============================================================================
     # @brief:   Main process loop
@@ -220,6 +244,7 @@ class SerialComunication():
                                 IpcMsgType.IpcMsgType_ComDisconnect :   self.__ipc_disconnect_cmd,  
                                 #IpcMsgType.IpcMsgType_ComRxFrame :      self.__ipc_rx_frame_cmd,  
                                 IpcMsgType.IpcMsgType_ComTxFrame :      self.__ipc_tx_frame_cmd,  
+                                IpcMsgType.IpcMsgType_ComTxBinary :      self.__ipc_tx_binary_cmd,  
                                 IpcMsgType.IpcMsgType_ComFinished :      self.__ipc_kill_cmd,  
         }
         
@@ -405,18 +430,27 @@ class SerialComPort(ComPortDesc):
         except:
             pass
 
-
+    def send_binary(self, bin):
+        try:
+            if self.is_connected():
+                self._com_port.write( bin )
+        except:
+            pass
 
     def write(self, str):
         # NOTE: Implicit termination with CR
         self._com_port.write(self.__unicode_str__(str + '\r'))
 
     def read(self):
+
+        rx_data = []
         try:
             if self.is_connected():
-                return self._com_port.read().decode("utf-8")
+                rx_data = self._com_port.read()
         except:
             pass
+
+        return rx_data
 
     def __unicode_str__(self, str):
         return str.encode("utf-8")

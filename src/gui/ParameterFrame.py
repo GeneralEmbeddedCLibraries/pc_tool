@@ -1,4 +1,4 @@
-## Copyright (c) 2023 Ziga Miklosic
+## Copyright (c) 2024 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -316,7 +316,7 @@ class ParameterFrame(tk.Frame):
         if value == "" or value == "-":
             return True
         else:
-            if len(value) < 10:
+            if len(value) <= 10:
                 try:
                     float(value)
                     return True
