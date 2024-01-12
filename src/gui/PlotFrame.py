@@ -1,4 +1,4 @@
-## Copyright (c) 2023 Ziga Miklosic
+## Copyright (c) 2024 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -28,7 +28,6 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-
 #################################################################################################
 ##  DEFINITIONS
 #################################################################################################
@@ -44,12 +43,9 @@ LOG_FILE_DELIMITER              = ";"
 ##  FUNCTIONS
 #################################################################################################
 
-
-
 #################################################################################################
 ##  CLASSES
 #################################################################################################   
-
 
 # ===============================================================================
 #
@@ -105,7 +101,10 @@ class PlotFrame(tk.Frame):
         PLOT_ADJUST_TOP         = 0.99
         PLOT_ADJUST_WSPACE		= 0.2
         PLOT_ADJUST_HSPACE		= 0.08
-            
+
+        # Plot marker
+        self.marker = None            
+
         # Plot frame
         self.plot_frame = tk.Frame(self, bg=GuiColor.main_bg)
 
@@ -311,7 +310,7 @@ class PlotFrame(tk.Frame):
 
                     # Plot only signals that are assign to 0 plot
                     if 0 == plot:
-                        signal["line"]  = self.ax.plot( self.timestamp, data, label=name )
+                        signal["line"]  = self.ax.plot( self.timestamp, data, marker=self.marker, label=name )
                         self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Multi plot
@@ -319,7 +318,7 @@ class PlotFrame(tk.Frame):
                     
                     # Draw only if plot is available
                     if plot < self.num_of_plot:
-                        signal["line"] = self.ax[plot].plot( self.timestamp, data, label=name )
+                        signal["line"] = self.ax[plot].plot( self.timestamp, data, marker=self.marker, label=name )
                         self.ax[plot].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
         # Refresh plot configs
@@ -442,10 +441,10 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if 1 == self.num_of_plot:
-                lines = self.ax.plot( self.timestamp, data, label=name )
+                lines = self.ax.plot( self.timestamp, data, marker=self.marker, label=name )
                 self.ax.legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
             else:
-                lines = self.ax[0].plot( self.timestamp, data, label=name )
+                lines = self.ax[0].plot( self.timestamp, data, marker=self.marker, label=name )
                 self.ax[0].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
             # Assign plot line
@@ -480,7 +479,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 1:
-                line = self.ax[1].plot( self.timestamp, data, label=name)
+                line = self.ax[1].plot( self.timestamp, data, marker=self.marker, label=name)
                 self.ax[1].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -514,7 +513,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 2:
-                line = self.ax[2].plot( self.timestamp, data, label=name)
+                line = self.ax[2].plot( self.timestamp, data, marker=self.marker, label=name)
                 self.ax[2].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -548,7 +547,7 @@ class PlotFrame(tk.Frame):
 
             # Plot data
             if self.num_of_plot > 3:
-                line = self.ax[3].plot( self.timestamp, data, label=name)
+                line = self.ax[3].plot( self.timestamp, data, marker=self.marker, label=name)
                 self.ax[3].legend(fancybox=True, shadow=True, loc="upper right", fontsize=12)
 
                 # Assign plot line
@@ -631,10 +630,19 @@ class PlotFrame(tk.Frame):
         else:
             return False
 
-
+    # ===============================================================================
+    # @brief:   Callback on enabling/disabling sample points show
+    #
+    # @param[in]:   state - Current state of show points state
+    # @return:      void
+    # ===============================================================================  
     def __sample_points_btn_press(self, state):
 
-        print( "Sample button show pressed. State: %s" % state )
+        # Toggle marker
+        if state:
+            self.marker = "o"
+        else:
+            self.marker = None   
 
 #################################################################################################
 ##  END OF FILE
