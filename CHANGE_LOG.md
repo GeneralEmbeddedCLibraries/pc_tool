@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## V0.4.1 - 25.06.2024
+
+### Notice
+ This version has new CLI interface format, compatible with CLI V2.0.0 on
+
+### Changed
+ - Parameter info command addopted to CLI V2.0.0
+ 
+
+---
 ## V0.4.0 - 12.01.2024
 
 ### Notice
