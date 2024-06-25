@@ -69,7 +69,7 @@ class ParameterTable():
 @dataclass
 class ParCmd():
     Idle:   int = 0
-    Status: str = "par_print"
+    Status: str = "par_info"
     Write:  str = "par_set"
     Read:   str = "par_get"
     Store:  str = "par_save"
