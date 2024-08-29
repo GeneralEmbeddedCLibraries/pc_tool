@@ -43,7 +43,7 @@ BOOT_FLASH_DATA_FRAME_SIZE      = 64 #bytes
 BOOT_COM_CONNECT_TIMEOUT_SEC    = 3.0
 BOOT_COM_PREPARE_TIMEOUT_SEC    = 10.0
 BOOT_COM_FLASH_TIMEOUT_SEC      = 0.5
-BOOT_COM_EXIT_TIMEOUT_SEC       = 1.0
+BOOT_COM_EXIT_TIMEOUT_SEC       = 5.0
 
 
 #################################################################################################
