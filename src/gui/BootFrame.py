@@ -41,7 +41,7 @@ BOOT_FLASH_DATA_FRAME_SIZE      = 64 #bytes
 
 # Communication timeout settings
 BOOT_COM_CONNECT_TIMEOUT_SEC    = 3.0
-BOOT_COM_PREPARE_TIMEOUT_SEC    = 5.0
+BOOT_COM_PREPARE_TIMEOUT_SEC    = 10.0
 BOOT_COM_FLASH_TIMEOUT_SEC      = 0.5
 BOOT_COM_EXIT_TIMEOUT_SEC       = 1.0
 
@@ -131,19 +131,24 @@ class BinFile:
 # ===============================================================================
 class FwImage(BinFile):
 
+    # Application header size in bytes
+    APP_HEADER_SIZE_BYTE            = 0x100
+
     # Expected application header version
     APP_HEADER_VER_EXPECTED         = 1
 
     # Application header addresses
-    APP_HEADER_APP_SW_VER_ADDR      = 0x00
-    APP_HEADER_APP_HW_VER_ADDR      = 0x04
-    APP_HEADER_APP_SIZE_ADDR        = 0x08
-    APP_HEADER_APP_CRC_ADDR         = 0x0C
-    APP_HEADER_VER_ADDR             = 0xFE
-    APP_HEADER_CRC_ADDR             = 0xFF
+    APP_HEADER_CRC_ADDR             = 0x00
+    APP_HEADER_VER_ADDR             = 0x01
 
-    # Application header size in bytes
-    APP_HEADER_SIZE_BYTE            = 0x100
+    # Application header data fields
+    APP_HEADER_SW_VER_ADDR          = 0x08
+    APP_HEADER_HW_VER_ADDR          = 0x0C
+    APP_HEADER_APP_SIZE_ADDR        = 0x10
+    APP_HEADER_APP_CRC_ADDR         = 0x14
+    APP_HEADER_ENC_TYPE             = 0x18
+    APP_HEADER_SIG_TYPE             = 0x1C
+    APP_HEADER_SIG_SHA256           = 0x20    
 
     # ===============================================================================
     # @brief    Firmware Image Constructor
@@ -160,7 +165,7 @@ class FwImage(BinFile):
     # @return       sw version
     # =============================================================================== 
     def get_sw_ver(self):
-        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 ), byteorder="little" )
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_SW_VER_ADDR, 4 ), byteorder="little" )
     
     # ===============================================================================
     # @brief    Get firmware image software version in raw format
@@ -168,7 +173,7 @@ class FwImage(BinFile):
     # @return       sw version in raw
     # =============================================================================== 
     def get_sw_ver_raw(self):
-        return self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 )
+        return self.file.read( FwImage.APP_HEADER_SW_VER_ADDR, 4 )
 
     # ===============================================================================
     # @brief    Get firmware image hardware version
@@ -176,7 +181,7 @@ class FwImage(BinFile):
     # @return       hw version
     # =============================================================================== 
     def get_hw_ver(self):
-        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 ), byteorder="little" )
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_HW_VER_ADDR, 4 ), byteorder="little" )
 
     # ===============================================================================
     # @brief    Get firmware image hardware version in raw format
@@ -184,7 +189,7 @@ class FwImage(BinFile):
     # @return       hw version raw
     # =============================================================================== 
     def get_hw_ver_raw(self):
-        return self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 )
+        return self.file.read( FwImage.APP_HEADER_HW_VER_ADDR, 4 )
 
     # ===============================================================================
     # @brief    Get firmware image size in bytes
@@ -420,6 +425,12 @@ class BootFrame(tk.Frame):
             # Open file
             self.fw_file = FwImage(file=fw_file_path)
 
+            # TODO: Add check button to enable/disable image validation
+             
+            # Enable update button
+            self.update_btn.config(state=tk.NORMAL)
+
+            '''
             # Application image valid
             if self.fw_file.validate():
 
@@ -434,7 +445,7 @@ class BootFrame(tk.Frame):
                 hw_ver = self.fw_file.get_hw_ver()
                 hw_ver = struct.pack('I', int(hw_ver))
 
-                # Show firmware imfo
+                # Show firmware info
                 self.fw_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
                 self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
                 self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
@@ -467,6 +478,7 @@ class BootFrame(tk.Frame):
 
                 # Enable update button
                 self.update_btn.config(state=tk.DISABLED)
+            '''
 
     # ===============================================================================
     # @brief:   Update button pressed
@@ -482,9 +494,18 @@ class BootFrame(tk.Frame):
 
             # Enter bootloader
             self.msg_send_ascii( BOOT_ENTER_BOOT_CMD )
+
+            # TODO: Remove only debugging
+            print("Sending enter to bootloader...");
             
             # Wait for 50 ms
             time.sleep( 0.050 )
+
+            # TODO: Add to open COM port again as on USB COM will closed        
+            self.__com_port_reconnect(2.0)
+
+            # TODO: Remove
+            print("Reconnected");
 
             # Reset input queue 
             self.bootProtocol.reset_rx_queue()
@@ -768,6 +789,46 @@ class BootFrame(tk.Frame):
 
             # Show bootloader version
             self.boot_ver_text["text"] = "V%d.%d.%d.%d" % ( boot_ver[3], boot_ver[2], boot_ver[1], boot_ver[0] )
+
+    # ===============================================================================
+    # @brief:   Disconnect from COM port
+    #
+    # @return:      void
+    # ===============================================================================    
+    def __com_port_disconnect(self):
+        msg = IpcMsg()
+
+        # Send disconnection reqeust to serial thread
+        msg.type = IpcMsgType.IpcMsgType_ComDisconnect
+
+        # Send command
+        self.__ipc_msg_send(msg)        
+
+    # ===============================================================================
+    # @brief:   Connect to COM port with last configure settings
+    #
+    # @return:      void
+    # ===============================================================================    
+    def __com_port_connect(self):
+        msg = IpcMsg()
+
+        # Connect with pre-exsisting COM port settings
+        msg.type    = IpcMsgType.IpcMsgType_ComConnect
+        msg.payload = None
+
+        # Send command
+        self.__ipc_msg_send(msg)         
+
+    # ===============================================================================
+    # @brief:   Re-connect to COM port with the same settings
+    #
+    # @param[in]:   reconnect_pause - Time pause between connect-reconnect cmd
+    # @return:      void
+    # ===============================================================================    
+    def __com_port_reconnect(self, reconnect_pause=2):
+        self.__com_port_disconnect()
+        time.sleep(reconnect_pause)
+        self.__com_port_connect()
 
 
 #################################################################################################
