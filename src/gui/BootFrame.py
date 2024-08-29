@@ -37,7 +37,7 @@ BOOT_ENTER_BOOT_CMD             = "enter_boot"
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
 # Number of bytes to transfer in flash data
-BOOT_FLASH_DATA_FRAME_SIZE      = 64 #bytes
+BOOT_FLASH_DATA_FRAME_SIZE      = 1024 #bytes
 
 # Communication timeout settings
 BOOT_COM_CONNECT_TIMEOUT_SEC    = 5.0
