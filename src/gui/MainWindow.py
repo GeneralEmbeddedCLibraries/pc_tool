@@ -628,6 +628,9 @@ class MainWindow():
         # Boot frame
         self.boot_frame.browse_btn.config(state=tk.NORMAL)
 
+        if self.boot_frame.upgrade_btn_is_active():
+            self.boot_frame.update_btn.config(state=tk.NORMAL)
+
     # ===============================================================================
     # @brief:   Deactivate connection related widgets
     #

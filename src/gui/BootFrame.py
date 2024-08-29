@@ -40,11 +40,13 @@ MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 BOOT_FLASH_DATA_FRAME_SIZE      = 64 #bytes
 
 # Communication timeout settings
-BOOT_COM_CONNECT_TIMEOUT_SEC    = 3.0
+BOOT_COM_CONNECT_TIMEOUT_SEC    = 5.0
 BOOT_COM_PREPARE_TIMEOUT_SEC    = 10.0
 BOOT_COM_FLASH_TIMEOUT_SEC      = 0.5
 BOOT_COM_EXIT_TIMEOUT_SEC       = 5.0
 
+# Reconnect pause time between COM port connect and disconnect command
+BOOT_COM_RECONNECT_PAUSE        = 1.0
 
 #################################################################################################
 ##  FUNCTIONS
@@ -238,7 +240,7 @@ class FwImage(BinFile):
 
         # Calculate application header CRC
         # NOTE: Ignore last CRC field!
-        app_header_crc = self.__calc_crc8( self.file.read( 0, FwImage.APP_HEADER_SIZE_BYTE - 1 ))
+        app_header_crc = self.__calc_crc8( self.file.read( 1, FwImage.APP_HEADER_SIZE_BYTE - 1 ))
 
         return app_header_crc
 
@@ -301,6 +303,9 @@ class BootFrame(tk.Frame):
 
         # Start tick
         self.start_tick = 0
+
+        # Upgrade btn init state
+        self.upgrade_btn_active = False
 
     # ===============================================================================
     # @brief:   Send ASCII format of message
@@ -427,10 +432,6 @@ class BootFrame(tk.Frame):
 
             # TODO: Add check button to enable/disable image validation
              
-            # Enable update button
-            self.update_btn.config(state=tk.NORMAL)
-
-            '''
             # Application image valid
             if self.fw_file.validate():
 
@@ -461,6 +462,7 @@ class BootFrame(tk.Frame):
 
                 # Enable update button
                 self.update_btn.config(state=tk.NORMAL)
+                self.upgrade_btn_active = True
 
             else:
                 self.fw_size_text["text"]   = "Invalid application!"
@@ -476,9 +478,9 @@ class BootFrame(tk.Frame):
                 self.status_text["fg"] = GuiColor.sub_1_fg
                 self.status_text["text"] = "---"
 
-                # Enable update button
+                # Disable update button
                 self.update_btn.config(state=tk.DISABLED)
-            '''
+                self.upgrade_btn_active = False
 
     # ===============================================================================
     # @brief:   Update button pressed
@@ -494,18 +496,12 @@ class BootFrame(tk.Frame):
 
             # Enter bootloader
             self.msg_send_ascii( BOOT_ENTER_BOOT_CMD )
-
-            # TODO: Remove only debugging
-            print("Sending enter to bootloader...");
             
             # Wait for 50 ms
             time.sleep( 0.050 )
 
             # TODO: Add to open COM port again as on USB COM will closed        
-            self.__com_port_reconnect(2.0)
-
-            # TODO: Remove
-            print("Reconnected");
+            self.__com_port_reconnect( BOOT_COM_RECONNECT_PAUSE )
 
             # Reset input queue 
             self.bootProtocol.reset_rx_queue()
@@ -630,7 +626,7 @@ class BootFrame(tk.Frame):
 
             # Update status
             self.status_text["fg"] = GuiColor.sub_1_fg
-            self.status_text["text"] = "Preparing..."
+            self.status_text["text"] = "Pre-validating and preparing flash..."
 
             # Restart communiction timeout timer
             self.com_timer.reset( BOOT_COM_PREPARE_TIMEOUT_SEC )
@@ -718,6 +714,7 @@ class BootFrame(tk.Frame):
                 # No more bytes to flash
                 else:
                     self.bootProtocol.send_exit()
+                    self.status_text["text"] = "Post-validating..."
 
                     # Restart communiction timeout timer
                     self.com_timer.reset( BOOT_COM_EXIT_TIMEOUT_SEC )
@@ -771,6 +768,10 @@ class BootFrame(tk.Frame):
 
             # Enable browse button back
             self.browse_btn.config(state=tk.NORMAL)
+
+            # TODO: In case of USB 
+            # Re-connect
+            self.__com_port_reconnect(BOOT_COM_RECONNECT_PAUSE);
         
     # ===============================================================================
     # @brief:   Info response message from bootlaoder receive callback
@@ -830,6 +831,13 @@ class BootFrame(tk.Frame):
         time.sleep(reconnect_pause)
         self.__com_port_connect()
 
+    # ===============================================================================
+    # @brief:   Get state of upgrade button regardless of COM port actions
+    #
+    # @return:      upgrade_btn_active - Upgrade button active state
+    # ===============================================================================    
+    def upgrade_btn_is_active(self):
+        return self.upgrade_btn_active
 
 #################################################################################################
 ##  END OF FILE
