@@ -373,6 +373,10 @@ class BootFrame(tk.Frame):
         self.update_btn     = NormalButton( self, "Upgrade", command=self.__update_btn_press)
         self.update_btn.config(state=tk.DISABLED)
 
+        # Configuration buttongs
+        self.image_valid_btn    = ConfigSwitch( self, "Validate FW image",    initial_state=False )
+        self.usb_com_btn        = ConfigSwitch( self, "USB communication", initial_state=False )
+
         # App frame widgets
         self.file_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
         self.fw_ver_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
@@ -383,10 +387,14 @@ class BootFrame(tk.Frame):
         self.boot_ver_text  = tk.Label(self.boot_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W )
         self.status_text    = tk.Label(self.boot_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W )
 
+
         # Self frame layout
         self.frame_label.grid(              column=0, row=0,                sticky=tk.W,                    padx=10, pady=10 )
         self.browse_btn.grid(               column=0, row=2,                sticky=tk.W,                    padx=20, pady=10    )
         self.update_btn.grid(               column=0, row=3,                sticky=tk.W,                    padx=20, pady=10    )
+        self.image_valid_btn.grid(          column=1, row=2,                sticky=tk.W+tk.E, )
+        self.usb_com_btn.grid(              column=1, row=3,                sticky=tk.W+tk.E, )
+        
         self.app_frame_label.grid(          column=0, row=4, columnspan=3,  sticky=tk.W,                    padx=20, pady=0 )
         self.app_frame.grid(                column=0, row=5, columnspan=3,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=10 )
         self.boot_frame_label.grid(         column=0, row=6,                sticky=tk.W,                    padx=20, pady=0 )
@@ -430,57 +438,63 @@ class BootFrame(tk.Frame):
             # Open file
             self.fw_file = FwImage(file=fw_file_path)
 
-            # TODO: Add check button to enable/disable image validation
-             
-            # Application image valid
-            if self.fw_file.validate():
+            # Image valuidation enabled
+            if True == self.image_valid_btn.state():
 
-                # Get FW image size
-                fw_size = self.fw_file.get_fw_size()
+                # Application image valid
+                if self.fw_file.validate():
 
-                # Get FW image SW version
-                sw_ver = self.fw_file.get_sw_ver()
-                sw_ver = struct.pack('I', int(sw_ver))
+                    # Get FW image size
+                    fw_size = self.fw_file.get_fw_size()
 
-                # Get HW image SW version
-                hw_ver = self.fw_file.get_hw_ver()
-                hw_ver = struct.pack('I', int(hw_ver))
+                    # Get FW image SW version
+                    sw_ver = self.fw_file.get_sw_ver()
+                    sw_ver = struct.pack('I', int(sw_ver))
 
-                # Show firmware info
-                self.fw_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
-                self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
-                self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
+                    # Get HW image SW version
+                    hw_ver = self.fw_file.get_hw_ver()
+                    hw_ver = struct.pack('I', int(hw_ver))
 
-                self.file_text["fg"]    = GuiColor.btn_success_bg
-                self.fw_size_text["fg"] = GuiColor.sub_1_fg
-                self.fw_ver_text["fg"]  = GuiColor.sub_1_fg
-                self.hw_ver_text["fg"]  = GuiColor.sub_1_fg
+                    # Show firmware info
+                    self.fw_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
+                    self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
+                    self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
 
-                # Change status to idle
-                self.status_text["fg"] = GuiColor.sub_1_fg
-                self.status_text["text"] = "Idle"
+                    self.file_text["fg"]    = GuiColor.btn_success_bg
+                    self.fw_size_text["fg"] = GuiColor.sub_1_fg
+                    self.fw_ver_text["fg"]  = GuiColor.sub_1_fg
+                    self.hw_ver_text["fg"]  = GuiColor.sub_1_fg
 
-                # Enable update button
-                self.update_btn.config(state=tk.NORMAL)
-                self.upgrade_btn_active = True
+                    # Change status to idle
+                    self.status_text["fg"] = GuiColor.sub_1_fg
+                    self.status_text["text"] = "Idle"
+
+                    # Enable update button
+                    self.update_btn.config(state=tk.NORMAL)
+                    self.upgrade_btn_active = True
+
+                else:
+                    self.fw_size_text["text"]   = "Invalid application!"
+                    self.fw_ver_text["text"]    = "Invalid application!"
+                    self.hw_ver_text["text"]    = "Invalid application!"
+
+                    self.file_text["fg"]    = "red"
+                    self.fw_size_text["fg"] = "red"
+                    self.fw_ver_text["fg"]  = "red"
+                    self.hw_ver_text["fg"]  = "red"
+
+                    # Change status to idle
+                    self.status_text["fg"] = GuiColor.sub_1_fg
+                    self.status_text["text"] = "---"
+
+                    # Disable update button
+                    self.update_btn.config(state=tk.DISABLED)
+                    self.upgrade_btn_active = False
 
             else:
-                self.fw_size_text["text"]   = "Invalid application!"
-                self.fw_ver_text["text"]    = "Invalid application!"
-                self.hw_ver_text["text"]    = "Invalid application!"
-
-                self.file_text["fg"]    = "red"
-                self.fw_size_text["fg"] = "red"
-                self.fw_ver_text["fg"]  = "red"
-                self.hw_ver_text["fg"]  = "red"
-
-                # Change status to idle
-                self.status_text["fg"] = GuiColor.sub_1_fg
-                self.status_text["text"] = "---"
-
-                # Disable update button
-                self.update_btn.config(state=tk.DISABLED)
-                self.upgrade_btn_active = False
+                # Enable update button
+                self.update_btn.config(state=tk.NORMAL)
+                self.upgrade_btn_active = True                
 
     # ===============================================================================
     # @brief:   Update button pressed
@@ -500,8 +514,9 @@ class BootFrame(tk.Frame):
             # Wait for 50 ms
             time.sleep( 0.050 )
 
-            # TODO: Add to open COM port again as on USB COM will closed        
-            self.__com_port_reconnect( BOOT_COM_RECONNECT_PAUSE )
+            # Re-connection needed only for USB devices
+            if True == self.usb_com_btn.state():
+                self.__com_port_reconnect(BOOT_COM_RECONNECT_PAUSE);            
 
             # Reset input queue 
             self.bootProtocol.reset_rx_queue()
@@ -769,9 +784,9 @@ class BootFrame(tk.Frame):
             # Enable browse button back
             self.browse_btn.config(state=tk.NORMAL)
 
-            # TODO: In case of USB 
-            # Re-connect
-            self.__com_port_reconnect(BOOT_COM_RECONNECT_PAUSE);
+            # Re-connection needed only for USB devices
+            if True == self.usb_com_btn.state():
+                self.__com_port_reconnect(BOOT_COM_RECONNECT_PAUSE);
         
     # ===============================================================================
     # @brief:   Info response message from bootlaoder receive callback
