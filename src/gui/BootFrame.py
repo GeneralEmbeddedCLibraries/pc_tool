@@ -399,7 +399,7 @@ class BootFrame(tk.Frame):
         self.app_frame.grid(                column=0, row=5, columnspan=3,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=10 )
         self.boot_frame_label.grid(         column=0, row=6,                sticky=tk.W,                    padx=20, pady=0 )
         self.boot_frame.grid(               column=0, row=7, columnspan=3,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=10 )
-        self.progress_bar.grid(             column=0, row=8,                sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=20    )
+        self.progress_bar.grid(             column=0, row=8, columnspan=2,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=20    )
         self.progress_text.grid(            column=2, row=8,                sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=20  )
 
         # Boot frame layout
