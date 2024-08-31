@@ -374,7 +374,7 @@ class BootFrame(tk.Frame):
         self.update_btn.config(state=tk.DISABLED)
 
         # Configuration buttongs
-        self.image_valid_btn    = ConfigSwitch( self, "Validate FW image",    initial_state=False )
+        self.image_valid_btn    = ConfigSwitch( self, "Validate FW image", initial_state=True )
         self.usb_com_btn        = ConfigSwitch( self, "USB communication", initial_state=False )
 
         # App frame widgets
