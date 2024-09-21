@@ -374,8 +374,8 @@ class BootFrame(tk.Frame):
         self.update_btn.config(state=tk.DISABLED)
 
         # Configuration buttongs
-        self.image_valid_btn    = ConfigSwitch( self, "Validate FW image", initial_state=True )
-        self.usb_com_btn        = ConfigSwitch( self, "USB communication", initial_state=False )
+        self.image_valid_btn    = ConfigSwitch( self, "Validate FW image", initial_state=False )
+        self.usb_com_btn        = ConfigSwitch( self, "USB communication", initial_state=True )
 
         # App frame widgets
         self.file_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
@@ -631,13 +631,8 @@ class BootFrame(tk.Frame):
             # Store start time
             self.start_tick = time.time()
 
-            # Get firmware info
-            fw_size = self.fw_file.get_fw_size()
-            sw_ver = self.fw_file.get_sw_ver()
-            hw_ver = self.fw_file.get_hw_ver()
-
-            # Send prepare message
-            self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
+            # Send prepare message -> send application header 
+            self.bootProtocol.send_prepare( self.fw_file.read( 0, FwImage.APP_HEADER_SIZE_BYTE ))
 
             # Update status
             self.status_text["fg"] = GuiColor.sub_1_fg
@@ -673,8 +668,8 @@ class BootFrame(tk.Frame):
                 self.progress_bar.stop()
                 self.progress_bar["value"] = 0
 
-                # Reset working address
-                self.working_addr = 0
+                # Reset working address to end of application header, as it was already send in prepare phase
+                self.working_addr = FwImage.APP_HEADER_SIZE_BYTE
 
                 data = self.fw_file.read( self.working_addr, BOOT_FLASH_DATA_FRAME_SIZE )
                 data_len = len( data )
