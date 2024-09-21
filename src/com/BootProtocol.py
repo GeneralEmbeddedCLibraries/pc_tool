@@ -61,6 +61,7 @@ class BootProtocol:
     MSG_ERROR_FW_SIZE       = 0x10
     MSG_ERROR_FW_VER        = 0x20
     MSG_ERROR_HW_VER        = 0x40
+    MSG_ERROR_SIGNATURE     = 0x80
     
     MSG_ERROR_STR = {   
                         MSG_OK                  : "OK",
@@ -71,6 +72,7 @@ class BootProtocol:
                         MSG_ERROR_FW_SIZE       : "Firmware image size error",
                         MSG_ERROR_FW_VER        : "Firmware version compatibility error",
                         MSG_ERROR_HW_VER        : "Hardware version compatibility error",
+                        MSG_ERROR_SIGNATURE     : "Firmware image signature invalid error",
                     }
 
 
