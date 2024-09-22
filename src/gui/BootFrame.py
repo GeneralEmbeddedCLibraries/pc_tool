@@ -497,8 +497,8 @@ class BootFrame(tk.Frame):
                     self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
                     self.image_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
                     self.image_addr_text["text"] = "0x%08X" % ( self.fw_file.get_image_addr())
-                    self.sig_type_text["text"] = "%s" % ( self.fw_file.read( FwImage.APP_HEADER_SIG_TYPE_ADDR, 1 )[0])
-                    self.enc_type_text["text"] = "%s" % ( self.fw_file.read( FwImage.APP_HEADER_ENC_TYPE_ADDR, 1 )[0])
+                    self.sig_type_text["text"] = "%s" % ["None", "ECDSA"][( self.fw_file.read( FwImage.APP_HEADER_SIG_TYPE_ADDR, 1 )[0])]
+                    self.enc_type_text["text"] = "%s" % ["None", "AES-CTR"][( self.fw_file.read( FwImage.APP_HEADER_ENC_TYPE_ADDR, 1 )[0])]
 
                     self.file_text["fg"]        = GuiColor.btn_success_bg
                     self.sw_ver_text["fg"]      = GuiColor.sub_1_fg
