@@ -133,24 +133,45 @@ class BinFile:
 # ===============================================================================
 class FwImage(BinFile):
 
-    # Application header size in bytes
-    APP_HEADER_SIZE_BYTE            = 0x100
-
     # Expected application header version
     APP_HEADER_VER_EXPECTED         = 1
 
     # Application header addresses
     APP_HEADER_CRC_ADDR             = 0x00
     APP_HEADER_VER_ADDR             = 0x01
+    APP_HEADER_IMG_TYPE_ADDR        = 0x02  # Image type [0-Application, 1-Custom]
+
+    # Image type
+    class ImageType():
+        APPLICATION = 0
+        CUSTOM      = 1
 
     # Application header data fields
-    APP_HEADER_SW_VER_ADDR          = 0x08
-    APP_HEADER_HW_VER_ADDR          = 0x0C
-    APP_HEADER_APP_SIZE_ADDR        = 0x10
-    APP_HEADER_APP_CRC_ADDR         = 0x14
-    APP_HEADER_ENC_TYPE             = 0x18
-    APP_HEADER_SIG_TYPE             = 0x1C
-    APP_HEADER_SIG_SHA256           = 0x20    
+    # For more info about image header look at Revision module specifications: "revision\doc\Revision_Specifications.xlsx"
+    APP_HEADER_SW_VER_ADDR          = 0x08  # Software version
+    APP_HEADER_HW_VER_ADDR          = 0x0C  # Hardware version
+    APP_HEADER_IMAGE_SIZE_ADDR      = 0x10  # Image size in bytes
+    APP_HEADER_IMAGE_ADDR_ADDR      = 0x14  # Image start address
+    APP_HEADER_IMAGE_CRC_ADDR       = 0x18  # Image CRC32
+    APP_HEADER_ENC_TYPE_ADDR        = 0x1C  # Encryption type [0-None, 1-AES-CTR]
+    APP_HEADER_SIG_TYPE_ADDR        = 0x1D  # Signature type [0-None, 1-ECSDA]
+    APP_HEADER_SIGNATURE_ADDR       = 0x1E  # Signature of the image. Size: 64 bytes
+    APP_HEADER_HASH_ADDR            = 0x5E  # Image hash - SHA256. Size: 32 bytes
+    APP_HEADER_GIT_SHA_ADDR         = 0x7E  # Git commit hash. Size: 8 byte
+    APP_HEADER_ENC_IMAGE_CRC_ADDR   = 0x86  # Encrypted image CRC32
+
+    # Encryption types
+    class EncType():
+        NONE    = 0
+        AES_CTR = 1
+
+    # Digital signature types
+    class SigType():
+        NONE    = 0
+        ECDSA   = 1  
+
+    # Application header size in bytes
+    APP_HEADER_SIZE_BYTE            = 256 # bytes
 
     # ===============================================================================
     # @brief    Firmware Image Constructor
@@ -198,8 +219,16 @@ class FwImage(BinFile):
     #
     # @return       firmware image size
     # =============================================================================== 
-    def get_fw_size(self):
-        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SIZE_ADDR, 4 ), byteorder="little" )
+    def get_image_size(self):
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_IMAGE_SIZE_ADDR, 4 ), byteorder="little" )
+
+    # ===============================================================================
+    # @brief    Get firmware image start address
+    #
+    # @return       firmware image start address
+    # =============================================================================== 
+    def get_image_addr(self):
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_IMAGE_ADDR_ADDR, 4 ), byteorder="little" )
 
     # ===============================================================================
     # @brief  Read from binary file
@@ -378,15 +407,17 @@ class BootFrame(tk.Frame):
         self.usb_com_btn        = ConfigSwitch( self, "USB communication", initial_state=True )
 
         # App frame widgets
-        self.file_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        self.fw_ver_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        self.fw_size_text   = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        self.hw_ver_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        
+        self.file_text          = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
+        self.sw_ver_text        = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
+        self.hw_ver_text        = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
+        self.image_size_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+        self.image_addr_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+        self.sig_type_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+        self.enc_type_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+
         # Boot frame widgets
         self.boot_ver_text  = tk.Label(self.boot_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W )
         self.status_text    = tk.Label(self.boot_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W )
-
 
         # Self frame layout
         self.frame_label.grid(              column=0, row=0,                sticky=tk.W,                    padx=10, pady=10 )
@@ -409,15 +440,21 @@ class BootFrame(tk.Frame):
         tk.Label(self.boot_frame, text="Bootloader version:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,   width=20, anchor=tk.E ).grid(           column=0, row=0, sticky=tk.E,     padx=5, pady=5    )
 
         # App frame layout
-        self.file_text.grid(        column=1, row=2,                sticky=tk.W,                   padx=5, pady=5    )
-        self.fw_size_text.grid(     column=1, row=3,                sticky=tk.W,                   padx=5, pady=5    )
-        self.fw_ver_text.grid(      column=1, row=4,                sticky=tk.W,                   padx=5, pady=5    )
-        self.hw_ver_text.grid(      column=1, row=5,                sticky=tk.W,                   padx=5, pady=5    )
-        
-        tk.Label(self.app_frame, text="Application file:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E  ).grid(      column=0, row=2, sticky=tk.E,    padx=5, pady=5    )
-        tk.Label(self.app_frame, text="Application size:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E ).grid(       column=0, row=3, sticky=tk.E,    padx=5, pady=5    )
-        tk.Label(self.app_frame, text="Software ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=4, sticky=tk.E,    padx=5, pady=5    )
-        tk.Label(self.app_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=5, sticky=tk.E,    padx=5, pady=5    )
+        self.file_text.grid(        column=1, row=2,                sticky=tk.W,                   padx=5, pady=1    )
+        self.sw_ver_text.grid(      column=1, row=3,                sticky=tk.W,                   padx=5, pady=1    )
+        self.hw_ver_text.grid(      column=1, row=4,                sticky=tk.W,                   padx=5, pady=1    )
+        self.image_size_text.grid(  column=1, row=5,                sticky=tk.W,                   padx=5, pady=1    )
+        self.image_addr_text.grid(  column=1, row=6,                sticky=tk.W,                   padx=5, pady=1    )
+        self.sig_type_text.grid(    column=1, row=7,                sticky=tk.W,                   padx=5, pady=1    )
+        self.enc_type_text.grid(    column=1, row=8,                sticky=tk.W,                   padx=5, pady=1    )
+
+        tk.Label(self.app_frame, text="Selected file:",     font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=2, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="SW ver:",            font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=3, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="HW ver:",            font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=4, sticky=tk.E,    padx=5, pady=1    )        
+        tk.Label(self.app_frame, text="Image size:",        font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=5, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="Image address:",     font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=6, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="Signature type:",    font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=7, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="Encryption type:",   font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=8, sticky=tk.E,    padx=5, pady=1    )
 
     # ===============================================================================
     # @brief:   Browse button pressed
@@ -445,7 +482,7 @@ class BootFrame(tk.Frame):
                 if self.fw_file.validate():
 
                     # Get FW image size
-                    fw_size = self.fw_file.get_fw_size()
+                    fw_size = self.fw_file.get_image_size()
 
                     # Get FW image SW version
                     sw_ver = self.fw_file.get_sw_ver()
@@ -456,14 +493,20 @@ class BootFrame(tk.Frame):
                     hw_ver = struct.pack('I', int(hw_ver))
 
                     # Show firmware info
-                    self.fw_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
-                    self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
+                    self.sw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
                     self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
+                    self.image_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
+                    self.image_addr_text["text"] = "0x%08X" % ( self.fw_file.get_image_addr())
+                    self.sig_type_text["text"] = "%s" % ( self.fw_file.read( FwImage.APP_HEADER_SIG_TYPE_ADDR, 1 )[0])
+                    self.enc_type_text["text"] = "%s" % ( self.fw_file.read( FwImage.APP_HEADER_ENC_TYPE_ADDR, 1 )[0])
 
-                    self.file_text["fg"]    = GuiColor.btn_success_bg
-                    self.fw_size_text["fg"] = GuiColor.sub_1_fg
-                    self.fw_ver_text["fg"]  = GuiColor.sub_1_fg
-                    self.hw_ver_text["fg"]  = GuiColor.sub_1_fg
+                    self.file_text["fg"]        = GuiColor.btn_success_bg
+                    self.sw_ver_text["fg"]      = GuiColor.sub_1_fg
+                    self.hw_ver_text["fg"]      = GuiColor.sub_1_fg
+                    self.image_size_text["fg"]  = GuiColor.sub_1_fg
+                    self.image_addr_text["fg"]  = GuiColor.sub_1_fg
+                    self.sig_type_text["fg"]    = GuiColor.sub_1_fg
+                    self.enc_type_text["fg"]    = GuiColor.sub_1_fg
 
                     # Change status to idle
                     self.status_text["fg"] = GuiColor.sub_1_fg
@@ -474,14 +517,21 @@ class BootFrame(tk.Frame):
                     self.upgrade_btn_active = True
 
                 else:
-                    self.fw_size_text["text"]   = "Invalid application!"
-                    self.fw_ver_text["text"]    = "Invalid application!"
-                    self.hw_ver_text["text"]    = "Invalid application!"
+                    self.sw_ver_text["text"]     = "Invalid application!"
+                    self.hw_ver_text["text"]     = "Invalid application!"
+                    self.image_size_text["text"] = "Invalid application!"
+                    self.image_addr_text["text"] = "Invalid application!"
+                    self.sig_type_text["text"]   = "Invalid application!"
+                    self.enc_type_text["text"]   = "Invalid application!"
 
-                    self.file_text["fg"]    = "red"
-                    self.fw_size_text["fg"] = "red"
-                    self.fw_ver_text["fg"]  = "red"
-                    self.hw_ver_text["fg"]  = "red"
+
+                    self.file_text["fg"]        = "red"
+                    self.sw_ver_text["fg"]      = "red"
+                    self.hw_ver_text["fg"]      = "red"
+                    self.image_size_text["fg"]  = "red"
+                    self.image_addr_text["fg"]  = "red"
+                    self.sig_type_text["fg"]    = "red"
+                    self.enc_type_text["fg"]    = "red"
 
                     # Change status to idle
                     self.status_text["fg"] = GuiColor.sub_1_fg
@@ -738,7 +788,7 @@ class BootFrame(tk.Frame):
                 self.update_btn.text( "Upgrade" )
 
             # Calculate progress
-            progress = (( self.working_addr / self.fw_file.get_fw_size()) * 100 )
+            progress = (( self.working_addr / self.fw_file.get_image_size()) * 100 )
 
             self.progress_bar["mode"] = "determinate"
             self.progress_text["text"] = "%3d%%" % progress
