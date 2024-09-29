@@ -544,7 +544,21 @@ class BootFrame(tk.Frame):
             else:
                 # Enable update button
                 self.update_btn.config(state=tk.NORMAL)
-                self.upgrade_btn_active = True                
+                self.upgrade_btn_active = True  
+
+                self.sw_ver_text["text"]     = "---"
+                self.hw_ver_text["text"]     = "---"
+                self.image_size_text["text"] = "---"
+                self.image_addr_text["text"] = "---"
+                self.sig_type_text["text"]   = "---"
+                self.enc_type_text["text"]   = "---"
+                
+                self.sw_ver_text["fg"]      = GuiColor.sub_1_fg
+                self.hw_ver_text["fg"]      = GuiColor.sub_1_fg
+                self.image_size_text["fg"]  = GuiColor.sub_1_fg
+                self.image_addr_text["fg"]  = GuiColor.sub_1_fg
+                self.sig_type_text["fg"]    = GuiColor.sub_1_fg
+                self.enc_type_text["fg"]    = GuiColor.sub_1_fg                                              
 
     # ===============================================================================
     # @brief:   Update button pressed
