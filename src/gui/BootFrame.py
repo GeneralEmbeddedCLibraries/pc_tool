@@ -40,10 +40,10 @@ MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 BOOT_FLASH_DATA_FRAME_SIZE      = 1024 #bytes
 
 # Communication timeout settings
-BOOT_COM_CONNECT_TIMEOUT_SEC    = 5.0
-BOOT_COM_PREPARE_TIMEOUT_SEC    = 10.0
+BOOT_COM_CONNECT_TIMEOUT_SEC    = 1.0
+BOOT_COM_PREPARE_TIMEOUT_SEC    = 5.0
 BOOT_COM_FLASH_TIMEOUT_SEC      = 0.5
-BOOT_COM_EXIT_TIMEOUT_SEC       = 5.0
+BOOT_COM_EXIT_TIMEOUT_SEC       = 2.0
 
 # Reconnect pause time between COM port connect and disconnect command
 BOOT_COM_RECONNECT_PAUSE        = 1.0
@@ -552,7 +552,7 @@ class BootFrame(tk.Frame):
                 self.image_addr_text["text"] = "---"
                 self.sig_type_text["text"]   = "---"
                 self.enc_type_text["text"]   = "---"
-                
+
                 self.sw_ver_text["fg"]      = GuiColor.sub_1_fg
                 self.hw_ver_text["fg"]      = GuiColor.sub_1_fg
                 self.image_size_text["fg"]  = GuiColor.sub_1_fg
