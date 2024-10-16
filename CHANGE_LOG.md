@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V0.5.0 - xx.xx.2024
+## V0.5.0 - 16.10.2024
 
 ### Added
  - Added support for USB DFU via configuration switch
@@ -13,6 +13,7 @@ and this project/module adheres to [Semantic Versioning](https://semver.org/spec
 
 ### Changed
  - Support for different application header in BOOT menu, compatible with Revision module V2.0.0
+ - New bootloader interface implemented, with different "prepare" command
 
 ---
 ## V0.4.1 - 25.06.2024

@@ -20,3 +20,7 @@ PC application for embedded device configuration and diagnostics in real-time.
 ## Offline plot viewer menu
 
 ![](doc/pic/plot_frame.png)
+
+## Device firmware upgrade
+
+![](doc/pic/boot_frame.png)
