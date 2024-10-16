@@ -113,8 +113,9 @@ class SerialComunication():
     # ===============================================================================
     def __ipc_connect_cmd(self, payload):
 
-        # Get COM and baudrate
-        self.port.port, self.port.baudrate = str(payload).split(";")
+        # Get COM and baudrate if specified
+        if payload != None:
+            self.port.port, self.port.baudrate = str(payload).split(";")
 
         # Connect to port
         status = self.port.connect()
