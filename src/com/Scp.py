@@ -13,8 +13,8 @@
 #################################################################################################
 ##  IMPORTS
 #################################################################################################
-from enum import Enum
 from dataclasses import dataclass
+import time
 
 #################################################################################################
 ##  DEFINITIONS
@@ -108,25 +108,61 @@ class ScpCliMessage():
         return ( stps_msg + self.scp_msg )
 
 
-    
+# ===============================================================================
+#
+#  @brief:   SCP Message
+#
+# ===============================================================================  
 class ScpParser():
 
     def __init__(self):
         self.stpsParser = StpsParser()
 
+    # ===============================================================================
+    # @brief:   Parse SCP message
+    #
+    # @param[in]:   data    - Data to parse
+    # @return:      None    - If message is not complete
+    #               str     - If message is complete
+    # ===============================================================================
     def parse(self, data):
-        scp_payload = self.stpsParser.parse( data )
 
-        if scp_payload:
-            attr_size = scp_payload[11]
+        # Parse STPS (it will return SCP msg if complete)
+        scp_msg = self.stpsParser.parse( data )
 
-            scp_payload_str = ''.join(chr(b) for b in scp_payload[12:12+attr_size])
+        # Check if message is complete
+        if scp_msg:
 
-            return scp_payload_str
+            # Parse SCP layer
+            cluster_id = scp_msg[2] + ( scp_msg[3] << 8 )
+            cmd_type = scp_msg[1]
+
+            # Expectiong only CLI cluster and write command
+            if cluster_id == 0xFC49 and cmd_type == ScpCommand.WRITE:
+
+                # Get attribute info
+                attr_id = scp_msg[8] + ( scp_msg[9] << 8 )
+                attr_type = scp_msg[10]
+                attr_size = scp_msg[11]
+
+                # Check if attribute is Transmit-endpoint 
+                # and if it is string type
+                if attr_id == 0x0000 and attr_type == ScpAttrType.STR:
+                    
+                    # Convert to string
+                    scp_payload_str = ''.join(chr(b) for b in scp_msg[12:12+attr_size])
+                    return scp_payload_str
+                
+                # Invalid attribute
+                else:
+                    return None
+
+            # Invalid message
+            else:
+                return None
+            
         else:
             return None
-
-
 
 # ===============================================================================
 #
@@ -209,21 +245,32 @@ class StpsMessage():
 
         return crc8 & 0xFF
 
-
-import time
-
+# ===============================================================================
+#
+#  @brief:   STPS Parser
+#
+# ===============================================================================  
 class StpsParser():
 
+    # Parse engine modes
     Idle = 0
     Header = 1
     Payload = 2
-
 
     def __init__(self):
         self.buf = []
         self.last_time = time.time()
         self.mode = StpsParser.Idle
 
+    # ===============================================================================
+    # @brief:   Parse incoming data
+    #
+    #   If msg is comple and valid it return complete SCP message!
+    #
+    # @param[in]:   data    - Incoming data to parse
+    # @return:      None    - If message is not complete or invalid
+    #               scp_msg - If message is complete and valid
+    # =============================================================================== 
     def parse(self, data):
 
         if data:
@@ -250,13 +297,18 @@ class StpsParser():
 
                 return None
 
-
         # Return "None" if message is not complete
         return rtn_status
 
-
+    # ===============================================================================
+    # @brief:   Parse header of the incoming data
+    #
+    # @return:      None    - If header is not complete or invalid
+    #               None    - If header is complete but payload is not yet complete
+    # ===============================================================================
     def __parse_header(self):
         
+        # Header received
         if len( self.buf ) >= 8:
 
             # Check for preamble
@@ -272,6 +324,12 @@ class StpsParser():
         else:
             return None
             
+    # ===============================================================================
+    # @brief:   Parse payload of the incoming data
+    #
+    # @return:      None    - If payload is not complete or invalid
+    #               payload - If payload is complete and valid
+    # =============================================================================== 
     def __parse_payload(self):
 
         payload_len = self.buf[2] + ( self.buf[3] << 8 )
@@ -289,8 +347,6 @@ class StpsParser():
             #crc_calc = self.__calc_crc( payload, payload_len )
             #crc_calc ^= self.__calc_crc( payload, payload_len )
             #crc_calc ^= self.__calc_crc( payload, payload_len )
-
-
 
 
     # ===============================================================================
