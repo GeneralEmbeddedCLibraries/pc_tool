@@ -107,6 +107,18 @@ class ScpCliMessage():
 
         return ( stps_msg + self.scp_msg )
 
+
+    
+class ScpParser():
+
+    def __init__(self):
+        self.stpsParser = StpsParser()
+
+    def parse(self, data):
+        return self.stpsParser.parse( data )
+
+
+
 # ===============================================================================
 #
 #  @brief:   STPS Message
@@ -163,6 +175,128 @@ class StpsMessage():
     # ===============================================================================  
     def get_msg(self):
         return self.msg
+
+    # ===============================================================================
+    # @brief:   Calculate CRC
+    #
+    # @param[in]:   data    - SCP payload data
+    # @param[in]:   size    - Size of SCP payload data
+    # @return:      void
+    # ===============================================================================  
+    def __calc_crc(self, data, size):
+
+        poly = 0x07
+        seed = 0x34
+        crc8 = seed
+
+        for i in range(size):
+            crc8 = ( crc8 ^ data[i] )
+
+            for j in range(8):
+                if crc8 & 0x80:
+                    crc8 = (( crc8 << 1 ) ^ poly )
+                else:
+                    crc8 = crc8 << 1
+
+        return crc8 & 0xFF
+
+
+import time
+
+class StpsParser():
+
+    Idle = 0
+    Header = 1
+    Payload = 2
+
+
+    def __init__(self):
+        self.buf = []
+        self.last_time = time.time()
+        self.mode = StpsParser.Idle
+
+    def parse(self, data):
+
+        if data:
+            #self.buf.append( data )
+            self.buf.append( int.from_bytes(data, byteorder='big') )
+            self.last_time = time.time()
+
+        #int_list = [int.from_bytes(b, byteorder='big') for b in self.buf]
+        #hex_list = [f"0x{val:02X}" for val in int_list]
+        
+        hex_list = [f"0x{val:02X}" for val in self.buf]
+        print("int_list as hex: %s" % hex_list)            
+
+        if self.mode == StpsParser.Idle:
+            self.mode = StpsParser.Header
+            rtn_status = None
+
+        elif self.mode == StpsParser.Header:
+            rtn_status = self.__parse_header()
+
+        elif self.mode == StpsParser.Payload:   
+            rtn_status = self.__parse_payload
+
+	    # Check for timeout only when parser is in the middle of work
+	    # If there is no incoming data then timeout handling is not relevant!
+        if self.mode != StpsParser.Idle:
+            if ( time.time() - self.last_time ) > 0.1: # 100ms timeout
+                self.mode = StpsParser.Idle
+                self.buf = []
+
+                print("STPS timeout")
+                return None
+
+
+        # Return "None" if message is not complete
+        return rtn_status
+
+
+    def __parse_header(self):
+        
+        if len( self.buf ) >= 8:
+
+            print("buf[0]: %s" % self.buf[0])
+            print("buf[1]: %s" % self.buf[1])
+
+            # Check for preamble
+            if self.buf[0] == 0xA9 and self.buf[1] == 0x65:
+                self.mode = StpsParser.Payload
+                print("STPS preamble OK")
+                return None # Still not a complete message
+            
+            else:
+                # Reset buffer
+                self.buf = []
+                self.mode = StpsParser.Idle
+                print("STPS preamble error")
+                return None
+        else:
+            return None
+            
+    def __parse_payload(self):
+
+        payload_len = self.buf[2] + ( self.buf[3] << 8 )
+
+        if len( self.buf ) >= ( payload_len + 8 ):  # 8 bytes for STPS
+            payload = self.buf[8:payload_len+8]
+
+            # Reset buffer
+            self.buf = []
+            self.mode = StpsParser.Idle
+
+            print("STPS payload: %s" % payload)
+
+            return payload  # Message received
+
+            # TODO: Check CRC here
+            #crc_calc = self.__calc_crc( payload, payload_len )
+            #crc_calc ^= self.__calc_crc( payload, payload_len )
+            #crc_calc ^= self.__calc_crc( payload, payload_len )
+
+
+
 
     # ===============================================================================
     # @brief:   Calculate CRC

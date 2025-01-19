@@ -86,7 +86,7 @@ class ComFrame(tk.Frame):
         # Setting button & label
         self.auto_con_btn   = SwitchButton(self.settings_frame, initial_state=False)
         self.auto_con_label = tk.Label(self.settings_frame, text="Automatic Connection", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
-        self.scp_en_btn     = SwitchButton(self.settings_frame, initial_state=False)
+        self.scp_en_btn     = SwitchButton(self.settings_frame, initial_state=True)  #TODO: Adjust init state
         self.scp_en_label   = tk.Label(self.settings_frame, text="SCP", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
 
         # Default values
