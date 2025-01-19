@@ -28,6 +28,8 @@ from gui.GuiCommon import GuiFont, GuiColor
 
 from com.IpcProtocol import IpcMsg, IpcMsgType
 
+from com.Scp import ScpCliMessage
+
 import time
 
 #################################################################################################
@@ -355,15 +357,36 @@ class MainWindow():
         # Connected to device
         if True == self.__connection_status:
 
-            # Append end string termiantion 
-            dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
+            # Check if SCP is enabled
+            if True == self.com_frame.scp_en_btn.state:
 
-            # Send cmd to serial process
-            msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
-            self.__ipc_send_msg(msg)
+                # Create SCP message
+                scpMsg = ScpCliMessage().assemle(cmd)
 
-            # Update msg tx counter
-            self.status_frame.set_tx_count(len(dev_cmd))
+                # Send cmd to serial process
+                msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxBinary, payload=scpMsg)
+                self.__ipc_send_msg(msg)   
+
+                # print in hex format
+                print("SCP: %s" % scpMsg ) 
+                for ch in scpMsg:
+                    print("0x%02X" % ch, end=" ")
+
+                print(" ")
+
+                # Update msg tx counter
+                self.status_frame.set_tx_count(len(scpMsg))                          
+                
+            else:
+                # Append end string termiantion 
+                dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
+
+                # Send cmd to serial process
+                msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
+                self.__ipc_send_msg(msg)
+
+                # Update msg tx counter
+                self.status_frame.set_tx_count(len(dev_cmd))
 
     # ===============================================================================
     # @brief:   Send message via IPC
