@@ -332,21 +332,32 @@ class StpsParser():
     # =============================================================================== 
     def __parse_payload(self):
 
-        payload_len = self.buf[2] + ( self.buf[3] << 8 )
+        # Get payload length
+        payload_length = self.buf[2] + ( self.buf[3] << 8 )
 
-        if len( self.buf ) >= ( payload_len + 8 ):  # 8 bytes for STPS
-            payload = self.buf[8:payload_len+8]
+        # All bytes received
+        if len( self.buf ) >= ( payload_length + 8 ):  # 8 bytes for STPS
+            
+            # Get packet data
+            payload = self.buf[8:payload_length+8]
+            devid = self.buf[4] + ( self.buf[5] << 8 )
+            crc = self.buf[7]
+
+            # Calculate crc
+            crc_calc = self.__calc_crc8( payload )
+            crc_calc ^= self.__calc_crc8( [ payload_length & 0xFF, ( payload_length>>8 ) & 0xFF ] )            
+            crc_calc ^= self.__calc_crc8( [ devid & 0xFF, ( devid>>8 ) & 0xFF ] )            
 
             # Reset buffer
             self.buf = []
             self.mode = StpsParser.Idle
 
-            return payload  # Message received
+            print("crc: ", crc, "crc_calc: ", crc_calc)
 
-            # TODO: Check CRC here
-            #crc_calc = self.__calc_crc( payload, payload_len )
-            #crc_calc ^= self.__calc_crc( payload, payload_len )
-            #crc_calc ^= self.__calc_crc( payload, payload_len )
+            if crc_calc == crc:
+                return payload  # Message received
+            else:
+                return None         
 
 
     # ===============================================================================
@@ -355,23 +366,22 @@ class StpsParser():
     # @param[in]:   data    - SCP payload data
     # @param[in]:   size    - Size of SCP payload data
     # @return:      void
-    # ===============================================================================  
-    def __calc_crc(self, data, size):
-
+    # ===============================================================================      
+    def __calc_crc8(self, data):
         poly = 0x07
         seed = 0x34
         crc8 = seed
 
-        for i in range(size):
-            crc8 = ( crc8 ^ data[i] )
+        for byte in data:
+            crc8 = (( crc8 ^ byte ) & 0xFF )
 
-            for j in range(8):
-                if crc8 & 0x80:
+            for n in range( 8 ):
+                if 0x80 == ( crc8 & 0x80 ):
                     crc8 = (( crc8 << 1 ) ^ poly )
                 else:
-                    crc8 = crc8 << 1
+                    crc8 = ( crc8 << 1 );
 
-        return crc8 & 0xFF
+        return crc8 & 0xFF    
 
 
 
