@@ -119,7 +119,12 @@ class ScpParser():
 
         if scp_payload:
             attr_size = scp_payload[11]
-            return scp_payload[12:12+attr_size]
+
+            scp_payload_str = ''.join(chr(b) for b in scp_payload[12:12+attr_size])
+
+            return scp_payload_str
+        else:
+            return None
 
 
 
@@ -224,11 +229,7 @@ class StpsParser():
         if data:
             # convert to integers
             self.buf.append( int.from_bytes(data, byteorder='big') )
-            self.last_time = time.time()
-
-        # Only for debug
-        #hex_list = [f"0x{val:02X}" for val in self.buf]
-        #print("int_list as hex: %s" % hex_list)            
+            self.last_time = time.time()         
 
         if self.mode == StpsParser.Idle:
             self.mode = StpsParser.Header
@@ -247,7 +248,6 @@ class StpsParser():
                 self.mode = StpsParser.Idle
                 self.buf = []
 
-                print("STPS timeout")
                 return None
 
 
@@ -259,20 +259,15 @@ class StpsParser():
         
         if len( self.buf ) >= 8:
 
-            print("buf[0]: %s" % self.buf[0])
-            print("buf[1]: %s" % self.buf[1])
-
             # Check for preamble
             if self.buf[0] == 0xA9 and self.buf[1] == 0x65:
                 self.mode = StpsParser.Payload
-                print("STPS preamble OK")
                 return None # Still not a complete message
             
             else:
                 # Reset buffer
                 self.buf = []
                 self.mode = StpsParser.Idle
-                print("STPS preamble error")
                 return None
         else:
             return None
@@ -287,8 +282,6 @@ class StpsParser():
             # Reset buffer
             self.buf = []
             self.mode = StpsParser.Idle
-
-            print("STPS payload: %s" % payload)
 
             return payload  # Message received
 

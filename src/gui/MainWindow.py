@@ -625,60 +625,45 @@ class MainWindow():
         if True == self.com_frame.scp_en_btn.state:     
             
             # Parse received message
-            cli_msg = self.scpParser.parse(payload)
-
-            if cli_msg:
-                print("cli_msg: %s" % cli_msg)
-
-                # Convert to string
-                cli_msg_string = ""
-                for ch in cli_msg:
-                    cli_msg_string += chr( ch )
-
-                print("cli_msg_string: %s" % cli_msg_string)
-
-                # Append received chars to buffer
-                self.com_rx_buf += str(cli_msg_string)
+            scp_msg = self.scpParser.parse(payload)
+            
+            if scp_msg:
+                self.com_rx_buf += scp_msg
                 
-                # Check for termiantion char
-                str_term = str(self.com_rx_buf).find(MAIN_WIN_COM_STRING_TERMINATION)
+            # Check for termiantion char
+            str_term = str(self.com_rx_buf).find(MAIN_WIN_COM_STRING_TERMINATION)
 
-                # Termination char founded
-                if str_term >= 0:
+            # Termination char founded
+            if str_term >= 0:
 
-                    # Parsed response from device
-                    dev_resp = self.com_rx_buf[:str_term]
+                # Parsed response from device
+                dev_resp = self.com_rx_buf[:str_term]
 
-                    print("dev_resp: %s" % dev_resp)
+                # Print till terminator
+                if "ERR" in dev_resp:
+                    self.cli_frame.print_err(dev_resp)
+                    self.status_frame.set_err_count(1)
+                elif "WAR" in dev_resp:
+                    self.cli_frame.print_war(dev_resp)
+                    self.status_frame.set_war_count(1)
+                else:
+                    self.cli_frame.print_normal(dev_resp)
 
-                    # Print till terminator
-                    if "ERR" in dev_resp:
-                        self.cli_frame.print_err(dev_resp)
-                        self.status_frame.set_err_count(1)
-                    elif "WAR" in dev_resp:
-                        self.cli_frame.print_war(dev_resp)
-                        self.status_frame.set_war_count(1)
-                    else:
-                        self.cli_frame.print_normal(dev_resp)
+                # Copy the rest of string for later process
+                # Note: Copy without termiantor
+                self.com_rx_buf = self.com_rx_buf[str_term+len(MAIN_WIN_COM_STRING_TERMINATION):]
 
-                    # Copy the rest of string for later process
-                    # Note: Copy without termiantor
+                # Parameter parser
+                # Note: Ignore raw traffic for parameter parser
+                if not self.get_raw_msg(dev_resp):
+                    self.par_frame.dev_msg_parser(dev_resp)
+                
+                # Raw trafic for plotting purposes
+                else:
+                    pass # TODO: Provide that data to plotter...
 
-                    # TODO: Check if this is correct
-                    #self.com_rx_buf = self.com_rx_buf[str_term+len(MAIN_WIN_COM_STRING_TERMINATION):]
-                    self.com_rx_buf = ""
-
-                    # Parameter parser
-                    # Note: Ignore raw traffic for parameter parser
-                    if not self.get_raw_msg(dev_resp):
-                        self.par_frame.dev_msg_parser(dev_resp)
-                    
-                    # Raw trafic for plotting purposes
-                    else:
-                        pass # TODO: Provide that data to plotter...
-
-                # Update msg rx counter
-                self.status_frame.set_rx_count(len(payload)) 
+            # Update msg rx counter
+            self.status_frame.set_rx_count(len(payload)) 
 
 
     # ===============================================================================
