@@ -115,7 +115,11 @@ class ScpParser():
         self.stpsParser = StpsParser()
 
     def parse(self, data):
-        return self.stpsParser.parse( data )
+        scp_payload = self.stpsParser.parse( data )
+
+        if scp_payload:
+            attr_size = scp_payload[11]
+            return scp_payload[12:12+attr_size]
 
 
 
@@ -218,15 +222,13 @@ class StpsParser():
     def parse(self, data):
 
         if data:
-            #self.buf.append( data )
+            # convert to integers
             self.buf.append( int.from_bytes(data, byteorder='big') )
             self.last_time = time.time()
 
-        #int_list = [int.from_bytes(b, byteorder='big') for b in self.buf]
-        #hex_list = [f"0x{val:02X}" for val in int_list]
-        
-        hex_list = [f"0x{val:02X}" for val in self.buf]
-        print("int_list as hex: %s" % hex_list)            
+        # Only for debug
+        #hex_list = [f"0x{val:02X}" for val in self.buf]
+        #print("int_list as hex: %s" % hex_list)            
 
         if self.mode == StpsParser.Idle:
             self.mode = StpsParser.Header
@@ -236,7 +238,7 @@ class StpsParser():
             rtn_status = self.__parse_header()
 
         elif self.mode == StpsParser.Payload:   
-            rtn_status = self.__parse_payload
+            rtn_status = self.__parse_payload()
 
 	    # Check for timeout only when parser is in the middle of work
 	    # If there is no incoming data then timeout handling is not relevant!

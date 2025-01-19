@@ -627,40 +627,58 @@ class MainWindow():
             # Parse received message
             cli_msg = self.scpParser.parse(payload)
 
-            # Check for termiantion char
-            str_term = str(cli_msg).find(MAIN_WIN_COM_STRING_TERMINATION)
+            if cli_msg:
+                print("cli_msg: %s" % cli_msg)
 
-            # Termination char founded
-            if str_term >= 0:
+                # Convert to string
+                cli_msg_string = ""
+                for ch in cli_msg:
+                    cli_msg_string += chr( ch )
 
-                # Parsed response from device
-                dev_resp = self.com_rx_buf[:str_term]
+                print("cli_msg_string: %s" % cli_msg_string)
 
-                # Print till terminator
-                if "ERR" in dev_resp:
-                    self.cli_frame.print_err(dev_resp)
-                    self.status_frame.set_err_count(1)
-                elif "WAR" in dev_resp:
-                    self.cli_frame.print_war(dev_resp)
-                    self.status_frame.set_war_count(1)
-                else:
-                    self.cli_frame.print_normal(dev_resp)
-
-                # Copy the rest of string for later process
-                # Note: Copy without termiantor
-                self.com_rx_buf = self.com_rx_buf[str_term+len(MAIN_WIN_COM_STRING_TERMINATION):]
-
-                # Parameter parser
-                # Note: Ignore raw traffic for parameter parser
-                if not self.get_raw_msg(dev_resp):
-                    self.par_frame.dev_msg_parser(dev_resp)
+                # Append received chars to buffer
+                self.com_rx_buf += str(cli_msg_string)
                 
-                # Raw trafic for plotting purposes
-                else:
-                    pass # TODO: Provide that data to plotter...
+                # Check for termiantion char
+                str_term = str(self.com_rx_buf).find(MAIN_WIN_COM_STRING_TERMINATION)
 
-            # Update msg rx counter
-            self.status_frame.set_rx_count(len(payload)) 
+                # Termination char founded
+                if str_term >= 0:
+
+                    # Parsed response from device
+                    dev_resp = self.com_rx_buf[:str_term]
+
+                    print("dev_resp: %s" % dev_resp)
+
+                    # Print till terminator
+                    if "ERR" in dev_resp:
+                        self.cli_frame.print_err(dev_resp)
+                        self.status_frame.set_err_count(1)
+                    elif "WAR" in dev_resp:
+                        self.cli_frame.print_war(dev_resp)
+                        self.status_frame.set_war_count(1)
+                    else:
+                        self.cli_frame.print_normal(dev_resp)
+
+                    # Copy the rest of string for later process
+                    # Note: Copy without termiantor
+
+                    # TODO: Check if this is correct
+                    #self.com_rx_buf = self.com_rx_buf[str_term+len(MAIN_WIN_COM_STRING_TERMINATION):]
+                    self.com_rx_buf = ""
+
+                    # Parameter parser
+                    # Note: Ignore raw traffic for parameter parser
+                    if not self.get_raw_msg(dev_resp):
+                        self.par_frame.dev_msg_parser(dev_resp)
+                    
+                    # Raw trafic for plotting purposes
+                    else:
+                        pass # TODO: Provide that data to plotter...
+
+                # Update msg rx counter
+                self.status_frame.set_rx_count(len(payload)) 
 
 
     # ===============================================================================
