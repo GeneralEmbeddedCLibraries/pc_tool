@@ -352,8 +352,6 @@ class StpsParser():
             self.buf = []
             self.mode = StpsParser.Idle
 
-            print("crc: ", crc, "crc_calc: ", crc_calc)
-
             if crc_calc == crc:
                 return payload  # Message received
             else:
