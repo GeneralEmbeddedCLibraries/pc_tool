@@ -1,4 +1,4 @@
-## Copyright (c) 2024 Ziga Miklosic
+## Copyright (c) 2025 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -84,8 +84,10 @@ class ComFrame(tk.Frame):
         self.baudrate_sel = tk.Entry(self.settings_frame, font=GuiFont.normal, bg=GuiColor.sub_1_fg, fg=GuiColor.sub_1_bg, borderwidth=0, width=8)
         
         # Setting button & label
-        self.auto_con_btn = SwitchButton(self.settings_frame, initial_state=False)
+        self.auto_con_btn   = SwitchButton(self.settings_frame, initial_state=False)
         self.auto_con_label = tk.Label(self.settings_frame, text="Automatic Connection", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
+        self.scp_en_btn     = SwitchButton(self.settings_frame, initial_state=True)  #TODO: Adjust init state
+        self.scp_en_label   = tk.Label(self.settings_frame, text="SCP", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg)
 
         # Default values
         self.baudrate_sel.insert(0, "115200")
@@ -133,8 +135,10 @@ class ComFrame(tk.Frame):
         self.baudrate_sel_label.grid(       column=0, row=1, sticky=tk.E,                   padx=5, pady=5  )
         self.baudrate_sel.grid(             column=1, row=1,                                padx=5, pady=5  )
         self.connect_btn.grid(              column=2, row=1, sticky=tk.W,                   padx=30, pady=5 )
-        self.auto_con_label.grid(           column=5, row=1, sticky=tk.W,                   padx=5, pady=5 )
-        self.auto_con_btn.grid(             column=6, row=1, sticky=tk.W+tk.S+tk.N+tk.S,    padx=5, pady=5 )
+        self.auto_con_label.grid(           column=5, row=0, sticky=tk.W,                   padx=5, pady=5 )
+        self.auto_con_btn.grid(             column=6, row=0, sticky=tk.W+tk.S+tk.N+tk.S,    padx=5, pady=5 )
+        self.scp_en_label.grid(             column=5, row=1, sticky=tk.E,                   padx=5, pady=5 )
+        self.scp_en_btn.grid(               column=6, row=1, sticky=tk.W+tk.S+tk.N+tk.S,    padx=5, pady=5 )
 
         # Layout configuration
         self.settings_frame.columnconfigure(4, weight=1)

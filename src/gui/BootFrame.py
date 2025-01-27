@@ -1,4 +1,4 @@
-## Copyright (c) 2023 Ziga Miklosic
+## Copyright (c) 2025 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -37,14 +37,16 @@ BOOT_ENTER_BOOT_CMD             = "enter_boot"
 MAIN_WIN_COM_STRING_TERMINATION = "\r\n"
 
 # Number of bytes to transfer in flash data
-BOOT_FLASH_DATA_FRAME_SIZE      = 64 #bytes
+BOOT_FLASH_DATA_FRAME_SIZE      = 1024 #bytes
 
 # Communication timeout settings
-BOOT_COM_CONNECT_TIMEOUT_SEC    = 3.0
+BOOT_COM_CONNECT_TIMEOUT_SEC    = 1.0
 BOOT_COM_PREPARE_TIMEOUT_SEC    = 5.0
 BOOT_COM_FLASH_TIMEOUT_SEC      = 0.5
-BOOT_COM_EXIT_TIMEOUT_SEC       = 1.0
+BOOT_COM_EXIT_TIMEOUT_SEC       = 2.0
 
+# Reconnect pause time between COM port connect and disconnect command
+BOOT_COM_RECONNECT_PAUSE        = 1.0
 
 #################################################################################################
 ##  FUNCTIONS
@@ -135,15 +137,41 @@ class FwImage(BinFile):
     APP_HEADER_VER_EXPECTED         = 1
 
     # Application header addresses
-    APP_HEADER_APP_SW_VER_ADDR      = 0x00
-    APP_HEADER_APP_HW_VER_ADDR      = 0x04
-    APP_HEADER_APP_SIZE_ADDR        = 0x08
-    APP_HEADER_APP_CRC_ADDR         = 0x0C
-    APP_HEADER_VER_ADDR             = 0xFE
-    APP_HEADER_CRC_ADDR             = 0xFF
+    APP_HEADER_CRC_ADDR             = 0x00
+    APP_HEADER_VER_ADDR             = 0x01
+    APP_HEADER_IMG_TYPE_ADDR        = 0x02  # Image type [0-Application, 1-Custom]
+
+    # Image type
+    class ImageType():
+        APPLICATION = 0
+        CUSTOM      = 1
+
+    # Application header data fields
+    # For more info about image header look at Revision module specifications: "revision\doc\Revision_Specifications.xlsx"
+    APP_HEADER_SW_VER_ADDR          = 0x08  # Software version
+    APP_HEADER_HW_VER_ADDR          = 0x0C  # Hardware version
+    APP_HEADER_IMAGE_SIZE_ADDR      = 0x10  # Image size in bytes
+    APP_HEADER_IMAGE_ADDR_ADDR      = 0x14  # Image start address
+    APP_HEADER_IMAGE_CRC_ADDR       = 0x18  # Image CRC32
+    APP_HEADER_ENC_TYPE_ADDR        = 0x1C  # Encryption type [0-None, 1-AES-CTR]
+    APP_HEADER_SIG_TYPE_ADDR        = 0x1D  # Signature type [0-None, 1-ECSDA]
+    APP_HEADER_SIGNATURE_ADDR       = 0x1E  # Signature of the image. Size: 64 bytes
+    APP_HEADER_HASH_ADDR            = 0x5E  # Image hash - SHA256. Size: 32 bytes
+    APP_HEADER_GIT_SHA_ADDR         = 0x7E  # Git commit hash. Size: 8 byte
+    APP_HEADER_ENC_IMAGE_CRC_ADDR   = 0x86  # Encrypted image CRC32
+
+    # Encryption types
+    class EncType():
+        NONE    = 0
+        AES_CTR = 1
+
+    # Digital signature types
+    class SigType():
+        NONE    = 0
+        ECDSA   = 1  
 
     # Application header size in bytes
-    APP_HEADER_SIZE_BYTE            = 0x100
+    APP_HEADER_SIZE_BYTE            = 256 # bytes
 
     # ===============================================================================
     # @brief    Firmware Image Constructor
@@ -160,7 +188,7 @@ class FwImage(BinFile):
     # @return       sw version
     # =============================================================================== 
     def get_sw_ver(self):
-        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 ), byteorder="little" )
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_SW_VER_ADDR, 4 ), byteorder="little" )
     
     # ===============================================================================
     # @brief    Get firmware image software version in raw format
@@ -168,7 +196,7 @@ class FwImage(BinFile):
     # @return       sw version in raw
     # =============================================================================== 
     def get_sw_ver_raw(self):
-        return self.file.read( FwImage.APP_HEADER_APP_SW_VER_ADDR, 4 )
+        return self.file.read( FwImage.APP_HEADER_SW_VER_ADDR, 4 )
 
     # ===============================================================================
     # @brief    Get firmware image hardware version
@@ -176,7 +204,7 @@ class FwImage(BinFile):
     # @return       hw version
     # =============================================================================== 
     def get_hw_ver(self):
-        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 ), byteorder="little" )
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_HW_VER_ADDR, 4 ), byteorder="little" )
 
     # ===============================================================================
     # @brief    Get firmware image hardware version in raw format
@@ -184,15 +212,23 @@ class FwImage(BinFile):
     # @return       hw version raw
     # =============================================================================== 
     def get_hw_ver_raw(self):
-        return self.file.read( FwImage.APP_HEADER_APP_HW_VER_ADDR, 4 )
+        return self.file.read( FwImage.APP_HEADER_HW_VER_ADDR, 4 )
 
     # ===============================================================================
     # @brief    Get firmware image size in bytes
     #
     # @return       firmware image size
     # =============================================================================== 
-    def get_fw_size(self):
-        return int.from_bytes( self.file.read( FwImage.APP_HEADER_APP_SIZE_ADDR, 4 ), byteorder="little" )
+    def get_image_size(self):
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_IMAGE_SIZE_ADDR, 4 ), byteorder="little" )
+
+    # ===============================================================================
+    # @brief    Get firmware image start address
+    #
+    # @return       firmware image start address
+    # =============================================================================== 
+    def get_image_addr(self):
+        return int.from_bytes( self.file.read( FwImage.APP_HEADER_IMAGE_ADDR_ADDR, 4 ), byteorder="little" )
 
     # ===============================================================================
     # @brief  Read from binary file
@@ -233,7 +269,7 @@ class FwImage(BinFile):
 
         # Calculate application header CRC
         # NOTE: Ignore last CRC field!
-        app_header_crc = self.__calc_crc8( self.file.read( 0, FwImage.APP_HEADER_SIZE_BYTE - 1 ))
+        app_header_crc = self.__calc_crc8( self.file.read( 1, FwImage.APP_HEADER_SIZE_BYTE - 1 ))
 
         return app_header_crc
 
@@ -296,6 +332,21 @@ class BootFrame(tk.Frame):
 
         # Start tick
         self.start_tick = 0
+
+        # Upgrade btn init state
+        self.upgrade_btn_active = False
+
+        # SCP interface switch (when disabled ASCII based protocol is used with \r\n)
+        self.scp_en = False
+
+    # ===============================================================================
+    # @brief:   Send application interface protocol
+    #
+    # @param[in]:   scp_en  - True for SCP protocol wiht application
+    # @return:      void
+    # ===============================================================================
+    def set_app_if_scp(self, scp_en):
+        self.scp_en = scp_en
 
     # ===============================================================================
     # @brief:   Send ASCII format of message
@@ -363,12 +414,19 @@ class BootFrame(tk.Frame):
         self.update_btn     = NormalButton( self, "Upgrade", command=self.__update_btn_press)
         self.update_btn.config(state=tk.DISABLED)
 
+        # Configuration buttongs
+        self.image_valid_btn    = ConfigSwitch( self, "Validate FW image", initial_state=False )
+        self.usb_com_btn        = ConfigSwitch( self, "USB communication", initial_state=True )
+
         # App frame widgets
-        self.file_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        self.fw_ver_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        self.fw_size_text   = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        self.hw_ver_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
-        
+        self.file_text          = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
+        self.sw_ver_text        = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
+        self.hw_ver_text        = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )
+        self.image_size_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+        self.image_addr_text    = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+        self.sig_type_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+        self.enc_type_text      = tk.Label(self.app_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W   )        
+
         # Boot frame widgets
         self.boot_ver_text  = tk.Label(self.boot_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W )
         self.status_text    = tk.Label(self.boot_frame, text="---", font=GuiFont.normal_bold, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=50, anchor=tk.W )
@@ -377,11 +435,14 @@ class BootFrame(tk.Frame):
         self.frame_label.grid(              column=0, row=0,                sticky=tk.W,                    padx=10, pady=10 )
         self.browse_btn.grid(               column=0, row=2,                sticky=tk.W,                    padx=20, pady=10    )
         self.update_btn.grid(               column=0, row=3,                sticky=tk.W,                    padx=20, pady=10    )
+        self.image_valid_btn.grid(          column=1, row=2,                sticky=tk.W+tk.E, )
+        self.usb_com_btn.grid(              column=1, row=3,                sticky=tk.W+tk.E, )
+        
         self.app_frame_label.grid(          column=0, row=4, columnspan=3,  sticky=tk.W,                    padx=20, pady=0 )
         self.app_frame.grid(                column=0, row=5, columnspan=3,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=10 )
         self.boot_frame_label.grid(         column=0, row=6,                sticky=tk.W,                    padx=20, pady=0 )
         self.boot_frame.grid(               column=0, row=7, columnspan=3,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=10 )
-        self.progress_bar.grid(             column=0, row=8,                sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=20    )
+        self.progress_bar.grid(             column=0, row=8, columnspan=2,  sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=20    )
         self.progress_text.grid(            column=2, row=8,                sticky=tk.W+tk.N+tk.S+tk.E,     padx=10, pady=20  )
 
         # Boot frame layout
@@ -391,15 +452,21 @@ class BootFrame(tk.Frame):
         tk.Label(self.boot_frame, text="Bootloader version:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,   width=20, anchor=tk.E ).grid(           column=0, row=0, sticky=tk.E,     padx=5, pady=5    )
 
         # App frame layout
-        self.file_text.grid(        column=1, row=2,                sticky=tk.W,                   padx=5, pady=5    )
-        self.fw_size_text.grid(     column=1, row=3,                sticky=tk.W,                   padx=5, pady=5    )
-        self.fw_ver_text.grid(      column=1, row=4,                sticky=tk.W,                   padx=5, pady=5    )
-        self.hw_ver_text.grid(      column=1, row=5,                sticky=tk.W,                   padx=5, pady=5    )
-        
-        tk.Label(self.app_frame, text="Application file:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E  ).grid(      column=0, row=2, sticky=tk.E,    padx=5, pady=5    )
-        tk.Label(self.app_frame, text="Application size:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,  width=20, anchor=tk.E ).grid(       column=0, row=3, sticky=tk.E,    padx=5, pady=5    )
-        tk.Label(self.app_frame, text="Software ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=4, sticky=tk.E,    padx=5, pady=5    )
-        tk.Label(self.app_frame, text="Hardware ver:", font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg,      width=20, anchor=tk.E ).grid(       column=0, row=5, sticky=tk.E,    padx=5, pady=5    )
+        self.file_text.grid(        column=1, row=2,                sticky=tk.W,                   padx=5, pady=1    )
+        self.sw_ver_text.grid(      column=1, row=3,                sticky=tk.W,                   padx=5, pady=1    )
+        self.hw_ver_text.grid(      column=1, row=4,                sticky=tk.W,                   padx=5, pady=1    )
+        self.image_size_text.grid(  column=1, row=5,                sticky=tk.W,                   padx=5, pady=1    )
+        self.image_addr_text.grid(  column=1, row=6,                sticky=tk.W,                   padx=5, pady=1    )
+        self.sig_type_text.grid(    column=1, row=7,                sticky=tk.W,                   padx=5, pady=1    )
+        self.enc_type_text.grid(    column=1, row=8,                sticky=tk.W,                   padx=5, pady=1    )
+
+        tk.Label(self.app_frame, text="Selected file:",     font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=2, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="SW ver:",            font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=3, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="HW ver:",            font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=4, sticky=tk.E,    padx=5, pady=1    )        
+        tk.Label(self.app_frame, text="Image size:",        font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=5, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="Image address:",     font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=6, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="Signature type:",    font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=7, sticky=tk.E,    padx=5, pady=1    )
+        tk.Label(self.app_frame, text="Encryption type:",   font=GuiFont.normal_italic, bg=GuiColor.sub_1_bg, fg=GuiColor.sub_1_fg, width=20, anchor=tk.E ).grid( column=0, row=8, sticky=tk.E,    padx=5, pady=1    )
 
     # ===============================================================================
     # @brief:   Browse button pressed
@@ -420,53 +487,90 @@ class BootFrame(tk.Frame):
             # Open file
             self.fw_file = FwImage(file=fw_file_path)
 
-            # Application image valid
-            if self.fw_file.validate():
+            # Image valuidation enabled
+            if True == self.image_valid_btn.state():
 
-                # Get FW image size
-                fw_size = self.fw_file.get_fw_size()
+                # Application image valid
+                if self.fw_file.validate():
 
-                # Get FW image SW version
-                sw_ver = self.fw_file.get_sw_ver()
-                sw_ver = struct.pack('I', int(sw_ver))
+                    # Get FW image size
+                    fw_size = self.fw_file.get_image_size()
 
-                # Get HW image SW version
-                hw_ver = self.fw_file.get_hw_ver()
-                hw_ver = struct.pack('I', int(hw_ver))
+                    # Get FW image SW version
+                    sw_ver = self.fw_file.get_sw_ver()
+                    sw_ver = struct.pack('I', int(sw_ver))
 
-                # Show firmware imfo
-                self.fw_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
-                self.fw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
-                self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
+                    # Get HW image SW version
+                    hw_ver = self.fw_file.get_hw_ver()
+                    hw_ver = struct.pack('I', int(hw_ver))
 
-                self.file_text["fg"]    = GuiColor.btn_success_bg
-                self.fw_size_text["fg"] = GuiColor.sub_1_fg
-                self.fw_ver_text["fg"]  = GuiColor.sub_1_fg
-                self.hw_ver_text["fg"]  = GuiColor.sub_1_fg
+                    # Show firmware info
+                    self.sw_ver_text["text"] = "V%d.%d.%d.%d" % ( sw_ver[3], sw_ver[2], sw_ver[1], sw_ver[0] )
+                    self.hw_ver_text["text"] = "V%d.%d.%d.%d" % ( hw_ver[3], hw_ver[2], hw_ver[1], hw_ver[0] )
+                    self.image_size_text["text"] = "%.2f kB" % ( fw_size / 1024 )
+                    self.image_addr_text["text"] = "0x%08X" % ( self.fw_file.get_image_addr())
+                    self.sig_type_text["text"] = "%s" % ["None", "ECDSA"][( self.fw_file.read( FwImage.APP_HEADER_SIG_TYPE_ADDR, 1 )[0])]
+                    self.enc_type_text["text"] = "%s" % ["None", "AES-CTR"][( self.fw_file.read( FwImage.APP_HEADER_ENC_TYPE_ADDR, 1 )[0])]
 
-                # Change status to idle
-                self.status_text["fg"] = GuiColor.sub_1_fg
-                self.status_text["text"] = "Idle"
+                    self.file_text["fg"]        = GuiColor.btn_success_bg
+                    self.sw_ver_text["fg"]      = GuiColor.sub_1_fg
+                    self.hw_ver_text["fg"]      = GuiColor.sub_1_fg
+                    self.image_size_text["fg"]  = GuiColor.sub_1_fg
+                    self.image_addr_text["fg"]  = GuiColor.sub_1_fg
+                    self.sig_type_text["fg"]    = GuiColor.sub_1_fg
+                    self.enc_type_text["fg"]    = GuiColor.sub_1_fg
 
-                # Enable update button
-                self.update_btn.config(state=tk.NORMAL)
+                    # Change status to idle
+                    self.status_text["fg"] = GuiColor.sub_1_fg
+                    self.status_text["text"] = "Idle"
+
+                    # Enable update button
+                    self.update_btn.config(state=tk.NORMAL)
+                    self.upgrade_btn_active = True
+
+                else:
+                    self.sw_ver_text["text"]     = "Invalid application!"
+                    self.hw_ver_text["text"]     = "Invalid application!"
+                    self.image_size_text["text"] = "Invalid application!"
+                    self.image_addr_text["text"] = "Invalid application!"
+                    self.sig_type_text["text"]   = "Invalid application!"
+                    self.enc_type_text["text"]   = "Invalid application!"
+
+
+                    self.file_text["fg"]        = "red"
+                    self.sw_ver_text["fg"]      = "red"
+                    self.hw_ver_text["fg"]      = "red"
+                    self.image_size_text["fg"]  = "red"
+                    self.image_addr_text["fg"]  = "red"
+                    self.sig_type_text["fg"]    = "red"
+                    self.enc_type_text["fg"]    = "red"
+
+                    # Change status to idle
+                    self.status_text["fg"] = GuiColor.sub_1_fg
+                    self.status_text["text"] = "---"
+
+                    # Disable update button
+                    self.update_btn.config(state=tk.DISABLED)
+                    self.upgrade_btn_active = False
 
             else:
-                self.fw_size_text["text"]   = "Invalid application!"
-                self.fw_ver_text["text"]    = "Invalid application!"
-                self.hw_ver_text["text"]    = "Invalid application!"
-
-                self.file_text["fg"]    = "red"
-                self.fw_size_text["fg"] = "red"
-                self.fw_ver_text["fg"]  = "red"
-                self.hw_ver_text["fg"]  = "red"
-
-                # Change status to idle
-                self.status_text["fg"] = GuiColor.sub_1_fg
-                self.status_text["text"] = "---"
-
                 # Enable update button
-                self.update_btn.config(state=tk.DISABLED)
+                self.update_btn.config(state=tk.NORMAL)
+                self.upgrade_btn_active = True  
+
+                self.sw_ver_text["text"]     = "---"
+                self.hw_ver_text["text"]     = "---"
+                self.image_size_text["text"] = "---"
+                self.image_addr_text["text"] = "---"
+                self.sig_type_text["text"]   = "---"
+                self.enc_type_text["text"]   = "---"
+
+                self.sw_ver_text["fg"]      = GuiColor.sub_1_fg
+                self.hw_ver_text["fg"]      = GuiColor.sub_1_fg
+                self.image_size_text["fg"]  = GuiColor.sub_1_fg
+                self.image_addr_text["fg"]  = GuiColor.sub_1_fg
+                self.sig_type_text["fg"]    = GuiColor.sub_1_fg
+                self.enc_type_text["fg"]    = GuiColor.sub_1_fg                                              
 
     # ===============================================================================
     # @brief:   Update button pressed
@@ -481,10 +585,17 @@ class BootFrame(tk.Frame):
             self.browse_btn.config(state=tk.DISABLED)
 
             # Enter bootloader
-            self.msg_send_ascii( BOOT_ENTER_BOOT_CMD )
+            if self.scp_en:
+                self.msg_send_bin( [0xA9, 0x65, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x7E, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x23, 0x9B, 0xD2, 0x70, 0x5E ] )
+            else:
+                self.msg_send_ascii( BOOT_ENTER_BOOT_CMD )
             
             # Wait for 50 ms
             time.sleep( 0.050 )
+
+            # Re-connection needed only for USB devices
+            if True == self.usb_com_btn.state():
+                self.__com_port_reconnect(BOOT_COM_RECONNECT_PAUSE);            
 
             # Reset input queue 
             self.bootProtocol.reset_rx_queue()
@@ -599,17 +710,12 @@ class BootFrame(tk.Frame):
             # Store start time
             self.start_tick = time.time()
 
-            # Get firmware info
-            fw_size = self.fw_file.get_fw_size()
-            sw_ver = self.fw_file.get_sw_ver()
-            hw_ver = self.fw_file.get_hw_ver()
-
-            # Send prepare message
-            self.bootProtocol.send_prepare( fw_size, sw_ver, hw_ver )
+            # Send prepare message -> send application header 
+            self.bootProtocol.send_prepare( self.fw_file.read( 0, FwImage.APP_HEADER_SIZE_BYTE ))
 
             # Update status
             self.status_text["fg"] = GuiColor.sub_1_fg
-            self.status_text["text"] = "Preparing..."
+            self.status_text["text"] = "Pre-validating and preparing flash..."
 
             # Restart communiction timeout timer
             self.com_timer.reset( BOOT_COM_PREPARE_TIMEOUT_SEC )
@@ -641,8 +747,8 @@ class BootFrame(tk.Frame):
                 self.progress_bar.stop()
                 self.progress_bar["value"] = 0
 
-                # Reset working address
-                self.working_addr = 0
+                # Reset working address to end of application header, as it was already send in prepare phase
+                self.working_addr = FwImage.APP_HEADER_SIZE_BYTE
 
                 data = self.fw_file.read( self.working_addr, BOOT_FLASH_DATA_FRAME_SIZE )
                 data_len = len( data )
@@ -697,6 +803,7 @@ class BootFrame(tk.Frame):
                 # No more bytes to flash
                 else:
                     self.bootProtocol.send_exit()
+                    self.status_text["text"] = "Post-validating..."
 
                     # Restart communiction timeout timer
                     self.com_timer.reset( BOOT_COM_EXIT_TIMEOUT_SEC )
@@ -710,7 +817,7 @@ class BootFrame(tk.Frame):
                 self.update_btn.text( "Upgrade" )
 
             # Calculate progress
-            progress = (( self.working_addr / self.fw_file.get_fw_size()) * 100 )
+            progress = (( self.working_addr / self.fw_file.get_image_size()) * 100 )
 
             self.progress_bar["mode"] = "determinate"
             self.progress_text["text"] = "%3d%%" % progress
@@ -750,6 +857,10 @@ class BootFrame(tk.Frame):
 
             # Enable browse button back
             self.browse_btn.config(state=tk.NORMAL)
+
+            # Re-connection needed only for USB devices
+            if True == self.usb_com_btn.state():
+                self.__com_port_reconnect(BOOT_COM_RECONNECT_PAUSE);
         
     # ===============================================================================
     # @brief:   Info response message from bootlaoder receive callback
@@ -769,6 +880,53 @@ class BootFrame(tk.Frame):
             # Show bootloader version
             self.boot_ver_text["text"] = "V%d.%d.%d.%d" % ( boot_ver[3], boot_ver[2], boot_ver[1], boot_ver[0] )
 
+    # ===============================================================================
+    # @brief:   Disconnect from COM port
+    #
+    # @return:      void
+    # ===============================================================================    
+    def __com_port_disconnect(self):
+        msg = IpcMsg()
+
+        # Send disconnection reqeust to serial thread
+        msg.type = IpcMsgType.IpcMsgType_ComDisconnect
+
+        # Send command
+        self.__ipc_msg_send(msg)        
+
+    # ===============================================================================
+    # @brief:   Connect to COM port with last configure settings
+    #
+    # @return:      void
+    # ===============================================================================    
+    def __com_port_connect(self):
+        msg = IpcMsg()
+
+        # Connect with pre-exsisting COM port settings
+        msg.type    = IpcMsgType.IpcMsgType_ComConnect
+        msg.payload = None
+
+        # Send command
+        self.__ipc_msg_send(msg)         
+
+    # ===============================================================================
+    # @brief:   Re-connect to COM port with the same settings
+    #
+    # @param[in]:   reconnect_pause - Time pause between connect-reconnect cmd
+    # @return:      void
+    # ===============================================================================    
+    def __com_port_reconnect(self, reconnect_pause=2):
+        self.__com_port_disconnect()
+        time.sleep(reconnect_pause)
+        self.__com_port_connect()
+
+    # ===============================================================================
+    # @brief:   Get state of upgrade button regardless of COM port actions
+    #
+    # @return:      upgrade_btn_active - Upgrade button active state
+    # ===============================================================================    
+    def upgrade_btn_is_active(self):
+        return self.upgrade_btn_active
 
 #################################################################################################
 ##  END OF FILE

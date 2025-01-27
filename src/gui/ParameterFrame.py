@@ -1,4 +1,4 @@
-## Copyright (c) 2024 Ziga Miklosic
+## Copyright (c) 2025 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -69,7 +69,7 @@ class ParameterTable():
 @dataclass
 class ParCmd():
     Idle:   int = 0
-    Status: str = "par_print"
+    Status: str = "par_info"
     Write:  str = "par_set"
     Read:   str = "par_get"
     Store:  str = "par_save"

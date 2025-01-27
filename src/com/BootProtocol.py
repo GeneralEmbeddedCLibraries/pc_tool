@@ -1,4 +1,4 @@
-## Copyright (c) 2023 Ziga Miklosic
+## Copyright (c) 2025 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -61,6 +61,7 @@ class BootProtocol:
     MSG_ERROR_FW_SIZE       = 0x10
     MSG_ERROR_FW_VER        = 0x20
     MSG_ERROR_HW_VER        = 0x40
+    MSG_ERROR_SIGNATURE     = 0x80
     
     MSG_ERROR_STR = {   
                         MSG_OK                  : "OK",
@@ -71,6 +72,7 @@ class BootProtocol:
                         MSG_ERROR_FW_SIZE       : "Firmware image size error",
                         MSG_ERROR_FW_VER        : "Firmware version compatibility error",
                         MSG_ERROR_HW_VER        : "Hardware version compatibility error",
+                        MSG_ERROR_SIGNATURE     : "Firmware image signature invalid error",
                     }
 
 
@@ -189,27 +191,20 @@ class BootProtocol:
     # ===============================================================================
     # @brief  Send prepare command
     #
-    # @param[in]    fw_size     - Size of firmware image
-    # @param[in]    fw_ver      - Firmware version
-    # @param[in]    hw_ver      - Hardware version
+    # @param[in]    image_header - Image (application) header
     # @return       void
     # ===============================================================================
-    def send_prepare(self, fw_size, fw_ver, hw_ver):
+    def send_prepare(self, image_header):
+
+        # Get size of image header
+        size = len(image_header)
 
         # Assemble prepare command
-        prepare_cmd = [ 0xB0, 0x07, 0x0C, 0x00, 0x2B, 0x20, 0x00, 0x00 ]
+        prepare_cmd = [ 0xB0, 0x07, ( size & 0xFF ), (( size >> 8 ) & 0xFF ), 0x2B, 0x20, 0x00, 0x00 ]
 
-        # Assemble FW size
-        for byte in struct.pack('I', int(fw_size)):
-            prepare_cmd.append( byte )
-
-        # Assemble FW version
-        for byte in struct.pack('I', int(fw_ver)):
-            prepare_cmd.append( byte )
-
-        # Assemble HW version
-        for byte in struct.pack('I', int(hw_ver)):
-            prepare_cmd.append( byte )
+        # Add payload
+        for byte in image_header:
+            prepare_cmd.append( byte )            
 
         # Calculate crc
         prepare_cmd[7] = self.__calc_crc8( prepare_cmd[2:4] )  # Lenght

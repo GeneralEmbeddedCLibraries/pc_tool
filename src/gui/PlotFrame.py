@@ -1,4 +1,4 @@
-## Copyright (c) 2024 Ziga Miklosic
+## Copyright (c) 2025 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -33,7 +33,7 @@ import matplotlib.animation as animation
 #################################################################################################
 
 # Default timestamp in miliseconds
-LOG_FILE_FIXED_TIMESTAMP_MS     = 10
+LOG_FILE_FIXED_TIMESTAMP_MS     = 10000
 
 # File delimiter
 LOG_FILE_DELIMITER              = ";"
@@ -146,7 +146,7 @@ class PlotFrame(tk.Frame):
         self.num_of_plot = 1
 
         # Timestamp option
-        self.timestamp_label = tk.Label(self, text="Timestamp [ms]:", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
+        self.timestamp_label = tk.Label(self, text="Timestamp [us]:", font=GuiFont.normal_bold, bg=GuiColor.main_bg, fg=GuiColor.main_fg)
         self.timestamp_entry = tk.Entry(self, font=GuiFont.normal, bg=GuiColor.sub_1_fg, fg=GuiColor.sub_1_bg, borderwidth=0, width=8)
         self.timestamp_entry.insert(0,LOG_FILE_FIXED_TIMESTAMP_MS)
 
@@ -227,7 +227,7 @@ class PlotFrame(tk.Frame):
     def __parse_meas_file(self):
 
         # Get fixed timestamp in seconds
-        fixed_timestamp_sec = ( int(self.timestamp_entry.get()) / 1000 )
+        fixed_timestamp_sec = ( int(self.timestamp_entry.get()) / 1e6 )
 
         # Open file for reading
         with open(self.meas_file, "r") as csvfile: 
