@@ -336,6 +336,18 @@ class BootFrame(tk.Frame):
         # Upgrade btn init state
         self.upgrade_btn_active = False
 
+        # SCP interface switch (when disabled ASCII based protocol is used with \r\n)
+        self.scp_en = False
+
+    # ===============================================================================
+    # @brief:   Send application interface protocol
+    #
+    # @param[in]:   scp_en  - True for SCP protocol wiht application
+    # @return:      void
+    # ===============================================================================
+    def set_app_if_scp(self, scp_en):
+        self.scp_en = scp_en
+
     # ===============================================================================
     # @brief:   Send ASCII format of message
     #
@@ -573,7 +585,10 @@ class BootFrame(tk.Frame):
             self.browse_btn.config(state=tk.DISABLED)
 
             # Enter bootloader
-            self.msg_send_ascii( BOOT_ENTER_BOOT_CMD )
+            if self.scp_en:
+                self.msg_send_bin( [0xA9, 0x65, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x7E, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x23, 0x9B, 0xD2, 0x70, 0x5E ] )
+            else:
+                self.msg_send_ascii( BOOT_ENTER_BOOT_CMD )
             
             # Wait for 50 ms
             time.sleep( 0.050 )

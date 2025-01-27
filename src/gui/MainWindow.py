@@ -271,6 +271,10 @@ class MainWindow():
         self.nav_frame.btn_plot.set_active(0)
         self.nav_frame.btn_boot.set_active(1)
 
+        # Config interface protocol with application
+        # Define if it's SCP or ASCII protocol
+        self.boot_frame.set_app_if_scp( self.com_frame.scp_en_btn.state )
+
     # ===============================================================================
     # @brief:   Change default table style
     #
