@@ -5,10 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-## V0.6.0 - xx.xx.2025
+## V0.6.0 - 27.01.2025
 
 ### Added
  - Support for CLI over SCP
+ - Support for enter bootloader over SCP command
 
 ---
 ## V0.5.0 - 16.10.2024
