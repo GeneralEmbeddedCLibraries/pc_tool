@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project/module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
+## V0.6.3 - 11.02.2025
+
+### Changed
+ - Changed CLI SCP messages DeviceID=2
+
+---
 ## V0.6.2 - 11.02.2025
 
 ### Changed
