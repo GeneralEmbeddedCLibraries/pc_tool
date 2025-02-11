@@ -103,7 +103,8 @@ class ScpCliMessage():
         self.scp_msg.append( 0x0A ) # LR
 
         # Add STPS transport layer
-        stps_msg = StpsMessage( self.scp_msg, 0x0000 ).get_msg()
+        # NOTE: DeviceID=2 for USB communication
+        stps_msg = StpsMessage( self.scp_msg, 2 ).get_msg()
 
         return ( stps_msg + self.scp_msg )
 
