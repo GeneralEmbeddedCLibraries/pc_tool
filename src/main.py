@@ -1,13 +1,13 @@
-## Copyright (c) 2024 Ziga Miklosic
+## Copyright (c) 2025 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
 ##
 ## @file:       main.py
 ## @brief:      Main entry for PC tool
-## @date:		16.10.2024
+## @date:		01.03.2025
 ## @author:		Ziga Miklosic
-## @version:    V0.5.0
+## @version:    V0.6.4
 ##
 #################################################################################################
 
@@ -24,7 +24,7 @@ import multiprocessing
 #################################################################################################
 
 # Script version
-MAIN_SCRIPT_VER     = "V0.5.0"
+MAIN_SCRIPT_VER     = "V0.6.4"
 
 #################################################################################################
 ##  FUNCTIONS

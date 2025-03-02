@@ -1,4 +1,4 @@
-## Copyright (c) 2023 Ziga Miklosic
+## Copyright (c) 2025 Ziga Miklosic
 ## All Rights Reserved
 ## This software is under MIT licence (https://opensource.org/licenses/MIT)
 #################################################################################################
@@ -27,6 +27,8 @@ from gui.BootFrame import BootFrame
 from gui.GuiCommon import GuiFont, GuiColor
 
 from com.IpcProtocol import IpcMsg, IpcMsgType
+
+from com.Scp import ScpCliMessage, ScpParser
 
 import time
 
@@ -111,7 +113,7 @@ class MainWindow():
                                 IpcMsgType.IpcMsgType_ComConnect :      self.__ipc_connect_cmd,  
                                 IpcMsgType.IpcMsgType_ComDisconnect :   self.__ipc_disconnect_cmd,  
                                 IpcMsgType.IpcMsgType_ComRxFrame :      self.__ipc_rx_frame_cmd,  
-                                IpcMsgType.IpcMsgType_ComRxBinary :      self.__ipc_rx_binary_cmd,  
+                                IpcMsgType.IpcMsgType_ComRxBinary :     self.__ipc_rx_binary_cmd,  
                                 IpcMsgType.IpcMsgType_ComTxFrame :      self.__ipc_tx_frame_cmd,  
         }
         # =============================================================================================
@@ -122,6 +124,8 @@ class MainWindow():
 
         # De-activate connection related widgets
         self.__deactivate_widgets()
+
+        self.scpParser = ScpParser()
 
         # Run GUI
         self.run()
@@ -599,7 +603,6 @@ class MainWindow():
 
         # Handle received message
         self.boot_frame.msg_receive_cb(payload)
-
 
     # ===============================================================================
     # @brief:   Response from TX frame command (to Serial Process) via IPC
