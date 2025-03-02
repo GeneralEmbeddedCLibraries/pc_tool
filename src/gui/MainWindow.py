@@ -271,10 +271,6 @@ class MainWindow():
         self.nav_frame.btn_plot.set_active(0)
         self.nav_frame.btn_boot.set_active(1)
 
-        # Config interface protocol with application
-        # Define if it's SCP or ASCII protocol
-        self.boot_frame.set_app_if_scp( self.com_frame.scp_en_btn.state )
-
     # ===============================================================================
     # @brief:   Change default table style
     #
@@ -363,29 +359,15 @@ class MainWindow():
         # Connected to device
         if True == self.__connection_status:
 
-            # Check if SCP is enabled
-            if True == self.com_frame.scp_en_btn.state:
+            # Append end string termiantion 
+            dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
 
-                # Create SCP message
-                scpMsg = ScpCliMessage().assemle(cmd)
+            # Send cmd to serial process
+            msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
+            self.__ipc_send_msg(msg)
 
-                # Send cmd to serial process
-                msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxBinary, payload=scpMsg)
-                self.__ipc_send_msg(msg)   
-
-                # Update msg tx counter
-                self.status_frame.set_tx_count(len(scpMsg))                          
-                
-            else:
-                # Append end string termiantion 
-                dev_cmd = str(cmd) + MAIN_WIN_COM_STRING_TERMINATION
-
-                # Send cmd to serial process
-                msg = IpcMsg(type=IpcMsgType.IpcMsgType_ComTxFrame, payload=dev_cmd)
-                self.__ipc_send_msg(msg)
-
-                # Update msg tx counter
-                self.status_frame.set_tx_count(len(dev_cmd))
+            # Update msg tx counter
+            self.status_frame.set_tx_count(len(dev_cmd))
 
     # ===============================================================================
     # @brief:   Send message via IPC
@@ -570,70 +552,12 @@ class MainWindow():
     # ===============================================================================
     def __ipc_rx_frame_cmd(self, payload):
         
-        # Ignnore if SCP is enabled
-        if False == self.com_frame.scp_en_btn.state:
+        # Is there any answer from embedded device?
+        if payload:
 
-            # Is there any answer from embedded device?
-            if payload:
-
-                # Append received chars to buffer
-                self.com_rx_buf += str(payload)
-                
-                # Check for termiantion char
-                str_term = str(self.com_rx_buf).find(MAIN_WIN_COM_STRING_TERMINATION)
-
-                # Termination char founded
-                if str_term >= 0:
-
-                    # Parsed response from device
-                    dev_resp = self.com_rx_buf[:str_term]
-
-                    # Print till terminator
-                    if "ERR" in dev_resp:
-                        self.cli_frame.print_err(dev_resp)
-                        self.status_frame.set_err_count(1)
-                    elif "WAR" in dev_resp:
-                        self.cli_frame.print_war(dev_resp)
-                        self.status_frame.set_war_count(1)
-                    else:
-                        self.cli_frame.print_normal(dev_resp)
-
-                    # Copy the rest of string for later process
-                    # Note: Copy without termiantor
-                    self.com_rx_buf = self.com_rx_buf[str_term+len(MAIN_WIN_COM_STRING_TERMINATION):]
-
-                    # Parameter parser
-                    # Note: Ignore raw traffic for parameter parser
-                    if not self.get_raw_msg(dev_resp):
-                        self.par_frame.dev_msg_parser(dev_resp)
-                    
-                    # Raw trafic for plotting purposes
-                    else:
-                        pass # TODO: Provide that data to plotter...
-
-            # Update msg rx counter
-            self.status_frame.set_rx_count(len(payload))
-
-    # ===============================================================================
-    # @brief:   Response from RX frame BINARY command to (Serial Process) via IPC
-    #
-    # @param[in]:   payload - Message payload
-    # @return:      void
-    # ===============================================================================
-    def __ipc_rx_binary_cmd(self, payload):
-
-        # Handle received message
-        self.boot_frame.msg_receive_cb(payload)
-
-        # SCP is enabled
-        if True == self.com_frame.scp_en_btn.state:     
+            # Append received chars to buffer
+            self.com_rx_buf += str(payload)
             
-            # Parse received message
-            scp_msg = self.scpParser.parse(payload)
-            
-            if scp_msg:
-                self.com_rx_buf += scp_msg
-                
             # Check for termiantion char
             str_term = str(self.com_rx_buf).find(MAIN_WIN_COM_STRING_TERMINATION)
 
@@ -666,9 +590,19 @@ class MainWindow():
                 else:
                     pass # TODO: Provide that data to plotter...
 
-            # Update msg rx counter
-            self.status_frame.set_rx_count(len(payload)) 
+        # Update msg rx counter
+        self.status_frame.set_rx_count(len(payload))
 
+    # ===============================================================================
+    # @brief:   Response from RX frame BINARY command to (Serial Process) via IPC
+    #
+    # @param[in]:   payload - Message payload
+    # @return:      void
+    # ===============================================================================
+    def __ipc_rx_binary_cmd(self, payload):
+
+        # Handle received message
+        self.boot_frame.msg_receive_cb(payload)
 
     # ===============================================================================
     # @brief:   Response from TX frame command (to Serial Process) via IPC
